@@ -1,29 +1,16 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { House, Pill, Calendar, User } from 'lucide-react';
 
-type UserType = 'elder' | 'caregiver';
-
-interface FooterProps {
-  userType: UserType;
-}
-
-const Footer = ({ userType }: FooterProps) => {
+const Footer = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const elderItems = [
-    { label: '홈', path: '/elder', icon: House },
-    { label: '처방전 등록', path: '/medicine/register', icon: Pill },
-  ];
-
-  const caregiverItems = [
+  const items = [
     { label: '홈', path: '/', icon: House },
     { label: '달력', path: '/calendar', icon: Calendar },
     { label: '처방전', path: '/medicine', icon: Pill },
     { label: '마이페이지', path: '/mypage', icon: User },
   ];
-
-  const items = userType === 'elder' ? elderItems : caregiverItems;
 
   return (
     <footer className="sticky h-15 bottom-0 bg-white border-t border-gray-200 z-10">

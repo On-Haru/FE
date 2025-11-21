@@ -1,13 +1,13 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { getUserTypeFromPath, USER_TYPE } from '@/types/user';
 
 const Layout = () => {
   const location = useLocation();
 
-  const userType = location.pathname.startsWith('/elder')
-    ? 'elder'
-    : 'caregiver';
+  const userType = getUserTypeFromPath(location.pathname);
+  const isElder = userType === USER_TYPE.ELDER;
 
   return (
     <div className="mobile-container flex flex-col">
@@ -16,7 +16,7 @@ const Layout = () => {
         <div className="flex-1">
           <Outlet />
         </div>
-        <Footer userType={userType} />
+        {!isElder && <Footer />}
       </div>
     </div>
   );
