@@ -18,9 +18,12 @@ const DetailPage = () => {
     const [elders, setElders] = useState<Elder[]>([]);
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [isDateClicked, setIsDateClicked] = useState<boolean>(false);
+    const [checklistData, setChecklistData] = useState<Record<string, DateChecklist>>({});
 
-    // 임시 체크리스트 데이터 (나중에 API로 교체)
-    const [checklistData] = useState<Record<string, DateChecklist>>({
+    // 각 어르신별 임시 체크리스트 데이터 (나중에 API로 교체)
+    const getElderChecklistData = (elderId: string): Record<string, DateChecklist> => {
+        // 어르신별로 다른 데이터를 반환
+        const baseData: Record<string, DateChecklist> = {
         '2025-11-30': {
             date: '2025-11-30',
             items: [
@@ -109,7 +112,43 @@ const DetailPage = () => {
                 { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: true },
             ],
         },
-    });
+        };
+
+        // 어르신 ID에 따라 약 이름이나 체크 상태를 다르게 설정
+        if (elderId === '2') {
+            // 이노인: 다른 약 이름 사용
+            return Object.fromEntries(
+                Object.entries(baseData).map(([date, data]) => [
+                    date,
+                    {
+                        ...data,
+                        items: data.items.map((item) => ({
+                            ...item,
+                            label: item.label.replace('타이레놀', '아스피린'),
+                        })),
+                    },
+                ])
+            );
+        } else if (elderId === '3') {
+            // 박노인: 다른 약 이름과 체크 상태
+            return Object.fromEntries(
+                Object.entries(baseData).map(([date, data]) => [
+                    date,
+                    {
+                        ...data,
+                        items: data.items.map((item) => ({
+                            ...item,
+                            label: item.label.replace('타이레놀', '게보린'),
+                            checked: Math.random() > 0.5, // 랜덤 체크 상태
+                        })),
+                    },
+                ])
+            );
+        }
+
+        // 김노인 (기본)
+        return baseData;
+    };
 
     // TODO: API에서 어르신 목록 가져오기
     useEffect(() => {
@@ -125,6 +164,17 @@ const DetailPage = () => {
         const elder = mockElders.find((e) => e.id === id) || mockElders[0];
         setCurrentElder(elder);
     }, [id]);
+
+    // 어르신이 변경되면 해당 어르신의 체크리스트 데이터 로드
+    useEffect(() => {
+        if (currentElder) {
+            const data = getElderChecklistData(currentElder.id);
+            setChecklistData(data);
+            // 날짜 선택 초기화
+            setSelectedDate(new Date());
+            setIsDateClicked(false);
+        }
+    }, [currentElder]);
 
     const handleElderChange = (elderId: string) => {
         const elder = elders.find((e) => e.id === elderId);
