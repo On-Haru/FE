@@ -3,11 +3,10 @@
 @theme {
   --color-primary: #36C8B7;
   --color-secondary: #FF9090;
+  --color-gray-custom: #71717A;
 }
 
 * {
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
 }
 

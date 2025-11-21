@@ -20,7 +20,7 @@ const Footer = () => {
 
   return (
     <footer className="sticky h-15 bottom-0 bg-white border-t border-gray-200 z-10">
-      <nav className="flex justify-around items-center py-3">
+      <nav className="flex justify-around items-center pb-3">
         {FOOTER_ITEMS.map((item) => {
           const Icon = item.icon;
           // 처방전 등록 페이지일 때도 활성화
