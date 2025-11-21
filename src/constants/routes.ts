@@ -68,3 +68,4 @@ export const isAuthPage = (pathname: string): boolean => {
     pathname.includes('/login')
   );
 };
+
