@@ -5,7 +5,8 @@ export const ROUTES = {
   DETAIL: '/detail/:id',
   MEDICINE: '/medicine',
   MEDICINE_REGISTER: '/medicine/register',
-  MEDICINE_DETAIL: '/medicine/:id',
+  MEDICINE_DETAIL: '/medicine/detail',
+  MEDICINE_PREVIOUS: '/medicine/previous',
   MYPAGE: '/mypage',
   REPORT: '/report',
 } as const;
@@ -35,6 +36,9 @@ export const getPageTitle = (pathname: string): string => {
 
   // 동적 경로 처리 (/medicine/:id 같은 경우)
   if (pathname.startsWith('/medicine/')) {
+    if (pathname.startsWith('/medicine/previous')) {
+      return '이전 처방전 확인하기';
+    }
     return '약 확인하기';
   }
 
@@ -64,3 +68,4 @@ export const isAuthPage = (pathname: string): boolean => {
     pathname.includes('/login')
   );
 };
+
