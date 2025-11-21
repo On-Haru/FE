@@ -13,20 +13,20 @@ const RoleSelectPage = () => {
 
       {/* 버튼들 */}
       <div className="w-full max-w-sm space-y-4">
-        {/* 본인 등록하기 버튼 */}
+        {/* 본인 버튼 */}
         <button
-          onClick={() => navigate('/signup/elder')}
+          onClick={() => navigate('/elder/auth-select')}
           className="w-full py-4 rounded-lg text-white font-semibold bg-primary "
         >
-          본인 등록하기
+          본인
         </button>
 
-        {/* 보호자 등록하기 버튼 */}
+        {/* 보호자 버튼 */}
         <button
-          onClick={() => navigate('/signup/caregiver')}
+          onClick={() => navigate('/caregiver/auth-select')}
           className="w-full py-4 rounded-lg font-semibold border-2 bg-white border-primary text-primary"
         >
-          보호자 등록하기
+          보호자
         </button>
       </div>
 
