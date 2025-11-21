@@ -1,20 +1,22 @@
-import { Routes, Route } from 'react-router-dom'
-import Layout from './Layout/Layout'
-import DetailPage from './pages/Detail/DetailPage'
-import ElderPage from './pages/Elder/ElderPage'
-import HomePage from './pages/Home/HomePage'
-import LoginPage from './pages/Login/LoginPage'
-import MedicineDetailPage from './pages/MedicineDetail/MedicineDetailPage'
-import MedicineListPage from './pages/MedicineList/MedicineListPage'
-import MedicineRegisterPage from './pages/MedicineRegister/MedicineRegisterPage'
-import MyPagePage from './pages/MyPage/MyPagePage'
-import ReportPage from './pages/Report/ReportPage'
+import { Routes, Route } from 'react-router-dom';
+import Layout from './Layout/Layout';
+import DetailPage from './pages/Detail/DetailPage';
+import ElderPage from './pages/Elder/ElderPage';
+import HomePage from './pages/Home/HomePage';
+import LoginPage from './pages/Login/LoginPage';
+import MedicineDetailPage from './pages/MedicineDetail/MedicineDetailPage';
+import MedicineListPage from './pages/MedicineList/MedicineListPage';
+import MedicineRegisterPage from './pages/MedicineRegister/MedicineRegisterPage';
+import MyPagePage from './pages/MyPage/MyPagePage';
+import ReportPage from './pages/Report/ReportPage';
+import RoleSelectPage from './pages/RoleSelect/RoleSelectPage';
 
 function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<RoleSelectPage />} />
+        <Route path="/home" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/detail/:id" element={<DetailPage />} />
         <Route path="/elder" element={<ElderPage />} />
@@ -25,7 +27,7 @@ function App() {
         <Route path="/report" element={<ReportPage />} />
       </Route>
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;
