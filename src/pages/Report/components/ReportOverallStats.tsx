@@ -1,3 +1,4 @@
+import { BarChart3 } from 'lucide-react';
 import type { Statistics } from '@/types/report';
 
 interface ReportOverallStatsProps {
@@ -16,8 +17,13 @@ const ReportOverallStats = ({ statistics }: ReportOverallStatsProps) => {
     };
 
     return (
-        <div className="mb-6 bg-white rounded-lg p-4 border border-gray-200">
-            <div className="space-y-4">
+        <div className="mb-6">
+            <div className="flex items-center gap-2 mb-4">
+                <BarChart3 className="w-5 h-5 text-primary" />
+                <h2 className="text-lg font-semibold text-black">전체 복약 통계</h2>
+            </div>
+            <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <div className="space-y-4">
                 {/* 전체 복약률 */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -51,6 +57,7 @@ const ReportOverallStats = ({ statistics }: ReportOverallStatsProps) => {
                     <span className="text-2xl font-bold" style={{ color: '#36C8B7' }}>
                         {missedCount}회
                     </span>
+                </div>
                 </div>
             </div>
         </div>

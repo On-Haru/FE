@@ -3,6 +3,7 @@ import ReportAISummary from './components/ReportAISummary';
 import ReportOverallStats from './components/ReportOverallStats';
 import ReportTimePattern from './components/ReportTimePattern';
 import ReportMedicinePattern from './components/ReportMedicinePattern';
+import ReportRiskSignals from './components/ReportRiskSignals';
 
 const ReportPage = () => {
   // 임시 mock 데이터
@@ -41,15 +42,28 @@ const ReportPage = () => {
         aiComment: '전반적으로 안정적인 복약 패턴입니다. 중요한 혈압약은 대부분 제때 복용하고 있습니다.',
       },
     ],
+    riskSignals: {
+      quickResponseRate: 42,
+      delayedResponseRate: 18,
+      suggestion: '저녁 시간대에는 TV 시청 전으로 알림 시간을 조정하거나, 보호자가 전화/메시지로 한 번 더 확인해 주면 좋습니다.',
+    },
   };
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col min-h-full gap-4">
       <ReportUserInfo name={mockData.name} birthYear={mockData.birthYear} />
       <ReportAISummary summary={mockData.aiSummary} />
       <ReportOverallStats statistics={mockData.statistics} />
       <ReportTimePattern timePattern={mockData.timePattern} />
-      <ReportMedicinePattern medicinePattern={mockData.medicinePattern} />
+      <ReportMedicinePattern
+        medicinePattern={mockData.medicinePattern}
+        averageDelayMinutes={mockData.statistics.averageDelayMinutes}
+      />
+      <ReportRiskSignals
+        quickResponseRate={mockData.riskSignals.quickResponseRate}
+        delayedResponseRate={mockData.riskSignals.delayedResponseRate}
+        suggestion={mockData.riskSignals.suggestion}
+      />
     </div>
   );
 };
