@@ -24,94 +24,94 @@ const DetailPage = () => {
     const getElderChecklistData = (elderId: string): Record<string, DateChecklist> => {
         // 어르신별로 다른 데이터를 반환
         const baseData: Record<string, DateChecklist> = {
-        '2025-11-30': {
-            date: '2025-11-30',
-            items: [
-                { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
-                { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: true },
-            ],
-        },
-        '2025-11-29': {
-            date: '2025-11-29',
-            items: [
-                { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
-                { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: false },
-            ],
-        },
-        '2025-11-28': {
-            date: '2025-11-28',
-            items: [
-                { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: false },
-                { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: false },
-            ],
-        },
-        '2025-11-27': {
-            date: '2025-11-27',
-            items: [
-                { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: false },
-                { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: false },
-                { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: false },
-            ],
-        },
-        '2025-11-26': {
-            date: '2025-11-26',
-            items: [
-                { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
-                { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: true },
-            ],
-        },
-        '2025-11-25': {
-            date: '2025-11-25',
-            items: [
-                { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
-                { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: false },
-            ],
-        },
-        '2025-11-24': {
-            date: '2025-11-24',
-            items: [
-                { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: false },
-                { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: false },
-            ],
-        },
-        '2025-11-23': {
-            date: '2025-11-23',
-            items: [
-                { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
-                { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: true },
-            ],
-        },
-        '2025-11-22': {
-            date: '2025-11-22',
-            items: [
-                { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
-                { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: true },
-            ],
-        },
-        '2025-11-21': {
-            date: '2025-11-21',
-            items: [
-                { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: false },
-                { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: false },
-            ],
-        },
-        '2025-11-20': {
-            date: '2025-11-20',
-            items: [
-                { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
-                { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: true },
-            ],
-        },
+            '2025-11-30': {
+                date: '2025-11-30',
+                items: [
+                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
+                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
+                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: true },
+                ],
+            },
+            '2025-11-29': {
+                date: '2025-11-29',
+                items: [
+                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
+                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
+                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: false },
+                ],
+            },
+            '2025-11-28': {
+                date: '2025-11-28',
+                items: [
+                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
+                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: false },
+                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: false },
+                ],
+            },
+            '2025-11-27': {
+                date: '2025-11-27',
+                items: [
+                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: false },
+                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: false },
+                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: false },
+                ],
+            },
+            '2025-11-26': {
+                date: '2025-11-26',
+                items: [
+                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
+                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
+                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: true },
+                ],
+            },
+            '2025-11-25': {
+                date: '2025-11-25',
+                items: [
+                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
+                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
+                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: false },
+                ],
+            },
+            '2025-11-24': {
+                date: '2025-11-24',
+                items: [
+                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
+                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: false },
+                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: false },
+                ],
+            },
+            '2025-11-23': {
+                date: '2025-11-23',
+                items: [
+                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
+                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
+                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: true },
+                ],
+            },
+            '2025-11-22': {
+                date: '2025-11-22',
+                items: [
+                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
+                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
+                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: true },
+                ],
+            },
+            '2025-11-21': {
+                date: '2025-11-21',
+                items: [
+                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
+                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: false },
+                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: false },
+                ],
+            },
+            '2025-11-20': {
+                date: '2025-11-20',
+                items: [
+                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
+                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
+                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: true },
+                ],
+            },
         };
 
         // 어르신 ID에 따라 약 이름이나 체크 상태를 다르게 설정
