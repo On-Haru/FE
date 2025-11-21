@@ -61,17 +61,11 @@ const TodayMedicationCard = ({
         </div>
         <div className="flex-shrink-0">
           {isTaken ? (
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: 'var(--morning-primary)' }}
-            >
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-morning-primary">
               <Check className="w-5 h-5 text-white" />
             </div>
           ) : (
-            <button
-              className="px-4 py-2 text-white text-sm font-medium rounded-lg"
-              style={{ backgroundColor: 'var(--lunch-primary)' }}
-            >
+            <button className="px-4 py-2 text-white text-sm font-medium rounded-lg bg-lunch-primary">
               복용 예정
             </button>
           )}
