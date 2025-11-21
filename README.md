@@ -1,73 +1,116 @@
-# React + TypeScript + Vite
+# 프로젝트 개요
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript + Vite 기반 프론트엔드 프로젝트입니다.
 
-Currently, two official plugins are available:
+## 기술 스택
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- React 19.2.0
+- TypeScript 5.9.3
+- Vite 7.2.2
+- TailwindCSS 4.1.17
+- React Router 7.9.6
+- Axios 1.13.2
+- PWA (vite-plugin-pwa)
 
-## React Compiler
+## 시작하기
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 설치
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 개발 서버 실행
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm dev
 ```
+
+### 빌드
+
+```bash
+pnpm build
+```
+
+### 미리보기
+
+```bash
+pnpm preview
+```
+
+## 프로젝트 구조
+
+```
+src/
+├── lib/              # 유틸리티 및 라이브러리
+│   ├── axios.ts      # Axios 인스턴스 (JWT 인터셉터)
+│   └── storage.ts    # 토큰 저장/조회 유틸
+├── pages/            # 페이지 컴포넌트
+│   ├── Calendar/
+│   ├── Elder/
+│   ├── Home/
+│   ├── Login/
+│   ├── MedicineDetail/
+│   ├── MedicineList/
+│   ├── MedicineRegister/
+│   ├── MyPage/
+│   └── Report/
+└── App.tsx           # 라우터 설정
+```
+
+## 주요 설정
+
+### Path Alias
+
+`@/` 별칭으로 `src/` 디렉토리를 참조할 수 있습니다.
+
+```typescript
+import { getAccessToken } from '@/lib/storage'
+```
+
+### TailwindCSS
+
+- Primary 색상: `#36C8B7`
+- Secondary 색상: `#FF9090`
+
+CSS 변수로 사용 가능:
+```css
+color: var(--color-primary);
+color: var(--color-secondary);
+```
+
+### Axios 설정
+
+`src/lib/axios.ts`에서 JWT 토큰이 자동으로 요청 헤더에 추가됩니다.
+
+- Access Token은 `localStorage`에 저장됩니다
+- 401 에러 발생 시 토큰이 자동으로 삭제됩니다
+
+### 환경 변수
+
+`.env` 파일에 다음 변수를 설정하세요:
+
+```
+VITE_API_BASE_URL=your_api_url
+```
+
+## 라우팅
+
+- `/` - HomePage
+- `/login` - LoginPage
+- `/calendar` - CalendarPage
+- `/elder` - ElderPage
+- `/medicine` - MedicineListPage
+- `/medicine/:id` - MedicineDetailPage
+- `/medicine/register` - MedicineRegisterPage
+- `/mypage` - MyPagePage
+- `/report` - ReportPage
+
+## 코드 스타일
+
+- Prettier 설정 파일: `.prettierrc`
+- ESLint 설정: `eslint.config.js`
+
+## 배포
+
+Vercel 배포 설정이 포함되어 있습니다. `vercel.json` 파일을 확인하세요.
