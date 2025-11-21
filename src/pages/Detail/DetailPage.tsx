@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import DetailPageHeader from './components/DetailPageHeader';
 import DetailCalendar from './components/DetailCalendar';
 import Checklist from './components/Checklist';
+import EmptyDateActions from './components/EmptyDateActions';
 import type { DateChecklist } from '@/types/checklist';
 
 interface Elder {
@@ -15,7 +16,8 @@ const DetailPage = () => {
     const { id } = useParams<{ id: string }>();
     const [currentElder, setCurrentElder] = useState<Elder | null>(null);
     const [elders, setElders] = useState<Elder[]>([]);
-    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+    const [isDateClicked, setIsDateClicked] = useState<boolean>(false);
 
     // 임시 체크리스트 데이터 (나중에 API로 교체)
     const [checklistData] = useState<Record<string, DateChecklist>>({
@@ -132,7 +134,10 @@ const DetailPage = () => {
     };
 
     const handleDateSelect = (date: Date | null) => {
-        setSelectedDate(date);
+        if (date) {
+            setSelectedDate(date);
+            setIsDateClicked(true);
+        }
     };
 
     // 선택된 날짜의 체크리스트 가져오기
@@ -147,7 +152,7 @@ const DetailPage = () => {
     }
 
     return (
-        <div className="flex flex-col min-h-full">
+        <div className="flex flex-col min-h-full relative">
             <DetailPageHeader
                 currentElder={currentElder}
                 elders={elders}
@@ -159,14 +164,21 @@ const DetailPage = () => {
                     selectedDate={selectedDate}
                     onDateSelect={handleDateSelect}
                 />
-                {selectedDate && getSelectedDateChecklist() && (
-                    <div className="mt-6 border-t border-gray-200">
+                {getSelectedDateChecklist() ? (
+                    <div className="mt-4 px-4">
                         <Checklist
                             date={getSelectedDateChecklist()!.date}
                             items={getSelectedDateChecklist()!.items}
+                            elderName={currentElder.name}
                         />
                     </div>
-                )}
+                ) : isDateClicked ? (
+                    <EmptyDateActions
+                        date={selectedDate}
+                        elderName={currentElder.name}
+                        isDateClicked={isDateClicked}
+                    />
+                ) : null}
             </div>
         </div>
     );

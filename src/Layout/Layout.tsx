@@ -10,7 +10,7 @@ const Layout = () => {
 
   return (
     <div className="mobile-container flex flex-col">
-      <div className="mobile-content flex-1 flex flex-col overflow-y-auto">
+      <div className="mobile-content flex-1 flex flex-col overflow-y-auto relative">
         <Header />
         <div className="flex-1 p-4">
           <Outlet />
