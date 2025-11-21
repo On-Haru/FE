@@ -21,7 +21,7 @@ const Header = () => {
   const connectionCode = '0837'; // 임시: 연결 코드
 
   return (
-    <header className="sticky top-0 z-10 flex items-center h-15 py-3 border-b border-gray-200 bg-white">
+    <header className="sticky top-0 z-10 flex items-center px-4 py-3 border-b border-gray-200 bg-white" style={{ height: '60px', minHeight: '60px' }}>
       {homePage ? (
         // 홈화면: 로고 왼쪽, Elder 홈화면이고 보호자 연결 시 오른쪽에 연결 코드
         <div className="w-full flex items-center">

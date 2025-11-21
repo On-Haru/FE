@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { format, parse } from 'date-fns';
@@ -21,12 +20,6 @@ const ChecklistModal = ({ isOpen, onClose, date, item, elderName }: ChecklistMod
 
     // 식사 시간 추출 (예: "아침약" -> "아침")
     const mealTime = item.label.split('약')[0] || '';
-
-    const handleConfirmMedication = () => {
-        // TODO: 복약 확인 API 호출
-        console.log('복약 확인:', date, item.id);
-        onClose();
-    };
 
     const handleSendNotification = () => {
         // TODO: 알림 보내기 API 호출
@@ -74,20 +67,12 @@ const ChecklistModal = ({ isOpen, onClose, date, item, elderName }: ChecklistMod
                             이미 체크되었습니다
                         </button>
                     ) : (
-                        <>
-                            <button
-                                onClick={handleConfirmMedication}
-                                className="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/80 cursor-pointer transition-colors"
-                            >
-                                복약 수동 확인
-                            </button>
-                            <button
-                                onClick={handleSendNotification}
-                                className="flex-1 px-4 py-2 bg-secondary text-white rounded-lg font-medium hover:bg-secondary/80 cursor-pointer transition-colors"
-                            >
-                                알림 보내기
-                            </button>
-                        </>
+                        <button
+                            onClick={handleSendNotification}
+                            className="flex-1 px-4 py-2 bg-secondary text-white rounded-lg font-medium hover:bg-secondary/80 cursor-pointer transition-colors"
+                        >
+                            알림 보내기
+                        </button>
                     )}
                 </div>
             </div>
