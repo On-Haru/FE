@@ -17,8 +17,6 @@ const AuthSelectPage = () => {
     return null;
   }
 
-  const roleName = role === 'elder' ? '본인' : '보호자';
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
       {/* 로고 */}
@@ -28,20 +26,25 @@ const AuthSelectPage = () => {
 
       {/* 버튼들 */}
       <div className="w-full max-w-sm space-y-4">
-        {/* 등록하기 버튼 */}
-        <button
-          onClick={() => navigate(`/signup/${role}`)}
-          className="w-full py-4 rounded-lg text-white font-semibold bg-primary"
-        >
-          {roleName} 등록하기
-        </button>
-
-        {/* 로그인하기 버튼 */}
+        {/* 로그인 버튼 */}
         <button
           onClick={() => navigate(`/login/${role}`)}
+          className="w-full py-4 rounded-lg text-white font-semibold bg-primary"
+        >
+          로그인 하기
+        </button>
+
+        {/* 등록하기 섹션 */}
+        {role === 'elder' && (
+          <p className="text-lg font-semibold text-center mb-2">
+            아직 등록이 안되어있다면?
+          </p>
+        )}
+        <button
+          onClick={() => navigate(`/signup/${role}`)}
           className="w-full py-4 rounded-lg font-semibold border-2 bg-white border-primary text-primary"
         >
-          {roleName} 로그인하기
+          등록하기
         </button>
       </div>
     </div>
