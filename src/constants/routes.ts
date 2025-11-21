@@ -5,14 +5,15 @@ export const ROUTES = {
   DETAIL: '/detail/:id',
   MEDICINE: '/medicine',
   MEDICINE_REGISTER: '/medicine/register',
-  MEDICINE_DETAIL: '/medicine/:id',
+  MEDICINE_DETAIL: '/medicine/detail',
+  MEDICINE_PREVIOUS: '/medicine/previous',
   MYPAGE: '/mypage',
   REPORT: '/report',
 } as const;
 
 // Footer에 표시되는 경로들
 export const FOOTER_ROUTES = [
-  ROUTES.HOME,
+  '/home',
   ROUTES.DETAIL,
   ROUTES.MEDICINE_REGISTER,
   ROUTES.MYPAGE,
@@ -35,6 +36,9 @@ export const getPageTitle = (pathname: string): string => {
 
   // 동적 경로 처리 (/medicine/:id 같은 경우)
   if (pathname.startsWith('/medicine/')) {
+    if (pathname.startsWith('/medicine/previous')) {
+      return '이전 처방전 확인하기';
+    }
     return '약 확인하기';
   }
 
@@ -54,5 +58,13 @@ export const isFooterPage = (pathname: string): boolean => {
 
 // 홈 페이지인지 확인
 export const isHomePage = (pathname: string): boolean => {
-  return pathname === ROUTES.HOME || pathname === ROUTES.ELDER_HOME;
+  return pathname === '/home' || pathname === ROUTES.ELDER_HOME;
+};
+
+export const isAuthPage = (pathname: string): boolean => {
+  return (
+    pathname === ROUTES.HOME ||
+    pathname.includes('/signup') ||
+    pathname.includes('/login')
+  );
 };
