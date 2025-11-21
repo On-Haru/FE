@@ -2,7 +2,7 @@
 export const ROUTES = {
   HOME: '/',
   ELDER_HOME: '/elder',
-  CALENDAR: '/calendar',
+  DETAIL: '/detail/:id',
   MEDICINE: '/medicine',
   MEDICINE_REGISTER: '/medicine/register',
   MEDICINE_DETAIL: '/medicine/:id',
@@ -13,14 +13,13 @@ export const ROUTES = {
 // Footer에 표시되는 경로들
 export const FOOTER_ROUTES = [
   ROUTES.HOME,
-  ROUTES.CALENDAR,
+  ROUTES.DETAIL,
   ROUTES.MEDICINE_REGISTER,
   ROUTES.MYPAGE,
 ] as const;
 
 // 페이지 제목 매핑
 export const PAGE_TITLES: Record<string, string> = {
-  [ROUTES.CALENDAR]: '복약 현황',
   [ROUTES.MEDICINE]: '처방전',
   [ROUTES.MEDICINE_REGISTER]: '약 등록하기',
   [ROUTES.MYPAGE]: '마이페이지',
@@ -37,6 +36,11 @@ export const getPageTitle = (pathname: string): string => {
   // 동적 경로 처리 (/medicine/:id 같은 경우)
   if (pathname.startsWith('/medicine/')) {
     return '약 확인하기';
+  }
+
+  // 동적 경로 처리 (/detail/:id 같은 경우)
+  if (pathname.startsWith('/detail/')) {
+    return '노인 상세';
   }
 
   return '';

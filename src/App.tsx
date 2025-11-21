@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import Layout from './Layout/Layout'
-import CalendarPage from './pages/Calendar/CalendarPage'
+import DetailPage from './pages/Detail/DetailPage'
 import ElderPage from './pages/Elder/ElderPage'
 import HomePage from './pages/Home/HomePage'
 import LoginPage from './pages/Login/LoginPage'
@@ -16,7 +16,7 @@ function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/detail/:id" element={<DetailPage />} />
         <Route path="/elder" element={<ElderPage />} />
         <Route path="/medicine" element={<MedicineListPage />} />
         <Route path="/medicine/:id" element={<MedicineDetailPage />} />
