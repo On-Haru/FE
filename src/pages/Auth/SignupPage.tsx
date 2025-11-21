@@ -13,9 +13,38 @@ const SignupPage = () => {
   const location = useLocation();
   const isStep2 = location.pathname.endsWith('/info');
 
-  // 1단계 상태
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [password, setPassword] = useState('');
+  // sessionStorage 키
+  const STORAGE_KEY = `signup_${role}`;
+
+  // 1단계 상태 - sessionStorage에서 초기값 로드
+  const [phoneNumber, setPhoneNumber] = useState(() => {
+    if (isStep2) {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          return data.phoneNumber || '';
+        } catch {
+          return '';
+        }
+      }
+    }
+    return '';
+  });
+  const [password, setPassword] = useState(() => {
+    if (isStep2) {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          return data.password || '';
+        } catch {
+          return '';
+        }
+      }
+    }
+    return '';
+  });
 
   // 2단계 상태
   const [name, setName] = useState('');
@@ -33,6 +62,25 @@ const SignupPage = () => {
       navigate('/');
     }
   }, [role, navigate]);
+
+  // 2단계에서 1단계 데이터가 없으면 1단계로 리다이렉트
+  useEffect(() => {
+    if (isStep2) {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      if (!saved) {
+        navigate(`/${role}/signup`);
+      } else {
+        try {
+          const data = JSON.parse(saved);
+          if (!data.phoneNumber || !data.password) {
+            navigate(`/${role}/signup`);
+          }
+        } catch {
+          navigate(`/${role}/signup`);
+        }
+      }
+    }
+  }, [isStep2, role, navigate, STORAGE_KEY]);
 
   // 외부 클릭 시 연도 드롭다운 닫기
   useEffect(() => {
@@ -58,6 +106,14 @@ const SignupPage = () => {
 
   const handleStep1Submit = (e: React.FormEvent) => {
     e.preventDefault();
+    // 1단계 데이터를 sessionStorage에 저장
+    sessionStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        phoneNumber,
+        password,
+      })
+    );
     // 모든 역할은 2단계로 이동
     navigate(`/${role}/signup/info`);
   };
@@ -78,6 +134,9 @@ const SignupPage = () => {
         name,
         birthYear: Number(birthYear),
       });
+
+      // 회원가입 성공 시 sessionStorage 정리
+      sessionStorage.removeItem(STORAGE_KEY);
 
       navigate(`/${role}/login`);
     } catch (error) {
@@ -115,7 +174,6 @@ const SignupPage = () => {
 
             <AuthInput
               id="password"
-              area-hidden="true"
               label="비밀번호"
               type="password"
               value={password}
