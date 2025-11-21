@@ -61,8 +61,7 @@ export const isAuthPage = (pathname: string): boolean => {
   return (
     pathname === ROUTES.HOME ||
     pathname.endsWith('/auth-select') ||
-    pathname.startsWith('/signup') ||
-    pathname.startsWith('/login') ||
-    pathname.includes('/auth-select')
+    pathname.includes('/signup') ||
+    pathname.includes('/login')
   );
 };

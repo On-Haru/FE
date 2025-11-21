@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect } from 'react';
+import { ChevronLeft } from 'lucide-react';
 
 const AuthSelectPage = () => {
   const navigate = useNavigate();
@@ -18,7 +19,14 @@ const AuthSelectPage = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4">
+    <div className="flex flex-col items-center justify-center h-full w-full p-4 relative">
+      {/* 뒤로가기 버튼 */}
+      <button
+        onClick={() => navigate('/')}
+        className="absolute top-4 left-4 flex items-center justify-center w-10 h-10 hover:opacity-70"
+      >
+        <ChevronLeft className="w-6 h-6" />
+      </button>
       {/* 로고 */}
       <div className="mb-12">
         <img src="/logo.svg" alt="하루온" className="h-16" />
@@ -28,21 +36,21 @@ const AuthSelectPage = () => {
       <div className="w-full max-w-sm space-y-4">
         {/* 로그인 버튼 */}
         <button
-          onClick={() => navigate(`/login/${role}`)}
-          className="w-full py-4 rounded-lg text-white font-semibold bg-primary"
+          onClick={() => navigate(`/${role}/login`)}
+          className={`w-full rounded-lg text-white font-semibold bg-primary ${role === 'elder' ? 'py-5 text-xl' : 'py-4'}`}
         >
           로그인 하기
         </button>
 
         {/* 등록하기 섹션 */}
         {role === 'elder' && (
-          <p className="text-lg font-semibold text-center mb-2">
+          <p className="text-xl font-semibold text-center mb-2">
             아직 등록이 안되어있다면?
           </p>
         )}
         <button
-          onClick={() => navigate(`/signup/${role}`)}
-          className="w-full py-4 rounded-lg font-semibold border-2 bg-white border-primary text-primary"
+          onClick={() => navigate(`/${role}/signup`)}
+          className={`w-full rounded-lg font-semibold border-2 bg-white border-primary text-primary ${role === 'elder' ? 'py-5 text-xl' : 'py-4'}`}
         >
           등록하기
         </button>
