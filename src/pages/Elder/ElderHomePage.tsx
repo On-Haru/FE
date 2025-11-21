@@ -42,7 +42,7 @@ const ElderHomePage = () => {
 
   // 보호자가 연결된 경우 - 메인 홈화면
   return (
-    <div className="flex flex-col pb-4">
+    <div className="flex flex-col pb-6">
       <DateTimeDisplay />
       <GreetingCard userName={userName} />
       <MissedMedicationAlert missedMedication={missedMedication} />

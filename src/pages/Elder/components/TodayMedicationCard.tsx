@@ -18,20 +18,20 @@ const TodayMedicationCard = ({
   const timeConfig = {
     morning: {
       label: '아침 약',
-      bgColor: 'var(--morning-secondary)',
-      iconColor: 'var(--morning-primary)',
+      bgColor: 'var(--color-morning-secondary)',
+      iconColor: 'var(--color-morning-primary)',
       icon: Sun,
     },
     lunch: {
       label: '점심 약',
-      bgColor: 'var(--lunch-secondary)',
-      iconColor: 'var(--lunch-primary)',
+      bgColor: 'var(--color-lunch-secondary)',
+      iconColor: 'var(--color-lunch-primary)',
       icon: Sun,
     },
     evening: {
       label: '저녁 약',
-      bgColor: 'var(--evening-secondary)',
-      iconColor: 'var(--evening-primary)',
+      bgColor: 'var(--color-evening-secondary)',
+      iconColor: 'var(--color-evening-primary)',
       icon: Moon,
     },
   };
@@ -40,7 +40,7 @@ const TodayMedicationCard = ({
   const Icon = config.icon;
 
   return (
-    <div className="px-4 mb-3">
+    <div className="mb-3">
       <div
         className="rounded-2xl px-6 py-4 flex items-center justify-between"
         style={{ backgroundColor: config.bgColor }}
@@ -61,11 +61,17 @@ const TodayMedicationCard = ({
         </div>
         <div className="flex-shrink-0">
           {isTaken ? (
-            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-morning-primary">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: 'var(--color-morning-primary)' }}
+            >
               <Check className="w-5 h-5 text-white" />
             </div>
           ) : (
-            <button className="px-4 py-2 text-white text-sm font-medium rounded-lg bg-lunch-primary">
+            <button
+              className="px-4 py-2 text-white text-sm font-medium rounded-lg"
+              style={{ backgroundColor: 'var(--color-lunch-primary)' }}
+            >
               복용 예정
             </button>
           )}

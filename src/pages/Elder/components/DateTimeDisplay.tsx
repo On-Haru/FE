@@ -23,7 +23,7 @@ const DateTimeDisplay = () => {
   const formattedDate = `${year}년 ${month}월 ${date}일`;
   const formattedTime = `${timePeriod} ${displayHours12}시 ${String(minutes).padStart(2, '0')}분`;
   return (
-    <div className="px-4 py-2">
+    <div className="px-4 pt-4 pb-2">
       <p className="text-base text-gray-700">
         {formattedDate} {formattedTime}
       </p>

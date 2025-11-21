@@ -19,8 +19,10 @@ const TodayMedicationList = ({ medications }: TodayMedicationListProps) => {
   }
 
   return (
-    <div className="px-4 mb-4">
-      <h2 className="text-lg font-semibold text-gray-800 mb-3">오늘의 약</h2>
+    <div className="px-4">
+      <h2 className="text-lg font-semibold text-gray-800 mb-3 px-4">
+        오늘의 약
+      </h2>
       <div>
         {medications.map((medication, index) => (
           <TodayMedicationCard
