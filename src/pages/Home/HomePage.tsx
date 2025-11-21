@@ -29,10 +29,10 @@ const HomePage = () => {
           },
           {
             id: '2',
-            name: '박관절',
-            todayStatus: { takenCount: 2, totalCount: 3 },
+            name: '이노인',
+            todayStatus: { takenCount: 3, totalCount: 3 },
             missedMedications: [],
-            statusMessage: '저녁 약을 복용할 시간입니다.',
+            statusMessage: '오늘의 약을 다 복용하였습니다.',
           },
         ];
 

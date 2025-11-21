@@ -46,7 +46,7 @@ const CaregiverConnectionPage = () => {
             피보호자 연결하기
           </h1>
           <p className="text-sm text-gray-600">
-            어르신 홈화면에 표시되는 연결 코드를 입력하세요
+            피보호자의 홈화면에 표시되는 연결 코드를 입력하세요
           </p>
         </div>
 
@@ -85,11 +85,6 @@ const CaregiverConnectionPage = () => {
             연결하기
           </button>
         </form>
-
-        {/* 안내 텍스트 */}
-        <p className="text-xs text-gray-500 text-center leading-relaxed">
-          어르신 홈화면 우측 상단에 표시되는 4자리 숫자를 입력해주세요.
-        </p>
       </div>
     </div>
   );

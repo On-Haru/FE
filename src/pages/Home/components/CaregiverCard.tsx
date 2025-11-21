@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { CareRecipient } from '@/types/caregiver';
 import MedicationProgressBar from './MedicationProgressBar';
 import DisconnectConfirmModal from './DisconnectConfirmModal';
@@ -11,6 +12,7 @@ interface CaregiverCardProps {
 }
 
 const CaregiverCard = ({ recipient, onDisconnect }: CaregiverCardProps) => {
+  const navigate = useNavigate();
   const { id, name, todayStatus, missedMedications, statusMessage } = recipient;
   const [showModal, setShowModal] = useState(false);
 
@@ -21,8 +23,14 @@ const CaregiverCard = ({ recipient, onDisconnect }: CaregiverCardProps) => {
     evening: '저녁',
   };
 
-  // 연결 해제하기 버튼 클릭 핸들러
-  const handleDisconnectClick = () => {
+  // 카드 클릭 핸들러 - 달력 페이지로 이동
+  const handleCardClick = () => {
+    navigate(`/detail/${id}`);
+  };
+
+  // 연결 해제하기 버튼 클릭 핸들러 - 카드 클릭 이벤트 전파 방지
+  const handleDisconnectClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
     setShowModal(true);
   };
 
@@ -38,7 +46,10 @@ const CaregiverCard = ({ recipient, onDisconnect }: CaregiverCardProps) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6 mb-4">
+    <div
+      onClick={handleCardClick}
+      className="bg-white rounded-xl border border-gray-200 p-6 mb-4 cursor-pointer hover:bg-gray-50 hover:-translate-y-0.5 transition-all duration-200"
+    >
       {/* 상단: 이름 + 연결 해제하기 */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-900">{name} 님</h2>
