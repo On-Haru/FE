@@ -33,7 +33,7 @@ const Footer = () => {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center gap-1 ${
+              className={`flex flex-col flex-1 items-center gap-1 ${
                 isActive ? 'text-primary' : 'text-gray-500'
               }`}
             >
