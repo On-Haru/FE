@@ -5,7 +5,10 @@ interface GreetingCardProps {
 const GreetingCard = ({ userName }: GreetingCardProps) => {
   return (
     <div className="px-4 mb-4">
-      <div className="bg-[#E6F2E7] rounded-2xl px-6 py-4">
+      <div
+        className="rounded-2xl px-6 py-4"
+        style={{ backgroundColor: 'var(--morning-secondary)' }}
+      >
         <p className="text-lg font-medium text-white">
           안녕하세요, {userName}님!
         </p>
