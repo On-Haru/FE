@@ -4,18 +4,18 @@ const RoleSelectPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full p-4">
+    <div className="flex flex-col items-center justify-between h-full w-full p-4">
       {/* 로고 */}
-      <div className="mb-12">
-        <img src="/logo.svg" alt="하루온" className="h-16" />
+      <div className="flex-1 flex items-center justify-center">
+        <img src="/logo.svg" alt="하루온" className="h-30" />
       </div>
 
       {/* 버튼들 */}
-      <div className="w-full max-w-sm space-y-4 mt-8">
+      <div className="w-full max-w-xs space-y-4 mb-8">
         {/* 본인 버튼 */}
         <button
           onClick={() => navigate('/elder/auth-select')}
-          className="w-full py-5 rounded-lg font-semibold border-2 bg-primary border-white text-white text-lg"
+          className="w-full py-6 rounded-lg font-semibold border-2 bg-primary border-white text-white text-xl"
         >
           본인
         </button>

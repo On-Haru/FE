@@ -1,6 +1,6 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ChevronLeft, ChevronDown } from 'lucide-react';
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -15,6 +15,8 @@ const SignupPage = () => {
   // 2단계 상태
   const [name, setName] = useState('');
   const [birthYear, setBirthYear] = useState('');
+  const [isYearOpen, setIsYearOpen] = useState(false);
+  const yearDropdownRef = useRef<HTMLDivElement>(null);
 
   // 연도 목록 생성 (현재 연도부터 100년 전까지)
   const currentYear = new Date().getFullYear();
@@ -26,6 +28,23 @@ const SignupPage = () => {
       navigate('/');
     }
   }, [role, navigate]);
+
+  // 외부 클릭 시 연도 드롭다운 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        yearDropdownRef.current &&
+        !yearDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsYearOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // role이 없거나 유효하지 않으면 아무것도 렌더링하지 않음
   if (!role || (role !== 'elder' && role !== 'caregiver')) {
@@ -168,20 +187,43 @@ const SignupPage = () => {
           >
             태어난 연도
           </label>
-          <select
-            id="birthYear"
-            value={birthYear}
-            onChange={(e) => setBirthYear(e.target.value)}
-            className={`w-full px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary appearance-none bg-white ${role === 'elder' ? 'py-4 text-lg' : 'py-3'}`}
-            required
-          >
-            <option value="">연도를 선택해주세요</option>
-            {years.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
+          <div className="relative" ref={yearDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsYearOpen(!isYearOpen)}
+              className={`w-full px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary bg-white flex items-center justify-between ${role === 'elder' ? 'py-4 text-lg' : 'py-3'}`}
+            >
+              <span className={birthYear ? '' : 'text-gray-400'}>
+                {birthYear || '연도를 선택해주세요'}
+              </span>
+              <ChevronDown
+                className={`w-5 h-5 text-gray-600 transition-transform ${isYearOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+
+            {/* 드롭다운 메뉴 */}
+            {isYearOpen && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-md z-50 max-h-60 overflow-y-auto">
+                {years.map((year) => (
+                  <button
+                    key={year}
+                    type="button"
+                    onClick={() => {
+                      setBirthYear(year.toString());
+                      setIsYearOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 transition-colors focus:outline-none ${
+                      birthYear === year.toString()
+                        ? 'bg-primary/10 text-primary font-medium'
+                        : 'text-gray-900 hover:bg-gray-50'
+                    } ${role === 'elder' ? 'text-lg' : ''}`}
+                  >
+                    {year}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 버튼 */}
