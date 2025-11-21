@@ -44,10 +44,8 @@ export const getPageTitle = (pathname: string): string => {
 
 // Footer 페이지인지 확인
 export const isFooterPage = (pathname: string): boolean => {
-  return (
-    (FOOTER_ROUTES as readonly string[]).includes(pathname) ||
-    pathname.startsWith('/medicine')
-  );
+  // FOOTER_ROUTES에 명시적으로 포함된 경로만 Footer 페이지
+  return (FOOTER_ROUTES as readonly string[]).includes(pathname);
 };
 
 // 홈 페이지인지 확인
