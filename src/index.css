@@ -36,6 +36,22 @@ body {
   position: relative;
 }
 
+/* 모바일 기기에서는 전체 화면 사용 */
+@media (max-width: 768px) {
+  #root {
+    padding: 0;
+    background-color: white;
+  }
+
+  .mobile-container {
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    box-shadow: none;
+  }
+}
+
 .mobile-content {
   width: 100%;
   height: 100%;
