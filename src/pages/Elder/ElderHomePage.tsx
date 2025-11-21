@@ -1,19 +1,24 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import ConnectionCodeScreen from './components/ConnectionCodeScreen';
 import DateTimeDisplay from './components/DateTimeDisplay';
 import GreetingCard from './components/GreetingCard';
 import MissedMedicationAlert from './components/MissedMedicationAlert';
 import TodayMedicationList from './components/TodayMedicationList';
-import { type MedicationTime } from './components/TodayMedicationCard';
+import MedicationReminderModal from './components/MedicationReminderModal';
+import {
+  type Medication,
+  type MedicationTime,
+} from './components/TodayMedicationCard';
 
 const ElderHomePage = () => {
   // TODO: API 연동 시 실제 데이터로 교체
+  // 테스트: false로 변경하면 보호자 미연결 화면 확인 가능
   const [hasGuardian] = useState<boolean>(true); // 임시: 보호자 연결 여부
   const connectionCode = '0837'; // 임시: 연결 코드
   const userName = '홍길동'; // 임시: 사용자 이름
 
   // 임시: 오늘의 약 데이터 (state로 관리)
-  const [todayMedications, setTodayMedications] = useState([
+  const [todayMedications, setTodayMedications] = useState<Medication[]>([
     {
       id: 1,
       time: 'morning' as MedicationTime,
@@ -37,11 +42,25 @@ const ElderHomePage = () => {
     },
   ]);
 
+  // 모달 상태 관리
+  const [showReminderModal, setShowReminderModal] = useState(false);
+  const [reminderMedication, setReminderMedication] = useState<Pick<
+    Medication,
+    'id' | 'time' | 'medicationName' | 'dosage'
+  > | null>(null);
+
   // 약 복용 처리 함수
   const handleMedicationTaken = (id: number) => {
     setTodayMedications((prev) =>
       prev.map((med) => (med.id === id ? { ...med, isTaken: true } : med))
     );
+  };
+
+  // 모달에서 복용 버튼 클릭 시
+  const handleModalTake = () => {
+    if (reminderMedication) {
+      handleMedicationTaken(reminderMedication.id);
+    }
   };
 
   // 복용 예정 약을 먼저, 복용된 약을 나중에 정렬
@@ -51,6 +70,41 @@ const ElderHomePage = () => {
       return a.isTaken ? 1 : -1;
     });
   }, [todayMedications]);
+
+  // 약 복용 시간 체크 (임시: 실제로는 API나 설정에서 가져올 것)
+  useEffect(() => {
+    // TODO: 실제 복용 시간과 현재 시간을 비교하여 모달 표시
+    // 예시: 점심약 복용 시간이 되면 모달 표시
+    const checkMedicationTime = () => {
+      // 점심약 복용 시간 (12시) 예시
+      // 실제로는 각 약의 복용 시간을 확인해야 함
+      const pendingMedication = sortedMedications.find(
+        (med) => !med.isTaken && med.time === 'lunch'
+      );
+
+      // 임시: 테스트를 위해 항상 점심약이 있으면 모달 표시 (실제로는 시간 체크 필요)
+      // const now = new Date();
+      // const currentHour = now.getHours();
+      // if (currentHour === 12 && pendingMedication) {
+      if (pendingMedication && !showReminderModal) {
+        setReminderMedication({
+          id: pendingMedication.id,
+          time: pendingMedication.time,
+          medicationName: pendingMedication.medicationName,
+          dosage: pendingMedication.dosage,
+        });
+        setShowReminderModal(true);
+      }
+    };
+
+    // 초기 체크
+    checkMedicationTime();
+
+    // 1분마다 체크 (실제로는 더 정확한 타이밍 필요)
+    const interval = setInterval(checkMedicationTime, 60000);
+
+    return () => clearInterval(interval);
+  }, [sortedMedications, showReminderModal]);
 
   // 복용 예정인 약 찾기
   const pendingMedications = sortedMedications.filter((med) => !med.isTaken);
@@ -81,18 +135,27 @@ const ElderHomePage = () => {
 
   // 보호자가 연결된 경우 - 메인 홈화면
   return (
-    <div className="flex flex-col pb-6">
-      <DateTimeDisplay />
-      <GreetingCard userName={userName} />
-      <MissedMedicationAlert
-        missedMedication={missedMedication}
-        hasNoMedication={allMedicationsTaken}
-      />
-      <TodayMedicationList
-        medications={sortedMedications}
-        onMedicationTaken={handleMedicationTaken}
-      />
-    </div>
+    <>
+      <div className="flex flex-col pb-6">
+        <DateTimeDisplay />
+        <GreetingCard userName={userName} />
+        <MissedMedicationAlert
+          missedMedication={missedMedication}
+          hasNoMedication={allMedicationsTaken}
+        />
+        <TodayMedicationList medications={sortedMedications} />
+      </div>
+      {showReminderModal && reminderMedication && (
+        <MedicationReminderModal
+          medication={reminderMedication}
+          onTake={handleModalTake}
+          onClose={() => {
+            setShowReminderModal(false);
+            setReminderMedication(null);
+          }}
+        />
+      )}
+    </>
   );
 };
 

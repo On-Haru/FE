@@ -1,24 +1,10 @@
-import TodayMedicationCard, {
-  type MedicationTime,
-} from './TodayMedicationCard';
-
-interface Medication {
-  id: number;
-  time: MedicationTime;
-  medicationName: string;
-  dosage: string;
-  isTaken: boolean;
-}
+import TodayMedicationCard, { type Medication } from './TodayMedicationCard';
 
 interface TodayMedicationListProps {
   medications: Medication[];
-  onMedicationTaken: (id: number) => void;
 }
 
-const TodayMedicationList = ({
-  medications,
-  onMedicationTaken,
-}: TodayMedicationListProps) => {
+const TodayMedicationList = ({ medications }: TodayMedicationListProps) => {
   if (medications.length === 0) {
     return null;
   }
@@ -32,12 +18,10 @@ const TodayMedicationList = ({
         {medications.map((medication) => (
           <TodayMedicationCard
             key={medication.id}
-            id={medication.id}
             time={medication.time}
             medicationName={medication.medicationName}
             dosage={medication.dosage}
             isTaken={medication.isTaken}
-            onMedicationTaken={onMedicationTaken}
           />
         ))}
       </div>

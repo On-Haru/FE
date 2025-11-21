@@ -11,11 +11,8 @@ const ConnectionCodeScreen = ({
         <p className="text-2xl text-gray-700 mb-6">
           보호자와 코드를 연결하세요
         </p>
-        <div
-          className="rounded-2xl px-10 py-16 mb-4"
-          style={{ backgroundColor: 'var(--color-morning-secondary)' }}
-        >
-          <p className="text-9xl font-bold text-black">{connectionCode}</p>
+        <div className="rounded-2xl px-10 py-16 mb-4">
+          <p className="text-9xl font-bold text-primary">{connectionCode}</p>
         </div>
       </div>
     </div>
