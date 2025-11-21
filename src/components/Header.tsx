@@ -5,8 +5,14 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const footerPaths = ['/', '/calendar', '/medicine', '/mypage'];
+
   const isHomePage =
     location.pathname === '/' || location.pathname === '/elder';
+
+  const isFooterPage =
+    footerPaths.includes(location.pathname) ||
+    location.pathname.startsWith('/medicine');
 
   const getTitle = () => {
     const path = location.pathname;
@@ -27,6 +33,11 @@ const Header = () => {
         <div className="flex-1 flex justify-center">
           <img src="/logo.svg" alt="하루온" className="h-8" />
         </div>
+      ) : isFooterPage ? (
+        // Footer 페이지: 제목만 중앙에 (뒤로가기 버튼 없음))
+        <h1 className="absolute left-1/2 -translate-x-1/2 text-center font-semibold whitespace-nowrap">
+          {getTitle()}
+        </h1>
       ) : (
         // 다른 페이지: 뒤로가기 + 제목
         <>
