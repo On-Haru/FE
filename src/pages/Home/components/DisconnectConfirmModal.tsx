@@ -1,3 +1,5 @@
+import { createPortal } from 'react-dom';
+
 interface DisconnectConfirmModalProps {
   /** 모달 열림 여부 */
   isOpen: boolean;
@@ -17,9 +19,9 @@ const DisconnectConfirmModal = ({
 }: DisconnectConfirmModalProps) => {
   if (!isOpen) return null;
 
-  return (
+  const modalContent = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      className="absolute inset-0 bg-black/50 flex items-center justify-center z-50"
       onClick={onCancel}
     >
       <div
@@ -54,6 +56,14 @@ const DisconnectConfirmModal = ({
       </div>
     </div>
   );
+
+  // mobile-content 요소 찾기
+  const mobileContent = document.querySelector('.mobile-content');
+  if (mobileContent) {
+    return createPortal(modalContent, mobileContent);
+  }
+
+  return modalContent;
 };
 
 export default DisconnectConfirmModal;
