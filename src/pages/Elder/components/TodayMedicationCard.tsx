@@ -1,26 +1,30 @@
-import { Sun, Moon, Check } from 'lucide-react';
+import { SunDim, Sun, Moon, Check } from 'lucide-react';
 
 export type MedicationTime = 'morning' | 'lunch' | 'evening';
 
 interface TodayMedicationCardProps {
+  id: number;
   time: MedicationTime;
   medicationName: string;
   dosage: string;
   isTaken: boolean;
+  onMedicationTaken: (id: number) => void;
 }
 
 const TodayMedicationCard = ({
+  id,
   time,
   medicationName,
   dosage,
   isTaken,
+  onMedicationTaken,
 }: TodayMedicationCardProps) => {
   const timeConfig = {
     morning: {
       label: '아침 약',
       bgColor: 'var(--color-morning-secondary)',
       iconColor: 'var(--color-morning-primary)',
-      icon: Sun,
+      icon: SunDim,
     },
     lunch: {
       label: '점심 약',
@@ -39,22 +43,32 @@ const TodayMedicationCard = ({
   const config = timeConfig[time];
   const Icon = config.icon;
 
+  // 복용된 경우 회색으로 변경
+  const cardBgColor = isTaken ? '#E5E5E5' : config.bgColor;
+  const iconColor = isTaken ? '#9CA3AF' : config.iconColor;
+  const textColor = isTaken ? '#9CA3AF' : undefined;
+
   return (
     <div className="mb-3">
       <div
-        className="rounded-2xl px-6 py-4 flex items-center justify-between"
-        style={{ backgroundColor: config.bgColor }}
+        className={`rounded-2xl px-6 py-4 flex items-center justify-between ${
+          !isTaken ? 'hover:opacity-90 transition-opacity cursor-pointer' : ''
+        }`}
+        style={{ backgroundColor: cardBgColor }}
       >
         <div className="flex items-center gap-3 flex-1">
           <Icon
-            className="w-6 h-6 flex-shrink-0"
-            style={{ color: config.iconColor }}
+            className="w-10 h-10 flex-shrink-0"
+            style={{ color: iconColor }}
           />
           <div className="flex-1">
-            <p className="text-base font-medium text-gray-800 mb-1">
+            <p
+              className="text-xl font-medium mb-2"
+              style={{ color: textColor || '#1F2937' }}
+            >
               {config.label}
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-lg" style={{ color: textColor || '#4B5563' }}>
               {medicationName} {dosage}
             </p>
           </div>
@@ -62,15 +76,15 @@ const TodayMedicationCard = ({
         <div className="flex-shrink-0">
           {isTaken ? (
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: 'var(--color-morning-primary)' }}
+              className="w-12 h-12 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: '#9CA3AF' }}
             >
-              <Check className="w-5 h-5 text-white" />
+              <Check className="w-7 h-7 text-white" />
             </div>
           ) : (
             <button
-              className="px-4 py-2 text-white text-sm font-medium rounded-lg"
-              style={{ backgroundColor: 'var(--color-lunch-primary)' }}
+              onClick={() => onMedicationTaken(id)}
+              className="px-4 py-2 text-white text-base font-medium rounded-lg hover:opacity-90 transition-opacity"
             >
               복용 예정
             </button>

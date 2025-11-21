@@ -1,9 +1,7 @@
+import ElderHomePage from './ElderHomePage';
+
 const ElderPage = () => {
-  return (
-    <div>
-      <h1>Elder</h1>
-    </div>
-  );
+  return <ElderHomePage />;
 };
 
 export default ElderPage;

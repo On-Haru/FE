@@ -24,8 +24,8 @@ const DateTimeDisplay = () => {
   const formattedTime = `${timePeriod} ${displayHours12}시 ${String(minutes).padStart(2, '0')}분`;
   return (
     <div className="px-4 pt-4 pb-2">
-      <p className="text-base text-gray-700">
-        {formattedDate} {formattedTime}
+      <p className="text-xl text-gray-700">
+        {formattedDate} | {formattedTime}
       </p>
     </div>
   );
