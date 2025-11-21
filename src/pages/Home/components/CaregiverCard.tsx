@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import type { CareRecipient } from '@/types/caregiver';
 import MedicationProgressBar from './MedicationProgressBar';
+import DisconnectConfirmModal from './DisconnectConfirmModal';
 
 interface CaregiverCardProps {
   /** 피보호자 정보 */
@@ -10,6 +12,7 @@ interface CaregiverCardProps {
 
 const CaregiverCard = ({ recipient, onDisconnect }: CaregiverCardProps) => {
   const { id, name, todayStatus, missedMedications, statusMessage } = recipient;
+  const [showModal, setShowModal] = useState(false);
 
   // 시간 라벨 매핑
   const timeLabels: Record<'morning' | 'lunch' | 'evening', string> = {
@@ -18,10 +21,20 @@ const CaregiverCard = ({ recipient, onDisconnect }: CaregiverCardProps) => {
     evening: '저녁',
   };
 
-  // 연결 해제 핸들러
-  const handleDisconnect = () => {
-    // TODO: 확인 모달 추가 (10단계에서 구현)
+  // 연결 해제하기 버튼 클릭 핸들러
+  const handleDisconnectClick = () => {
+    setShowModal(true);
+  };
+
+  // 모달에서 확인 클릭 핸들러
+  const handleConfirm = () => {
     onDisconnect(id);
+    setShowModal(false);
+  };
+
+  // 모달에서 취소 클릭 핸들러
+  const handleCancel = () => {
+    setShowModal(false);
   };
 
   return (
@@ -30,7 +43,7 @@ const CaregiverCard = ({ recipient, onDisconnect }: CaregiverCardProps) => {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-900">{name} 님</h2>
         <button
-          onClick={handleDisconnect}
+          onClick={handleDisconnectClick}
           className="text-sm text-red-500 underline hover:text-red-600 transition-colors"
         >
           연결 해제하기
@@ -68,6 +81,14 @@ const CaregiverCard = ({ recipient, onDisconnect }: CaregiverCardProps) => {
           </p>
         )}
       </div>
+
+      {/* 연결 해제 확인 모달 */}
+      <DisconnectConfirmModal
+        isOpen={showModal}
+        recipientName={name}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 };
