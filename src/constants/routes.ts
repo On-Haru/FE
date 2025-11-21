@@ -9,6 +9,8 @@ export const ROUTES = {
   MYPAGE: '/mypage',
   REPORT: '/report',
   ROLE_SELECT: '/role-select',
+  ELDER_AUTH_SELECT: '/elder/auth-select',
+  CAREGIVER_AUTH_SELECT: '/caregiver/auth-select',
 } as const;
 
 // Footer에 표시되는 경로들
@@ -55,12 +57,14 @@ export const isFooterPage = (pathname: string): boolean => {
 
 // 홈 페이지인지 확인
 export const isHomePage = (pathname: string): boolean => {
-  return pathname === ROUTES.HOME || pathname === ROUTES.ELDER_HOME;
+  return pathname === '/home' || pathname === ROUTES.ELDER_HOME;
 };
 
 export const isAuthPage = (pathname: string): boolean => {
   return (
     pathname === ROUTES.ROLE_SELECT ||
+    pathname === ROUTES.ELDER_AUTH_SELECT ||
+    pathname === ROUTES.CAREGIVER_AUTH_SELECT ||
     pathname.startsWith('/signup') ||
     pathname.startsWith('/login') ||
     pathname.includes('/auth-select')
