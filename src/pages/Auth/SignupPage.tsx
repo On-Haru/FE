@@ -115,6 +115,7 @@ const SignupPage = () => {
 
             <AuthInput
               id="password"
+              area-hidden="true"
               label="비밀번호"
               type="password"
               value={password}
@@ -228,6 +229,7 @@ const SignupPage = () => {
         {/* 로그인 스타일과 위치 통일을 위한 공간 (로그인 페이지의 "아직 가입이 안되어있다면?" 버튼과 동일한 높이) */}
         <button
           type="button"
+          aria-hidden="true"
           className={`text-gray-600 mb-8 pointer-events-none ${role === 'elder' ? 'text-lg' : 'text-sm'}`}
           style={{ visibility: 'hidden' }}
         >
