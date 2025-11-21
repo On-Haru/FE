@@ -1,23 +1,33 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { House, Pill, Calendar, User } from 'lucide-react';
+import { FOOTER_ROUTES, ROUTES } from '@/constants/routes';
+
+const FOOTER_ITEMS = [
+  { label: '홈', path: FOOTER_ROUTES[0], icon: House },
+  { label: '달력', path: FOOTER_ROUTES[1], icon: Calendar },
+  {
+    label: '처방전',
+    path: FOOTER_ROUTES[2],
+    icon: Pill,
+    activePrefix: '/medicine',
+  },
+  { label: '마이페이지', path: FOOTER_ROUTES[3], icon: User },
+] as const;
 
 const Footer = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const items = [
-    { label: '홈', path: '/', icon: House },
-    { label: '달력', path: '/calendar', icon: Calendar },
-    { label: '처방전', path: '/medicine', icon: Pill },
-    { label: '마이페이지', path: '/mypage', icon: User },
-  ];
-
   return (
     <footer className="sticky h-15 bottom-0 bg-white border-t border-gray-200 z-10">
       <nav className="flex justify-around items-center py-3">
-        {items.map((item) => {
+        {FOOTER_ITEMS.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.path;
+          // 처방전 등록 페이지일 때도 활성화
+          const isActive =
+            location.pathname === item.path ||
+            ('activePrefix' in item &&
+              location.pathname.startsWith(item.activePrefix));
 
           return (
             <button
