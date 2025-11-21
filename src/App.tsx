@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import Layout from './Layout/Layout'
 import CalendarPage from './pages/Calendar/CalendarPage'
 import ElderPage from './pages/Elder/ElderPage'
 import HomePage from './pages/Home/HomePage'
@@ -12,15 +13,17 @@ import ReportPage from './pages/Report/ReportPage'
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/calendar" element={<CalendarPage />} />
-      <Route path="/elder" element={<ElderPage />} />
-      <Route path="/medicine" element={<MedicineListPage />} />
-      <Route path="/medicine/:id" element={<MedicineDetailPage />} />
-      <Route path="/medicine/register" element={<MedicineRegisterPage />} />
-      <Route path="/mypage" element={<MyPagePage />} />
-      <Route path="/report" element={<ReportPage />} />
+      <Route element={<Layout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/elder" element={<ElderPage />} />
+        <Route path="/medicine" element={<MedicineListPage />} />
+        <Route path="/medicine/:id" element={<MedicineDetailPage />} />
+        <Route path="/medicine/register" element={<MedicineRegisterPage />} />
+        <Route path="/mypage" element={<MyPagePage />} />
+        <Route path="/report" element={<ReportPage />} />
+      </Route>
     </Routes>
   )
 }
