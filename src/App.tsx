@@ -10,6 +10,7 @@ import MedicineRegisterPage from './pages/MedicineRegister/MedicineRegisterPage'
 import MyPagePage from './pages/MyPage/MyPagePage';
 import ReportPage from './pages/Report/ReportPage';
 import RoleSelectPage from './pages/RoleSelect/RoleSelectPage';
+import AuthSelectPage from './pages/AuthSelect/AuthSelectPage';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/medicine/register" element={<MedicineRegisterPage />} />
         <Route path="/mypage" element={<MyPagePage />} />
         <Route path="/report" element={<ReportPage />} />
+        <Route path="/:role/auth-select" element={<AuthSelectPage />} />
       </Route>
     </Routes>
   );
