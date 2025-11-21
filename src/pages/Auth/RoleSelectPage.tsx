@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { ROUTES } from '@/constants/routes';
 
 const RoleSelectPage = () => {
   const navigate = useNavigate();

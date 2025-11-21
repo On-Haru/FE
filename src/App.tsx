@@ -3,14 +3,14 @@ import Layout from './Layout/Layout';
 import DetailPage from './pages/Detail/DetailPage';
 import ElderPage from './pages/Elder/ElderPage';
 import HomePage from './pages/Home/HomePage';
-import LoginPage from './pages/Login/LoginPage';
+import LoginPage from './pages/Auth/LoginPage';
 import MedicineDetailPage from './pages/MedicineDetail/MedicineDetailPage';
 import MedicineListPage from './pages/MedicineList/MedicineListPage';
 import MedicineRegisterPage from './pages/MedicineRegister/MedicineRegisterPage';
 import MyPagePage from './pages/MyPage/MyPagePage';
 import ReportPage from './pages/Report/ReportPage';
-import RoleSelectPage from './pages/RoleSelect/RoleSelectPage';
-import AuthSelectPage from './pages/AuthSelect/AuthSelectPage';
+import RoleSelectPage from './pages/Auth/RoleSelectPage';
+import AuthSelectPage from './pages/Auth/AuthSelectPage';
 
 function App() {
   return (
