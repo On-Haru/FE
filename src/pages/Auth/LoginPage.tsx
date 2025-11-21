@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import BackButton from './components/BackButton';
 import AuthLogo from './components/AuthLogo';
 import AuthInput from './components/AuthInput';
+import { formatPhoneNumber } from '@/utils/phoneFormatter';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -41,10 +42,11 @@ const LoginPage = () => {
             label="전화번호"
             type="tel"
             value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
+            onChange={(e) => setPhoneNumber(formatPhoneNumber(e.target.value))}
             placeholder="전화번호를 입력하세요"
             required
             isElder={role === 'elder'}
+            maxLength={13}
           />
 
           {/* 버튼 */}
