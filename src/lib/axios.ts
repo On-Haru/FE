@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import axios, { type AxiosInstance, type InternalAxiosRequestConfig, type AxiosResponse, type AxiosError } from 'axios';
 import { getAccessToken, clearTokens } from './storage';
 
 /**
@@ -18,11 +18,11 @@ const axiosInstance: AxiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken();
-    
+
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     return config;
   },
   (error: AxiosError) => {
@@ -44,7 +44,7 @@ axiosInstance.interceptors.response.use(
       // 로그인 페이지로 리다이렉트 (필요시)
       // window.location.href = '/login';
     }
-    
+
     return Promise.reject(error);
   }
 );

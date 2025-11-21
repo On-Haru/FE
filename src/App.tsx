@@ -4,7 +4,6 @@ import DetailPage from './pages/Detail/DetailPage';
 import ElderPage from './pages/Elder/ElderPage';
 import HomePage from './pages/Home/HomePage';
 import LoginPage from './pages/Auth/LoginPage';
-import MedicineListPage from './pages/MedicineList/MedicineListPage';
 import RoleSelectPage from './pages/Auth/RoleSelectPage';
 import SignupPage from './pages/Auth/SignupPage';
 import PreviousMedicinePage from './pages/PreviousMedicine/PreviousMedicinePage'
@@ -34,5 +33,5 @@ function App() {
     </Routes>
   );
 }
-        
+
 export default App;
