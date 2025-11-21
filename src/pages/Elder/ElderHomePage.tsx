@@ -11,7 +11,6 @@ const ElderHomePage = () => {
   const [hasGuardian] = useState<boolean>(true); // 임시: 보호자 연결 여부
   const connectionCode = '0837'; // 임시: 연결 코드
   const userName = '홍길동'; // 임시: 사용자 이름
-  const missedMedication = '점심약 미복용'; // 임시: 미복용 약 정보
 
   // 임시: 오늘의 약 데이터 (state로 관리)
   const [todayMedications, setTodayMedications] = useState([
@@ -53,6 +52,28 @@ const ElderHomePage = () => {
     });
   }, [todayMedications]);
 
+  // 복용 예정인 약 찾기
+  const pendingMedications = sortedMedications.filter((med) => !med.isTaken);
+
+  // 미복용 약 메시지 생성
+  const getMissedMedicationMessage = () => {
+    if (pendingMedications.length === 0) return undefined;
+
+    const timeLabels: Record<MedicationTime, string> = {
+      morning: '아침약',
+      lunch: '점심약',
+      evening: '저녁약',
+    };
+
+    const missedTimes = pendingMedications.map((med) => timeLabels[med.time]);
+    return `${missedTimes.join(', ')} 미복용`;
+  };
+
+  const missedMedication = getMissedMedicationMessage();
+
+  // 모든 약이 복용되었는지 확인
+  const allMedicationsTaken = sortedMedications.every((med) => med.isTaken);
+
   // 보호자가 연결되지 않은 경우
   if (!hasGuardian) {
     return <ConnectionCodeScreen connectionCode={connectionCode} />;
@@ -63,7 +84,10 @@ const ElderHomePage = () => {
     <div className="flex flex-col pb-6">
       <DateTimeDisplay />
       <GreetingCard userName={userName} />
-      <MissedMedicationAlert missedMedication={missedMedication} />
+      <MissedMedicationAlert
+        missedMedication={missedMedication}
+        hasNoMedication={allMedicationsTaken}
+      />
       <TodayMedicationList
         medications={sortedMedications}
         onMedicationTaken={handleMedicationTaken}
