@@ -7,4 +7,3 @@ const MedicineDetailPage = () => {
 };
 
 export default MedicineDetailPage;
-
