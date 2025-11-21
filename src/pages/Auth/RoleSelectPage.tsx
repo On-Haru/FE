@@ -14,16 +14,16 @@ const RoleSelectPage = () => {
       <div className="w-full max-w-xs space-y-4 mb-8">
         {/* 본인 버튼 */}
         <button
-          onClick={() => navigate('/elder/auth-select')}
-          className="w-full py-6 rounded-lg font-semibold border-2 bg-primary border-white text-white text-xl"
+          onClick={() => navigate('/elder/login')}
+          className="w-full py-6 rounded-lg font-semibold bg-primary text-white text-xl shadow-md hover:bg-primary/90 transition-colors"
         >
-          본인
+          본인 등록하기
         </button>
 
         {/* 보호자 버튼 */}
         <button
-          onClick={() => navigate('/caregiver/auth-select')}
-          className="w-full py-5 rounded-lg font-semibold border-2 bg-white border-primary text-primary text-lg"
+          onClick={() => navigate('/caregiver/login')}
+          className="w-full py-5 rounded-lg font-semibold border-2 border-primary bg-white text-primary text-lg hover:bg-primary/5 transition-colors"
         >
           보호자
         </button>

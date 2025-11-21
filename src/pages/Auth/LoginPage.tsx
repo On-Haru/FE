@@ -28,20 +28,33 @@ const LoginPage = () => {
   };
   return (
     <div className="flex flex-col items-center justify-between h-full w-full p-4 relative">
-      <BackButton to={`/${role}/auth-select`} />
+      <BackButton to="/" />
       <AuthLogo />
       {/* 폼 */}
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6 mb-8">
-        <AuthInput
-          id="phone"
-          label="전화번호"
-          type="tel"
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-          placeholder="전화번호를 입력하세요"
-          required
-          isElder={role === 'elder'}
-        />
+      <div className="mt-auto w-full flex flex-col items-center">
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-sm space-y-6 mb-8"
+        >
+          <AuthInput
+            id="phone"
+            label="전화번호"
+            type="tel"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            placeholder="전화번호를 입력하세요"
+            required
+            isElder={role === 'elder'}
+          />
+
+          {/* 버튼 */}
+          <button
+            type="submit"
+            className={`w-full rounded-lg text-white font-semibold bg-primary ${role === 'elder' ? 'py-5 text-xl' : 'py-4 text-base'}`}
+          >
+            로그인
+          </button>
+        </form>
 
         <AuthInput
           id="password"
@@ -54,14 +67,14 @@ const LoginPage = () => {
           isElder={role === 'elder'}
         />
 
-        {/* 버튼 */}
+        {/* 회원가입 링크 표시 */}
         <button
-          type="submit"
-          className={`w-full rounded-lg text-white font-semibold bg-primary ${role === 'elder' ? 'py-5 text-xl' : 'py-4'}`}
+          onClick={() => navigate(`/${role}/signup`)}
+          className={`text-gray-600 hover:text-primary transition-colors mb-8 ${role === 'elder' ? 'text-lg' : 'text-sm'}`}
         >
-          로그인
+          아직 가입이 안되어있다면?
         </button>
-      </form>
+      </div>
     </div>
   );
 };

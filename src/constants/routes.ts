@@ -60,7 +60,6 @@ export const isHomePage = (pathname: string): boolean => {
 export const isAuthPage = (pathname: string): boolean => {
   return (
     pathname === ROUTES.HOME ||
-    pathname.endsWith('/auth-select') ||
     pathname.includes('/signup') ||
     pathname.includes('/login')
   );

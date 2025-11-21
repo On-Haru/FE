@@ -33,7 +33,7 @@ const AuthInput = ({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className={`w-full px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary ${isElder ? 'py-4 text-lg' : 'py-3'}`}
+        className={`w-full px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary ${isElder ? 'py-4 text-lg' : 'py-3 text-base'}`}
         required={required}
       />
     </div>
