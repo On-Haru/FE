@@ -21,7 +21,7 @@ const Header = () => {
   };
 
   return (
-    <header className="relative flex items-center h-15 px-4 py-3 border-b border-gray-200 bg-white">
+    <header className="sticky top-0 z-10 flex items-center h-15 px-4 py-3 border-b border-gray-200 bg-white">
       {isHomePage ? (
         // 홈화면: 로고만 중앙에
         <div className="flex-1 flex justify-center">
