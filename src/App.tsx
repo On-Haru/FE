@@ -3,15 +3,15 @@ import Layout from './Layout/Layout';
 import DetailPage from './pages/Detail/DetailPage';
 import ElderPage from './pages/Elder/ElderPage';
 import HomePage from './pages/Home/HomePage';
+import CaregiverConnectionPage from './pages/Home/CaregiverConnectionPage';
 import LoginPage from './pages/Auth/LoginPage';
 import RoleSelectPage from './pages/Auth/RoleSelectPage';
 import SignupPage from './pages/Auth/SignupPage';
-import PreviousMedicinePage from './pages/PreviousMedicine/PreviousMedicinePage'
-import MedicineDetailPage from './pages/MedicineDetail/MedicineDetailPage'
+import PreviousMedicinePage from './pages/PreviousMedicine/PreviousMedicinePage';
+import MedicineDetailPage from './pages/MedicineDetail/MedicineDetailPage';
 import MedicineRegisterPage from './pages/MedicineRegister/MedicineRegisterPage';
 import MyPagePage from './pages/MyPage/MyPagePage';
 import ReportPage from './pages/Report/ReportPage';
-
 
 function App() {
   return (
@@ -19,6 +19,7 @@ function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<RoleSelectPage />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/home/connect" element={<CaregiverConnectionPage />} />
         <Route path="/detail/:id" element={<DetailPage />} />
         <Route path="/elder" element={<ElderPage />} />
         <Route path="/medicine/previous" element={<PreviousMedicinePage />} />
