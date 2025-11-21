@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import BackButton from './components/BackButton';
+import AuthLogo from './components/AuthLogo';
 
 const AuthSelectPage = () => {
   const navigate = useNavigate();
@@ -19,21 +20,12 @@ const AuthSelectPage = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full p-4 relative">
-      {/* 뒤로가기 버튼 */}
-      <button
-        onClick={() => navigate('/')}
-        className="absolute top-4 left-4 flex items-center justify-center w-10 h-10 hover:opacity-70"
-      >
-        <ChevronLeft className="w-6 h-6" />
-      </button>
-      {/* 로고 */}
-      <div className="mb-12">
-        <img src="/logo.svg" alt="하루온" className="h-16" />
-      </div>
+    <div className="flex flex-col items-center justify-between h-full w-full p-4 relative">
+      <BackButton to="/" />
+      <AuthLogo />
 
       {/* 버튼들 */}
-      <div className="w-full max-w-sm space-y-4">
+      <div className="w-full max-w-sm space-y-4 mb-8">
         {/* 로그인 버튼 */}
         <button
           onClick={() => navigate(`/${role}/login`)}

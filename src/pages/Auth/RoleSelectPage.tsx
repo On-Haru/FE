@@ -5,9 +5,9 @@ const RoleSelectPage = () => {
 
   return (
     <div className="flex flex-col items-center justify-between h-full w-full p-4">
-      {/* 로고 */}
+      {/* 로고 - 시작 화면만 더 크게 */}
       <div className="flex-1 flex items-center justify-center">
-        <img src="/logo.svg" alt="하루온" className="h-30" />
+        <img src="/logo.svg" alt="하루온" className="h-24" />
       </div>
 
       {/* 버튼들 */}

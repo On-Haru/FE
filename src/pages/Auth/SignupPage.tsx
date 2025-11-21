@@ -1,6 +1,9 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import BackButton from './components/BackButton';
+import AuthLogo from './components/AuthLogo';
+import AuthInput from './components/AuthInput';
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -73,62 +76,36 @@ const SignupPage = () => {
   // 1단계: 전화번호, 비밀번호
   if (!isStep2) {
     return (
-      <div className="flex flex-col items-center justify-center h-full w-full p-4 relative">
-        {/* 뒤로가기 버튼 */}
-        <button
-          onClick={() => navigate(`/${role}/auth-select`)}
-          className="absolute top-4 left-4 flex items-center justify-center w-10 h-10 hover:opacity-70"
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-
-        {/* 로고 */}
-        <div className="mb-12">
-          <img src="/logo.svg" alt="하루온" className="h-16" />
-        </div>
+      <div className="flex flex-col items-center justify-between h-full w-full p-4 relative">
+        <BackButton to={`/${role}/auth-select`} />
+        <AuthLogo />
 
         {/* 폼 */}
         <form
           onSubmit={handleStep1Submit}
-          className="w-full max-w-sm space-y-6"
+          className="w-full max-w-sm space-y-6 mb-8"
         >
-          {/* 전화번호 입력 */}
-          <div>
-            <label
-              htmlFor="phone"
-              className={`block font-medium mb-2 ${role === 'elder' ? 'text-lg' : 'text-sm'}`}
-            >
-              전화번호
-            </label>
-            <input
-              id="phone"
-              type="tel"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="전화번호를 입력하세요"
-              className={`w-full px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary ${role === 'elder' ? 'py-4 text-lg' : 'py-3'}`}
-              required
-            />
-          </div>
+          <AuthInput
+            id="phone"
+            label="전화번호"
+            type="tel"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            placeholder="전화번호를 입력하세요"
+            required
+            isElder={role === 'elder'}
+          />
 
-          {/* 비밀번호 입력 */}
-          <div>
-            <label
-              htmlFor="password"
-              className={`block font-medium mb-2 ${role === 'elder' ? 'text-lg' : 'text-sm'}`}
-            >
-              비밀번호
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="비밀번호를 입력하세요"
-              className={`w-full px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary ${role === 'elder' ? 'py-4 text-lg' : 'py-3'}`}
-              required
-            />
-          </div>
+          <AuthInput
+            id="password"
+            label="비밀번호"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="비밀번호를 입력하세요"
+            required
+            isElder={role === 'elder'}
+          />
 
           {/* 버튼 */}
           <button
@@ -144,40 +121,25 @@ const SignupPage = () => {
 
   // 2단계: 이름, 태어난 연도
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full p-4 relative">
-      {/* 뒤로가기 버튼 */}
-      <button
-        onClick={() => navigate(`/${role}/signup`)}
-        className="absolute top-4 left-4 flex items-center justify-center w-10 h-10 hover:opacity-70"
-      >
-        <ChevronLeft className="w-6 h-6" />
-      </button>
-
-      {/* 로고 */}
-      <div className="mb-12">
-        <img src="/logo.svg" alt="하루온" className="h-16" />
-      </div>
+    <div className="flex flex-col items-center justify-between h-full w-full p-4 relative">
+      <BackButton to={`/${role}/signup`} />
+      <AuthLogo />
 
       {/* 폼 */}
-      <form onSubmit={handleStep2Submit} className="w-full max-w-sm space-y-6">
-        {/* 이름 입력 */}
-        <div>
-          <label
-            htmlFor="name"
-            className={`block font-medium mb-2 ${role === 'elder' ? 'text-lg' : 'text-sm'}`}
-          >
-            이름
-          </label>
-          <input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="이름을 입력하세요"
-            className={`w-full px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary ${role === 'elder' ? 'py-4 text-lg' : 'py-3'}`}
-            required
-          />
-        </div>
+      <form
+        onSubmit={handleStep2Submit}
+        className="w-full max-w-sm space-y-6 mb-8"
+      >
+        <AuthInput
+          id="name"
+          label="이름"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="이름을 입력하세요"
+          required
+          isElder={role === 'elder'}
+        />
 
         {/* 태어난 연도 선택 */}
         <div>
