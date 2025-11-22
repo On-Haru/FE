@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Check, SunDim, Sun, Moon } from 'lucide-react';
 import { type Medication } from './TodayMedicationCard';
 
@@ -50,6 +50,20 @@ const MedicationReminderModal = ({
       onClose();
     }, 800);
   };
+
+  // 30분 후 자동으로 모달 닫기
+  useEffect(() => {
+    const timer = setTimeout(
+      () => {
+        onClose();
+      },
+      30 * 60 * 1000
+    ); // 30분 = 1,800,000 밀리초
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [onClose]);
 
   return (
     <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
