@@ -2,7 +2,7 @@
 export interface ApiResponse<T> {
     success: boolean;
     data: T;
-    erroCode?: string;
+    errorCode?: string;
     message?: string | null;
 }
 
@@ -10,10 +10,11 @@ export interface ApiResponse<T> {
 export interface TakingLog {
     id: number;
     scheduleId: number;
-    scheduleType: 'MORNING' | 'LUNCH' | 'EVENING';
-    scheduleDateTime: string;
+    medicineName: string;
+    scheduleType: 'MORNING' | 'LUNCH' | 'EVENING' | 'BEDTIME';
+    scheduledDateTime: string;
     takenDateTime: string | null;
-    take: boolean;
+    taken: boolean;
     delayMinutes: number | null;
 }
 
@@ -22,7 +23,7 @@ export interface CalendarSlot {
     slotId: number;
     scheduleId: number;
     medicineName: string;
-    scheduleType: 'MORNING' | 'LUNCH' | 'EVENING';
+    scheduleType: 'MORNING' | 'LUNCH' | 'EVENING' | 'BEDTIME';
     scheduledDateTime: string;
     taken: boolean;
     takenDateTime: string | null;
@@ -57,13 +58,13 @@ export interface CreateTakingLogRequest {
     scheduleId: number;
     scheduledDateTime: string;
     takenDateTime?: string | null;
-    take: boolean;
+    taken: boolean;
     delayMinutes?: number | null;
 }
 
 //복용 여부 업데이트 요청 타입
-export interface UpdateTakingLogRequest {
+export interface UpdateTakenRequest {
     scheduleId: number;
     scheduledDateTime: string;
-    take: boolean;
+    taken: boolean;
 }
