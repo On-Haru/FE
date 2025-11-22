@@ -161,7 +161,7 @@ export async function updatePrescription(
       };
       
       // 404, 405, 500 에러면 업데이트가 지원되지 않는 것으로 간주하고 새로 생성
-      if (err.response?.status === 404 || err.response?.status === 405 || err.response?.status === 500) {
+      if (err.response?.status === 404 || err.response?.status === 405) {
         // 새로 생성하도록 fallback
         const res = await axiosInstance.post<{ data: PrescriptionCreateResponse }>(
           `/api/prescriptions`,
