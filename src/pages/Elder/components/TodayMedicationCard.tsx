@@ -40,6 +40,7 @@ interface TodayMedicationCardProps {
   medicationName: string;
   dosage: string;
   isTaken: boolean;
+  onClick?: () => void;
 }
 
 const TodayMedicationCard = ({
@@ -47,6 +48,7 @@ const TodayMedicationCard = ({
   medicationName,
   dosage,
   isTaken,
+  onClick,
 }: TodayMedicationCardProps) => {
   const config = timeConfig[time];
   const Icon = config.icon;
@@ -63,6 +65,7 @@ const TodayMedicationCard = ({
           !isTaken ? 'hover:opacity-90 transition-opacity cursor-pointer' : ''
         }`}
         style={{ backgroundColor: cardBgColor }}
+        onClick={!isTaken ? onClick : undefined}
       >
         <div className="flex items-center gap-3 flex-1">
           <Icon
