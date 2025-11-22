@@ -92,7 +92,7 @@ const DetailCalendar = ({
                     <ChevronLeft className="w-4 h-4 text-gray-600" />
                 </button>
                 <h2 className="text-lg font-semibold">
-                    {format(currentMonth, 'M월')}
+                    {format(currentMonth, 'yyyy년 M월')}
                 </h2>
                 <button
                     onClick={handleNextMonth}
