@@ -52,10 +52,7 @@ const MedicationReminderModal = ({
   };
 
   return (
-    <div
-      className="absolute inset-0 bg-black/50 flex items-center justify-center z-50"
-      onClick={onClose}
-    >
+    <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
       <div
         className="bg-white rounded-xl w-[90%] max-w-md min-h-[400px] px-6 pt-8 pb-6 flex flex-col items-center justify-start"
         onClick={(e) => e.stopPropagation()}
