@@ -12,6 +12,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
 
   useEffect(() => {
+    // role이 없거나 유효하지 않으면 역할 선택 페이지로 리다이렉트
     if (!role || (role !== 'elder' && role !== 'caregiver')) {
       navigate('/');
     }
@@ -27,10 +28,12 @@ const LoginPage = () => {
       navigate('/home');
     }
   };
+
   return (
     <div className="flex flex-col items-center justify-between h-full w-full p-4 relative">
       <BackButton to="/" />
       <AuthLogo />
+
       {/* 폼 */}
       <div className="mt-auto w-full flex flex-col items-center">
         <form
@@ -49,6 +52,17 @@ const LoginPage = () => {
             maxLength={13}
           />
 
+          <AuthInput
+            id="password"
+            label="비밀번호"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="비밀번호를 입력하세요"
+            required
+            isElder={role === 'elder'}
+          />
+
           {/* 버튼 */}
           <button
             type="submit"
@@ -57,17 +71,6 @@ const LoginPage = () => {
             로그인
           </button>
         </form>
-
-        <AuthInput
-          id="password"
-          label="비밀번호"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="비밀번호를 입력하세요"
-          required
-          isElder={role === 'elder'}
-        />
 
         {/* 회원가입 링크 표시 */}
         <button
