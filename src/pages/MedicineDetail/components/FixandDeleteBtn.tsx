@@ -9,7 +9,7 @@ const FixandDeleteBtn = ({ onDelete, editMode, onToggleEdit, onSave }: FixandDel
   return (
     <div className="w-full px-4 py-4 flex justify-end">
       <div className="flex gap-2">
-        <button className="px-6 h-12 rounded-xl border border-primary text-primary font-semibold" onClick={onDelete}>
+        <button className="px-6 h-12 rounded-xl border border-primary text-primary font-semibold" onClick={editMode ? onToggleEdit : onDelete}>
           {editMode ? "취소하기" : "선택삭제"}
         </button>
 

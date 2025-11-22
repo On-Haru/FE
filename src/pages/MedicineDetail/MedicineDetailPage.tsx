@@ -65,7 +65,7 @@ const MedicineDetailPage = () => {
     setSelected([]);
   };
 
-  const handleToggleEdit = () => setEditMode(true);
+  const handleToggleEdit = () => setEditMode((prev) => !prev);
   const handleSaveEdit = () => {
     setEditMode(false);
     // TODO: 저장 API
