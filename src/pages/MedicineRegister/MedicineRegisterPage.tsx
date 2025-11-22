@@ -39,7 +39,7 @@ const MedicineRegisterPage = () => {
               setSelectedOption(newElder);
             }
           }}
-          fontSize="clamp(16px, 4vw, 20px)"
+          fontSize="clamp(16px, 5vw, 20px)"
           width={140}
         />
       )}
