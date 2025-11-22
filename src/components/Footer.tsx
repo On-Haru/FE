@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { House, Pill, Calendar, User } from 'lucide-react';
-import { FOOTER_ROUTES, ROUTES } from '@/constants/routes';
+import { FOOTER_ROUTES } from '@/constants/routes';
 
 const FOOTER_ITEMS = [
   { label: '홈', path: FOOTER_ROUTES[0], icon: House },
