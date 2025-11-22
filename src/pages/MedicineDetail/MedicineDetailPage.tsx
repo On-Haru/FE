@@ -29,20 +29,23 @@ const MedicineDetailPage = () => {
           return;
         }
 
-        const mapped: MedicineItem[] = detail.medicines.map((m: any) => ({
-          id: m.id,
-          name: m.name,
-          dosage: m.dosage,
-          totalCount: m.totalCount,
-          durationDays: m.durationDays,
-          memo: m.memo ?? null,
-          aiDescription: m.aiDescription ?? null,
-          schedules: (m.schedules || []).map((s: any) => ({
-            id: s.id,
-            notifyTime: s.notifyTime,
-            timeTag: s.timeTag,
-          })),
-        }));
+        const mapped: MedicineItem[] = detail.medicines.map((m: any, index: number) => {
+          console.log('💊 Medicine item:', m);
+          return {
+            id: m.id ?? Date.now() + index, // id가 없으면 임시 ID 생성
+            name: m.name || '',
+            dosage: m.dosage ?? 0,
+            totalCount: m.totalCount ?? 0,
+            durationDays: m.durationDays ?? 0,
+            memo: m.memo ?? null,
+            aiDescription: m.aiDescription ?? null,
+            schedules: (m.schedules || []).map((s: any, sIndex: number) => ({
+              id: s.id ?? Date.now() + index * 1000 + sIndex, // id가 없으면 임시 ID 생성
+              notifyTime: s.notifyTime,
+              timeTag: s.timeTag,
+            })),
+          };
+        });
 
         setMedicines(mapped);
       } catch (error: any) {
@@ -84,7 +87,7 @@ const MedicineDetailPage = () => {
 
       const payload = {
         medicines: medicines.map((m) => ({
-          id: typeof m.id === 'number' ? m.id : undefined, // 신규는 undefined
+          // id는 API 응답에 없으므로 저장 시 제외
           name: m.name,
           dosage: m.dosage,
           totalCount: m.totalCount,
@@ -92,22 +95,26 @@ const MedicineDetailPage = () => {
           memo: m.memo,
           aiDescription: m.aiDescription,
           schedules: m.schedules.map((s) => ({
-            id: typeof s.id === 'number' ? s.id : undefined,
+            // id는 API 응답에 없으므로 저장 시 제외
             notifyTime: s.notifyTime,
             timeTag: s.timeTag,
           })),
         })),
       };
 
-      console.log('📦 Update payload:', payload);
+      console.log('📦 Update payload:', JSON.stringify(payload, null, 2));
+      console.log('📦 Prescription ID:', latestId);
 
-      await updatePrescription(latestId, payload);
+      const result = await updatePrescription(latestId, payload);
+      console.log('✅ 저장 성공:', result);
 
       alert('저장 완료!');
       setEditMode(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error('❌ 저장 실패:', err);
-      alert('저장 실패');
+      console.error('❌ Error response:', err.response?.data);
+      console.error('❌ Error status:', err.response?.status);
+      alert(`저장 실패: ${err.response?.data?.message || err.message || '알 수 없는 오류'}`);
     }
   };
 
@@ -155,9 +162,6 @@ const MedicineDetailPage = () => {
   /** 알람 추가 */
   const handleAddAlarm = (medicineId: number) => {
     setMedicines((prev) => {
-      const maxId =
-        prev.flatMap((m) => m.schedules).reduce((max, s) => (s.id > max ? s.id : max), 0) || 0;
-
       const newAlarm = {
         id: Date.now(), // 임시 ID
         notifyTime: '08:00',

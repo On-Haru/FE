@@ -92,14 +92,14 @@ const TableList = ({
                 {editMode ? (
                   <input
                     type="text"
-                    className="w-1/3 rounded text-center focus:outline-none"
-                    value={item.dosage}
+                    className="w-1/3 bg-gray-100 rounded text-center focus:outline-none"
+                    value={item.dosage ?? ''}
                     onChange={(e) =>
-                      onChangeField?.(item.id, 'dosage', Number(e.target.value))
+                      onChangeField?.(item.id, 'dosage', Number(e.target.value) || 0)
                     }
                   />
                 ) : (
-                  <span className="w-1/3">{item.dosage}</span>
+                  <span className="w-1/3">{item.dosage ?? '-'}</span>
                 )}
 
                 {/* 총 개수 */}
