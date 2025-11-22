@@ -11,11 +11,6 @@ const ReportMedicinePattern = ({
 }: ReportMedicinePatternProps) => {
     return (
         <div>
-            <div className="flex justify-end mb-4">
-                <p className="text-sm text-gray-600">
-                    현재 총 복용 중인 약 · {medicinePattern.length}개
-                </p>
-            </div>
             <div className="space-y-3">
                 {medicinePattern.map((medicine, index) => (
                     <div

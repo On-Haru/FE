@@ -16,6 +16,7 @@ interface CollapsibleSectionProps {
   children: React.ReactNode;
   isOpen: boolean;
   onToggle: () => void;
+  subtitle?: string;
 }
 
 const CollapsibleSection = ({
@@ -24,6 +25,7 @@ const CollapsibleSection = ({
   children,
   isOpen,
   onToggle,
+  subtitle,
 }: CollapsibleSectionProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const chevronRef = useRef<HTMLDivElement>(null);
@@ -107,6 +109,9 @@ const CollapsibleSection = ({
         <div className="flex items-center gap-2">
           {icon}
           <h2 className="text-lg font-semibold text-black">{title}</h2>
+          {subtitle && (
+            <span className="text-sm text-gray-600 font-normal" style={{ transform: 'translateY(2px)' }}>{subtitle}</span>
+          )}
         </div>
         <div ref={chevronRef}>
           <ChevronDown
@@ -220,6 +225,7 @@ const ReportPage = () => {
             icon={<Pill className="w-5 h-5 text-primary" />}
             isOpen={isMedicinePatternOpen}
             onToggle={() => setIsMedicinePatternOpen(!isMedicinePatternOpen)}
+            subtitle={`현재 총 복용 중인 약 · ${mockData.medicinePattern.length}개`}
           >
             <ReportMedicinePattern
               medicinePattern={mockData.medicinePattern}
