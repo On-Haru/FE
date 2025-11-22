@@ -5,13 +5,16 @@ import {
   deleteCaregiverLink,
 } from './services/caregiverLink';
 import { getUser } from './services/user';
+import { getCalendar } from '@/pages/Detail/services/takingLog';
+import type { CalendarResponse } from '@/pages/Detail/types/takingLog';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import EmptyStateScreen from './components/EmptyStateScreen';
 import CaregiverCard from './components/CaregiverCard';
 
-// CareRecipient에 linkId 추가
+// CareRecipient에 linkId와 캘린더 데이터 추가
 interface RecipientWithLinkId extends CareRecipient {
   linkId: number;
+  calendarData: CalendarResponse | null;
 }
 
 const HomePage = () => {
@@ -26,37 +29,51 @@ const HomePage = () => {
     try {
       const links = await getCaregiverLinks();
 
-      // 각 피보호자의 상세 정보(이름 등)를 User API로 가져오기
+      // 오늘 날짜 정보
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth() + 1; // 0-based이므로 +1
+
+      // 각 피보호자의 상세 정보(이름, 캘린더 데이터)를 가져오기
       const recipientsWithDetails = await Promise.all(
         links.map(async (link) => {
+          let userInfo;
+          let calendarData: CalendarResponse | null = null;
+
+          // User API로 피보호자 정보 조회
           try {
-            // User API로 피보호자 정보 조회
-            const userInfo = await getUser(link.seniorId);
-            return {
-              id: link.seniorId.toString(),
-              linkId: link.id, // 연결 해제에 필요한 linkId 저장
-              name: userInfo.name, // 실제 이름 사용
-              todayStatus: {
-                takenCount: 0, // TODO: 실제 데이터는 별도 API에서 가져와야 함
-                totalCount: 0, // TODO: 실제 데이터는 별도 API에서 가져와야 함
-              },
-              missedMedications: [], // TODO: 실제 데이터는 별도 API에서 가져와야 함
-              statusMessage: undefined, // TODO: 실제 데이터는 별도 API에서 가져와야 함
-            };
+            userInfo = await getUser(link.seniorId);
           } catch (userError) {
             // User API 호출 실패 시 기본값 사용
-            return {
-              id: link.seniorId.toString(),
-              linkId: link.id, // 연결 해제에 필요한 linkId 저장
-              name: `피보호자 ${link.seniorId}`, // 폴백: User API 실패 시
-              todayStatus: {
-                takenCount: 0,
-                totalCount: 0,
-              },
-              missedMedications: [],
-              statusMessage: undefined,
+            userInfo = {
+              id: link.seniorId,
+              name: `피보호자 ${link.seniorId}`,
+              phone: '',
+              role: 'SENIOR' as const,
+              code: 0,
             };
           }
+
+          // 캘린더 API로 오늘의 복약 기록 조회
+          try {
+            calendarData = await getCalendar(year, month, link.seniorId);
+          } catch (calendarError) {
+            // 캘린더 API 호출 실패 시 null로 처리 (다음 단계에서 기본값 사용)
+            calendarData = null;
+          }
+
+          return {
+            id: link.seniorId.toString(),
+            linkId: link.id, // 연결 해제에 필요한 linkId 저장
+            name: userInfo.name, // 실제 이름 사용
+            calendarData, // 캘린더 데이터 저장
+            todayStatus: {
+              takenCount: 0, // 다음 단계에서 계산
+              totalCount: 0, // 다음 단계에서 계산
+            },
+            missedMedications: [], // 다음 단계에서 계산
+            statusMessage: undefined, // 다음 단계에서 계산
+          };
         })
       );
 
