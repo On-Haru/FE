@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import DetailPageHeader from './components/DetailPageHeader';
 import DetailCalendar from './components/DetailCalendar';
@@ -26,8 +26,11 @@ const DetailPage = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     // API에서 캘린더 데이터 가져오기
-    const fetchCalendarData = async (year: number, month: number) => {
-        if (!currentElder) return;
+    const fetchCalendarData = useCallback(async (year: number, month: number) => {
+        if (!currentElder) {
+            setIsLoading(false);
+            return;
+        }
 
         setIsLoading(true);
         try {
@@ -37,11 +40,13 @@ const DetailPage = () => {
             // API 응답이 유효한지 확인
             if (!calendarData) {
                 setChecklistData({});
+                setIsLoading(false);
                 return;
             }
 
             if (!calendarData.days || !Array.isArray(calendarData.days)) {
                 setChecklistData({});
+                setIsLoading(false);
                 return;
             }
 
@@ -93,7 +98,7 @@ const DetailPage = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [currentElder]);
 
     // 어르신 목록 조회 (TODO: 실제 API로 교체)
     useEffect(() => {
@@ -128,7 +133,7 @@ const DetailPage = () => {
             const month = currentMonth.getMonth() + 1; // getMonth()는 0부터 시작
             fetchCalendarData(year, month);
         }
-    }, [currentElder, currentMonth]);
+    }, [currentElder, currentMonth, fetchCalendarData]);
 
     const handleElderChange = (elderId: string) => {
         const elder = elders.find((e) => e.id === elderId);

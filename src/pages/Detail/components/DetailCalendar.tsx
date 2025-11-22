@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameDay } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { DateChecklist } from '@/types/checklist';
@@ -23,32 +23,41 @@ const DetailCalendar = ({
 }: DetailCalendarProps) => {
     const [currentMonth, setCurrentMonth] = useState(propCurrentMonth);
 
-    const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(currentMonth);
-    const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+    // 날짜 계산을 메모이제이션
+    const { daysInMonth, previousMonthDays, nextMonthDays } = useMemo(() => {
+        const monthStart = startOfMonth(currentMonth);
+        const monthEnd = endOfMonth(currentMonth);
+        const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-    // 해당 월의 첫 번째 날의 요일 계산 (0 = 일요일, 1 = 월요일 등)
-    const firstDayOfWeek = getDay(monthStart);
+        // 해당 월의 첫 번째 날의 요일 계산 (0 = 일요일, 1 = 월요일 등)
+        const firstDayOfWeek = getDay(monthStart);
 
-    // 첫 번째 주를 채우기 위한 이전 달의 날짜들 가져오기
-    const previousMonthDays: Date[] = [];
-    if (firstDayOfWeek > 0) {
-        const prevMonthEnd = endOfMonth(subMonths(currentMonth, 1));
-        for (let i = firstDayOfWeek - 1; i >= 0; i--) {
-            previousMonthDays.push(new Date(prevMonthEnd.getFullYear(), prevMonthEnd.getMonth(), prevMonthEnd.getDate() - i));
+        // 첫 번째 주를 채우기 위한 이전 달의 날짜들 가져오기
+        const prevDays: Date[] = [];
+        if (firstDayOfWeek > 0) {
+            const prevMonthEnd = endOfMonth(subMonths(currentMonth, 1));
+            for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+                prevDays.push(new Date(prevMonthEnd.getFullYear(), prevMonthEnd.getMonth(), prevMonthEnd.getDate() - i));
+            }
         }
-    }
 
-    // 마지막 주를 채우기 위한 다음 달의 날짜들 가져오기
-    const totalCells = previousMonthDays.length + daysInMonth.length;
-    const remainingCells = 42 - totalCells; // 6주 * 7일 = 42
-    const nextMonthDays: Date[] = [];
-    if (remainingCells > 0) {
-        const nextMonthStart = addMonths(currentMonth, 1);
-        for (let i = 1; i <= remainingCells; i++) {
-            nextMonthDays.push(new Date(nextMonthStart.getFullYear(), nextMonthStart.getMonth(), i));
+        // 마지막 주를 채우기 위한 다음 달의 날짜들 가져오기
+        const totalCells = prevDays.length + days.length;
+        const remainingCells = 42 - totalCells; // 6주 * 7일 = 42
+        const nextDays: Date[] = [];
+        if (remainingCells > 0) {
+            const nextMonthStart = addMonths(currentMonth, 1);
+            for (let i = 1; i <= remainingCells; i++) {
+                nextDays.push(new Date(nextMonthStart.getFullYear(), nextMonthStart.getMonth(), i));
+            }
         }
-    }
+
+        return {
+            daysInMonth: days,
+            previousMonthDays: prevDays,
+            nextMonthDays: nextDays,
+        };
+    }, [currentMonth]);
 
     // prop으로 받은 currentMonth가 변경되면 내부 state도 업데이트
     useEffect(() => {
@@ -57,31 +66,26 @@ const DetailCalendar = ({
         }
     }, [propCurrentMonth]);
 
-    const handlePreviousMonth = () => {
+    const handlePreviousMonth = useCallback(() => {
         const newMonth = subMonths(currentMonth, 1);
         setCurrentMonth(newMonth);
         onMonthChange(newMonth);
-    };
+    }, [currentMonth, onMonthChange]);
 
-    const handleNextMonth = () => {
+    const handleNextMonth = useCallback(() => {
         const newMonth = addMonths(currentMonth, 1);
         setCurrentMonth(newMonth);
         onMonthChange(newMonth);
-    };
+    }, [currentMonth, onMonthChange]);
 
-    const handleDateClick = (date: Date) => {
+    const handleDateClick = useCallback((date: Date) => {
         onDateSelect(date);
-    };
+    }, [onDateSelect]);
 
     const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
     return (
-        <div className="w-full border rounded-xl p-4 pb-10 border-[#E4E4E7] shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
-            {isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10 rounded-xl">
-                    <div className="text-gray-500">로딩 중...</div>
-                </div>
-            )}
+        <div className="relative w-full border rounded-xl p-4 pb-10 border-[#E4E4E7] shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
             {/* 월 네비게이션 */}
             <div className="flex items-center justify-between mb-4">
                 <button

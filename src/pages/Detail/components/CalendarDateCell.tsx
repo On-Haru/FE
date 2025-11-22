@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { format } from 'date-fns';
 import type { DateChecklist } from '@/types/checklist';
 import OverlappingCircles from './OverlappingCircles';
@@ -11,7 +12,7 @@ interface CalendarDateCellProps {
     onClick?: () => void;
 }
 
-const CalendarDateCell = ({
+const CalendarDateCell = memo(({
     date,
     checklistData,
     isSelected = false,
@@ -19,41 +20,38 @@ const CalendarDateCell = ({
     hasChecklist = false,
     onClick,
 }: CalendarDateCellProps) => {
-    // 날짜별 완료율 계산
-    const getCompletionPercentage = (): number => {
-        const dateKey = format(date, 'yyyy-MM-dd');
+    // 날짜 키를 메모이제이션
+    const dateKey = useMemo(() => format(date, 'yyyy-MM-dd'), [date]);
+
+    // 완료율 계산을 메모이제이션
+    const filledCount = useMemo(() => {
         const checklist = checklistData[dateKey];
         if (!checklist || checklist.items.length === 0) return 0;
 
         const checkedCount = checklist.items.filter(item => item.checked).length;
-        return (checkedCount / checklist.items.length) * 100;
-    };
+        const percentage = (checkedCount / checklist.items.length) * 100;
 
-    // 완료율에 따라 틸 색상 원의 개수 결정
-    const getFilledCircleCount = (percentage: number): number => {
+        // 완료율에 따라 틸 색상 원의 개수 결정
         if (percentage === 0) return 0;
         if (percentage <= 50) return 1;
         if (percentage < 100) return 2;
         return 3;
-    };
+    }, [checklistData, dateKey]);
 
-    // 체크리스트가 없으면 모든 원을 회색으로 표시 (0% 완료)
-    let filledCount = 0;
-    const dateKey = format(date, 'yyyy-MM-dd');
-    const checklist = checklistData[dateKey];
-    if (checklist && checklist.items.length > 0) {
-        const percentage = getCompletionPercentage();
-        filledCount = getFilledCircleCount(percentage);
-    }
+    // 클래스명을 메모이제이션
+    const className = useMemo(() => {
+        const baseClasses = 'relative w-8 h-8 flex items-center justify-center text-sm rounded transition-transform';
+        if (isDisabled) {
+            return `${baseClasses} text-gray-400 cursor-default`;
+        }
+        if (isSelected) {
+            return `${baseClasses} text-gray-900 font-semibold cursor-pointer`;
+        }
+        return `${baseClasses} hover:scale-120 text-gray-900 cursor-pointer`;
+    }, [isDisabled, isSelected, hasChecklist]);
 
-    const baseClasses = 'relative w-8 h-8 flex items-center justify-center text-sm rounded transition-transform';
-    const className = isDisabled
-        ? `${baseClasses} text-gray-400 cursor-default`
-        : isSelected
-            ? `${baseClasses} text-gray-900 font-semibold cursor-pointer`
-            : hasChecklist
-                ? `${baseClasses} hover:scale-120 text-gray-900 cursor-pointer`
-                : `${baseClasses} hover:scale-120 text-gray-900 cursor-pointer`;
+    // 날짜 숫자를 메모이제이션
+    const dayNumber = useMemo(() => format(date, 'd'), [date]);
 
     return (
         <button
@@ -62,12 +60,14 @@ const CalendarDateCell = ({
             disabled={isDisabled}
         >
             <span className="absolute inset-0 flex items-center justify-center z-10 font-semibold" style={{ fontSize: '12px' }}>
-                {format(date, 'd')}
+                {dayNumber}
             </span>
             <OverlappingCircles filledCount={filledCount} />
         </button>
     );
-};
+});
+
+CalendarDateCell.displayName = 'CalendarDateCell';
 
 export default CalendarDateCell;
 
