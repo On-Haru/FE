@@ -1,80 +1,44 @@
+import { useState, useEffect } from 'react';
 import TableHeader from '@/pages/PreviousMedicine/components/TableHeader';
 import TableList, {
   type MedicineItem,
 } from '@/pages/PreviousMedicine/components/TableList';
+import { getPreviousPrescriptions } from '@/pages/PreviousMedicine/services/previous';
 
 export interface Prescription {
-  prescription_id: string | number;
-  date: string; // 처방전 날짜 (예: "2024-01-15")
+  id: number;
+  seniorId: number;
+  issuedDate: string;
+  hospitalName: string;
+  doctorName: string;
+  note: string;
   medicines: MedicineItem[];
 }
 
 const PreviousMedicinePage = () => {
-  const prescriptions: Prescription[] = [
-    {
-      prescription_id: 1,
-      date: '2024-01-10',
-      medicines: [
-        {
-          medicine_id: 1,
-          medicinename: '타이레놀',
-          dosage: 2,
-          number: 3,
-          days: 5,
-          alarms: [
-            {
-              id: 1,
-              schedule_type: 'MORNING',
-              notify_time: '08:00',
-              repeated_time: 'DAILY',
-            },
-            {
-              id: 2,
-              schedule_type: 'EVENING',
-              notify_time: '19:00',
-              repeated_time: 'DAILY',
-            },
-          ],
-        },
-        {
-          medicine_id: 2,
-          medicinename: '오메가3',
-          dosage: 1,
-          number: 1,
-          days: 30,
-          alarms: [
-            {
-              id: 3,
-              schedule_type: 'MORNING',
-              notify_time: '09:00',
-              repeated_time: 'DAILY',
-            },
-          ],
-        },
-      ],
-    },
-    {
-      prescription_id: 2,
-      date: '2024-01-20',
-      medicines: [
-        {
-          medicine_id: 3,
-          medicinename: '아스피린',
-          dosage: 1,
-          number: 2,
-          days: 7,
-          alarms: [
-            {
-              id: 4,
-              schedule_type: 'LUNCH',
-              notify_time: '12:00',
-              repeated_time: 'DAILY',
-            },
-          ],
-        },
-      ],
-    },
-  ];
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // TODO: 실제 seniorId를 가져와야 함 (예: URL 파라미터, 상태 관리 등)
+        const seniorId = 1001; // 임시 값
+        const data = await getPreviousPrescriptions(seniorId);
+        console.log('📋 Previous prescriptions:', data);
+        setPrescriptions(data || []);
+      } catch (error: any) {
+        console.error('이전 처방전 조회 실패:', error);
+        console.log('status:', error.response?.status);
+        console.log('data:', error.response?.data);
+        setPrescriptions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -84,16 +48,32 @@ const PreviousMedicinePage = () => {
     return `${year}.${month}.${day}`;
   };
 
+  if (loading) {
+    return (
+      <div className="w-full px-4 py-6 text-center text-sm text-gray-500">
+        로딩 중...
+      </div>
+    );
+  }
+
+  if (prescriptions.length === 0) {
+    return (
+      <div className="w-full px-4 py-6 text-center text-sm text-gray-500">
+        등록된 처방전이 없습니다.
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
       {prescriptions.map((prescription) => (
-        <div key={prescription.prescription_id} className="mb-8">
+        <div key={prescription.id} className="mb-8">
           <div className="px-2 py-2">
             <span className="text-lg font-semibold text-gray-800">
-              처방전 {prescription.prescription_id} &ensp;
+              {prescription.hospitalName} &ensp;
             </span>
             <span className="text-md font-base text-gray-400">
-              {formatDate(prescription.date)}
+              {formatDate(prescription.issuedDate)}
             </span>
           </div>
           <TableHeader />
