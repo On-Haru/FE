@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createCaregiverLink } from './services/caregiverLink';
 import { formatPhoneNumber, extractPhoneNumber } from '@/utils/phoneFormatter';
+import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 
 const CaregiverConnectionPage = () => {
   const navigate = useNavigate();
@@ -45,43 +46,8 @@ const CaregiverConnectionPage = () => {
 
       // 성공 시 홈으로 이동
       navigate('/home');
-    } catch (error: any) {
-      // 에러 응답 처리
-      if (error.response) {
-        const status = error.response.status;
-        const errorData = error.response.data;
-        const errorCode = errorData?.errorCode;
-        const errorMessage = errorData?.message;
-
-        if (status === 400) {
-          if (errorCode === 'US003') {
-            alert('피보호자 정보가 일치하지 않습니다.');
-          } else {
-            alert(errorMessage || '입력 정보를 확인해주세요.');
-          }
-        } else if (status === 401) {
-          if (errorCode === 'AU001') {
-            alert('인증 토큰이 필요합니다. 다시 로그인해주세요.');
-          } else if (errorCode === 'AU002') {
-            alert('유효하지 않은 토큰입니다. 다시 로그인해주세요.');
-          } else {
-            alert(errorMessage || '인증에 실패했습니다.');
-          }
-        } else if (status === 409) {
-          if (errorCode === 'CG001') {
-            alert('이미 등록된 보호자입니다.');
-          } else {
-            alert(errorMessage || '이미 등록된 정보입니다.');
-          }
-        } else if (status === 502) {
-          alert('서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
-        } else {
-          alert(errorMessage || `연결에 실패했습니다. (오류 코드: ${status})`);
-        }
-      } else {
-        const errorMessage = error.message || '연결에 실패했습니다.';
-        alert(errorMessage);
-      }
+    } catch (error) {
+      alert(getApiErrorMessage(error));
     }
   };
 
