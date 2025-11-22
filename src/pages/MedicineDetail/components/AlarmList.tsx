@@ -2,6 +2,194 @@ import { useState, useEffect } from 'react';
 import { MinusCircle, Plus } from 'lucide-react';
 import TimeTag, { type TimeLabel } from '@/components/TimeTag';
 
+// ==================== 시간 입력 유틸리티 함수 ====================
+
+/**
+ * 시간 문자열을 HH:MM 형식으로 정규화
+ */
+const normalizeTimeFormat = (value: string): string => {
+  const digits = value.replace(/[^\d]/g, '').padEnd(4, '0');
+  return `${digits[0] || '0'}${digits[1] || '8'}:${digits[2] || '0'}${digits[3] || '0'}`;
+};
+
+/**
+ * 시간 유효성 검사 (0-23)
+ */
+const isValidHour = (hour: number): boolean => {
+  return hour >= 0 && hour <= 23;
+};
+
+/**
+ * 분 유효성 검사 (0-59)
+ */
+const isValidMinute = (minute: number): boolean => {
+  return minute >= 0 && minute <= 59;
+};
+
+/**
+ * 시간을 0-23 범위로 제한
+ */
+const clampHour = (hour: number): number => {
+  return Math.max(0, Math.min(23, hour));
+};
+
+/**
+ * 분을 0-59 범위로 제한
+ */
+const clampMinute = (minute: number): number => {
+  return Math.max(0, Math.min(59, minute));
+};
+
+/**
+ * 시간과 분을 HH:MM 형식으로 포맷팅
+ */
+const formatTimeString = (hour: number, minute: number): string => {
+  return `${String(clampHour(hour)).padStart(2, '0')}:${String(clampMinute(minute)).padStart(2, '0')}`;
+};
+
+/**
+ * 시간 문자열을 파싱하여 hour, minute 반환
+ */
+const parseTimeString = (timeStr: string): { hour: number; minute: number } | null => {
+  const parts = timeStr.split(':');
+  if (parts.length === 2) {
+    const hour = Number(parts[0]);
+    const minute = Number(parts[1]);
+    if (!isNaN(hour) && !isNaN(minute)) {
+      return { hour, minute };
+    }
+  }
+  return null;
+};
+
+/**
+ * HHMM 형식 문자열을 파싱
+ */
+const parseCompactTime = (value: string): { hour: number; minute: number } | null => {
+  if (value.length >= 2) {
+    const hour = Number(value.slice(0, 2)) || 0;
+    const minute = Number(value.slice(2, 4)) || 0;
+    return { hour, minute };
+  }
+  return null;
+};
+
+/**
+ * 특정 위치에 숫자 삽입
+ */
+const insertDigitAtPosition = (
+  position: number,
+  digit: string,
+  currentValue: string
+): { newValue: string; nextCursorPos: number } => {
+  let chars = currentValue.split('');
+  
+  // 정규화 필요 시 정규화
+  if (chars.length !== 5 || chars[2] !== ':') {
+    chars = normalizeTimeFormat(currentValue).split('');
+  }
+
+  let nextCursorPos = position;
+
+  if (position <= 1) {
+    // 시간 부분
+    if (position === 0 && digit >= '0' && digit <= '2') {
+      chars[0] = digit;
+      nextCursorPos = 1;
+    } else if (position === 1) {
+      const firstDigit = chars[0];
+      if ((firstDigit === '0' || firstDigit === '1') && digit >= '0' && digit <= '9') {
+        chars[1] = digit;
+        nextCursorPos = 3; // 콜론 건너뛰기
+      } else if (firstDigit === '2' && digit >= '0' && digit <= '3') {
+        chars[1] = digit;
+        nextCursorPos = 3; // 콜론 건너뛰기
+      }
+    }
+  } else if (position === 2) {
+    // 콜론 위치이면 분 첫 번째 자리로
+    chars[3] = digit;
+    nextCursorPos = 4;
+  } else if (position >= 3) {
+    // 분 부분
+    const minutePos = position - 3;
+    if (minutePos < 2) {
+      chars[3 + minutePos] = digit;
+      nextCursorPos = Math.min(position + 1, 5);
+    }
+  }
+
+  // 시간 유효성 검사 및 자동 수정
+  const hourStr = chars.slice(0, 2).join('');
+  const hour = Number(hourStr);
+  if (hour > 23) {
+    chars[0] = '2';
+    chars[1] = '3';
+  } else if (hour < 0) {
+    chars[0] = '0';
+    chars[1] = '0';
+  }
+
+  const newValue = chars.join('');
+  
+  // 커서 위치 조정 (콜론 건너뛰기)
+  if (nextCursorPos === 2) {
+    nextCursorPos = 3;
+  }
+
+  return { newValue, nextCursorPos };
+};
+
+/**
+ * 입력 값을 정리하고 포맷팅
+ */
+const sanitizeTimeInput = (value: string): string => {
+  // 숫자와 콜론만 허용
+  let sanitized = value.replace(/[^\d:]/g, '');
+
+  // 최대 5글자 제한
+  if (sanitized.length > 5) {
+    sanitized = sanitized.slice(0, 5);
+  }
+
+  // 콜론 자동 추가
+  if (sanitized.length === 2 && !sanitized.includes(':')) {
+    sanitized = sanitized + ':';
+  }
+
+  // 콜론은 하나만 허용
+  const colonIndex = sanitized.indexOf(':');
+  if (colonIndex !== -1 && sanitized.indexOf(':', colonIndex + 1) !== -1) {
+    sanitized = sanitized.slice(0, colonIndex + 1) + sanitized.slice(colonIndex + 1).replace(/:/g, '');
+  }
+
+  return sanitized;
+};
+
+/**
+ * 시간 문자열을 검증하고 정규화
+ */
+const validateAndNormalizeTime = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  // HH:MM 형식 파싱
+  const parsed = parseTimeString(trimmed);
+  if (parsed) {
+    const { hour, minute } = parsed;
+    return formatTimeString(hour, minute);
+  }
+
+  // HHMM 형식 파싱
+  const compactParsed = parseCompactTime(trimmed);
+  if (compactParsed) {
+    const { hour, minute } = compactParsed;
+    return formatTimeString(hour, minute);
+  }
+
+  return null;
+};
+
 export interface AlarmItem {
   id: string | number;
   schedule_type: 'MORNING' | 'LUNCH' | 'EVENING';
@@ -108,102 +296,31 @@ const TimeInputItem = ({
             e.preventDefault();
             
             const input = e.currentTarget;
-            let cursorPos = input.selectionStart || 0;
+            const cursorPos = input.selectionStart || 0;
             
-            // 현재 값을 HH:MM 형식으로 정규화
-            let chars = inputValue.split('');
-            if (chars.length !== 5 || chars[2] !== ':') {
-              const digits = inputValue.replace(/[^\d]/g, '').padEnd(4, '0');
-              chars = [digits[0] || '0', digits[1] || '8', ':', digits[2] || '0', digits[3] || '0'];
-            }
+            const { newValue, nextCursorPos } = insertDigitAtPosition(
+              cursorPos,
+              e.key,
+              inputValue
+            );
             
-            // 커서 위치에 따라 숫자 교체
-            // 위치 0, 1 = 시간 (H, H)
-            // 위치 2 = 콜론 (건너뛰기)
-            // 위치 3, 4 = 분 (M, M)
+            setInputValue(newValue);
             
-            if (cursorPos <= 1) {
-              // 시간 첫 번째 자리 (0) 또는 두 번째 자리 (1)
-              const inputKey = e.key;
-              
-              if (cursorPos === 0) {
-                // 첫 번째 자리: 0-2만 허용 (0X, 1X, 2X)
-                if (inputKey >= '0' && inputKey <= '2') {
-                  chars[0] = inputKey;
-                  cursorPos = 1;
-                }
-              } else if (cursorPos === 1) {
-                // 두 번째 자리: 첫 번째 숫자에 따라 제한
-                const firstDigit = chars[0];
-                if (firstDigit === '0' || firstDigit === '1') {
-                  // 0X 또는 1X: 0-9 허용 (00-19)
-                  if (inputKey >= '0' && inputKey <= '9') {
-                    chars[1] = inputKey;
-                    cursorPos = 3; // 콜론 건너뛰고 분 부분으로
-                  }
-                } else if (firstDigit === '2') {
-                  // 2X: 0-3만 허용 (20-23)
-                  if (inputKey >= '0' && inputKey <= '3') {
-                    chars[1] = inputKey;
-                    cursorPos = 3; // 콜론 건너뛰고 분 부분으로
-                  }
-                }
-              }
-            } else if (cursorPos === 2) {
-              // 콜론 위치이면 분 첫 번째 자리로
-              chars[3] = e.key;
-              cursorPos = 4;
-            } else if (cursorPos >= 3) {
-              // 분 부분
-              const minutePos = cursorPos - 3; // 3, 4 -> 0, 1
-              if (minutePos < 2) {
-                chars[3 + minutePos] = e.key;
-                cursorPos = Math.min(cursorPos + 1, 5);
-              }
-            }
-            
-            // 시간 유효성 검사 (0-23 범위)
-            const hourStr = chars.slice(0, 2).join('');
-            const hour = Number(hourStr);
-            
-            // 시간 범위 검증 및 자동 수정
-            if (hour > 23) {
-              // 23 초과 시 23으로 고정
-              chars[0] = '2';
-              chars[1] = '3';
-            } else if (hour < 0) {
-              // 음수이면 00으로 변경
-              chars[0] = '0';
-              chars[1] = '0';
-            }
-            
-            const result = chars.join('');
-            setInputValue(result);
-            
-            // 커서 위치 업데이트 (콜론 위치는 건너뛰기)
+            // 커서 위치 업데이트
             setTimeout(() => {
-              if (cursorPos === 2) {
-                cursorPos = 3;
-              }
-              input.setSelectionRange(cursorPos, cursorPos);
+              input.setSelectionRange(nextCursorPos, nextCursorPos);
               
               // 완성된 형식일 때 업데이트
-              if (result.length === 5) {
-                const [hourStr, minuteStr] = result.split(':');
-                const hour = Number(hourStr);
-                
-                if (hour >= 0 && hour <= 23 && minuteStr && minuteStr.length === 2) {
-                  const minute = Number(minuteStr);
-                  if (minute >= 0 && minute <= 59) {
-                    const newType = getScheduleType(result);
-                    
-                    onChangeAlarm?.(
-                      medicineId,
-                      Number(item.id),
-                      result, // 이미 24시간 형식
-                      newType
-                    );
-                  }
+              if (newValue.length === 5) {
+                const parsed = parseTimeString(newValue);
+                if (parsed && isValidHour(parsed.hour) && isValidMinute(parsed.minute)) {
+                  const newType = getScheduleType(newValue);
+                  onChangeAlarm?.(
+                    medicineId,
+                    Number(item.id),
+                    newValue,
+                    newType
+                  );
                 }
               }
             }, 0);
@@ -211,79 +328,22 @@ const TimeInputItem = ({
         }}
         onChange={(e) => {
           // 백스페이스, Delete 등 키 처리
-          let newValue = e.target.value.replace(/[^\d:]/g, '');
-          
-          if (newValue.length > 5) {
-            newValue = newValue.slice(0, 5);
-          }
-          
-          // 콜론 자동 추가
-          if (newValue.length === 2 && !newValue.includes(':')) {
-            newValue = newValue + ':';
-          }
-          
-          // 콜론은 하나만
-          const colonIndex = newValue.indexOf(':');
-          if (colonIndex !== -1 && newValue.indexOf(':', colonIndex + 1) !== -1) {
-            newValue = newValue.slice(0, colonIndex + 1) + newValue.slice(colonIndex + 1).replace(/:/g, '');
-          }
-          
-          setInputValue(newValue);
+          const sanitized = sanitizeTimeInput(e.target.value);
+          setInputValue(sanitized);
         }}
         onBlur={(e) => {
           // 포커스가 벗어날 때 형식 검증 및 자동 완성
-          const value = e.target.value.trim();
+          const validated = validateAndNormalizeTime(e.target.value);
           
-          if (!value) {
-            // 빈 값이면 원래 값으로 복원
-            setInputValue(formatTimeDisplay(item.notify_time));
-            return;
-          }
-          
-          const [hourStr, minuteStr] = value.split(':');
-          
-          if (hourStr) {
-            let hour = Number(hourStr) || 0;
-            const minute = (minuteStr?.padEnd(2, '0') || '00').padStart(2, '0');
-            
-            // 시간 범위로 제한 (0-23)
-            if (hour < 0) hour = 0;
-            if (hour > 23) hour = 23;
-            
-            // 분 범위 제한 (0-59)
-            const minuteNum = Number(minute);
-            const validMinute = minuteNum > 59 ? '59' : minute;
-            
-            const time24 = `${String(hour).padStart(2, '0')}:${validMinute}`;
-            const newType = getScheduleType(time24);
-            
-            setInputValue(time24);
+          if (validated) {
+            setInputValue(validated);
+            const newType = getScheduleType(validated);
             onChangeAlarm?.(
               medicineId,
               Number(item.id),
-              time24,
+              validated,
               newType
             );
-          } else if (value && !value.includes(':')) {
-            // "HHMM" 형식인 경우 콜론 추가
-            if (value.length >= 1) {
-              let hour = Number(value.slice(0, 2)) || 0;
-              const minuteStr = value.slice(2, 4) || '00';
-              
-              if (hour < 0) hour = 0;
-              if (hour > 23) hour = 23;
-              
-              const time24 = `${String(hour).padStart(2, '0')}:${minuteStr.padEnd(2, '0')}`;
-              const newType = getScheduleType(time24);
-              
-              setInputValue(time24);
-              onChangeAlarm?.(
-                medicineId,
-                Number(item.id),
-                time24,
-                newType
-              );
-            }
           } else {
             // 형식이 올바르지 않으면 원래 값으로 복원
             setInputValue(formatTimeDisplay(item.notify_time));
