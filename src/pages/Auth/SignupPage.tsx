@@ -1,12 +1,11 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
-// TODO: API 연동 시 주석 해제
-// import axiosInstance from '@/lib/axios';
+import { signup } from './services/auth';
 import BackButton from './components/BackButton';
 import AuthLogo from './components/AuthLogo';
 import AuthInput from './components/AuthInput';
-import { formatPhoneNumber } from '@/utils/phoneFormatter';
+import { formatPhoneNumber, extractPhoneNumber } from '@/utils/phoneFormatter';
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -127,35 +126,65 @@ const SignupPage = () => {
       return;
     }
 
-    // TODO: API 연동 시 아래 주석 해제
-    // try {
-    //   await axiosInstance.post('/auth/signup', {
-    //     role,
-    //     phoneNumber,
-    //     password,
-    //     name,
-    //     birthYear: Number(birthYear),
-    //   });
-    //   sessionStorage.removeItem(STORAGE_KEY);
-    //   navigate(`/${role}/login`);
-    // } catch (error) {
-    //   console.error('Failed to sign up', error);
-    //   alert('회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.');
-    // }
+    try {
+      // API 스펙에 맞춰 데이터 변환
+      // - phone: 하이픈 제거
+      // - role: "elder" -> "SENIOR", "caregiver" -> "CAREGIVER"
+      // - year: 문자열로 전송
+      const apiRole = role === 'elder' ? 'SENIOR' : 'CAREGIVER';
+      const phoneWithoutHyphen = extractPhoneNumber(phoneNumber);
 
-    // 퍼블리싱 단계: 임시로 성공 처리
-    console.log('회원가입 요청 데이터 (퍼블리싱):', {
-      role,
-      phoneNumber,
-      name,
-      birthYear: Number(birthYear),
-      password: '***',
-    });
+      await signup({
+        name,
+        phone: phoneWithoutHyphen,
+        year: birthYear,
+        password,
+        role: apiRole,
+      });
 
-    // 회원가입 성공 시 sessionStorage 정리
-    sessionStorage.removeItem(STORAGE_KEY);
+      // 성공 시 처리
+      sessionStorage.removeItem(STORAGE_KEY);
+      navigate(`/${role}/login`);
+    } catch (error: any) {
+      // 에러 응답 처리
+      if (error.response) {
+        const status = error.response.status;
+        const errorData = error.response.data;
+        const errorCode = errorData?.errorCode;
+        const errorMessage = errorData?.message;
 
-    navigate(`/${role}/login`);
+        // 상태 코드에 따른 메시지 처리
+        if (status === 403) {
+          alert(
+            errorMessage || '접근이 거부되었습니다. 서버 설정을 확인해주세요.'
+          );
+        } else if (status === 400) {
+          // Validation 에러
+          alert(errorMessage || '입력 정보를 확인해주세요.');
+        } else if (status === 409) {
+          // 중복 에러
+          if (errorCode === 'US002') {
+            alert('전화번호가 이미 등록되어 있습니다.');
+          } else {
+            alert(errorMessage || '이미 등록된 정보입니다.');
+          }
+        } else if (status === 404) {
+          if (errorCode === 'US001') {
+            alert('유저가 존재하지 않습니다.');
+          } else {
+            alert(errorMessage || '요청한 리소스를 찾을 수 없습니다.');
+          }
+        } else {
+          alert(
+            errorMessage || `회원가입에 실패했습니다. (오류 코드: ${status})`
+          );
+        }
+      } else {
+        // 네트워크 에러 또는 서비스에서 던진 에러
+        const errorMessage = error.message || '회원가입에 실패했습니다.';
+        alert(errorMessage);
+      }
+    }
   };
 
   // 1단계: 전화번호, 비밀번호
@@ -199,7 +228,7 @@ const SignupPage = () => {
             {/* 버튼 */}
             <button
               type="submit"
-              className={`w-full rounded-lg text-white font-semibold bg-primary ${role === 'elder' ? 'py-5 text-xl' : 'py-4 text-base'}`}
+              className={`cursor-pointer w-full rounded-xl text-white font-semibold bg-primary ${role === 'elder' ? 'py-5 text-xl' : 'py-4 text-base'}`}
             >
               다음
             </button>
@@ -253,7 +282,7 @@ const SignupPage = () => {
               <button
                 type="button"
                 onClick={() => setIsYearOpen(!isYearOpen)}
-                className={`w-full px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary bg-white flex items-center justify-between ${role === 'elder' ? 'py-4 text-lg' : 'py-3 text-base'}`}
+                className={`w-full px-4 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary bg-white flex items-center justify-between ${role === 'elder' ? 'py-4 text-lg' : 'py-3 text-base'}`}
               >
                 <span className={birthYear ? '' : 'text-gray-400'}>
                   {birthYear || '연도를 선택해주세요'}
@@ -265,7 +294,7 @@ const SignupPage = () => {
 
               {/* 드롭다운 메뉴 */}
               {isYearOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-md z-50 max-h-60 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-md z-50 max-h-60 overflow-y-auto">
                   {years.map((year) => (
                     <button
                       key={year}
@@ -291,7 +320,7 @@ const SignupPage = () => {
           {/* 버튼 */}
           <button
             type="submit"
-            className={`w-full rounded-lg text-white font-semibold bg-primary ${role === 'elder' ? 'py-5 text-xl' : 'py-4 text-base'}`}
+            className={`cursor-pointer w-full rounded-xl text-white font-semibold bg-primary ${role === 'elder' ? 'py-5 text-xl' : 'py-4 text-base'}`}
           >
             가입하기
           </button>
@@ -301,7 +330,7 @@ const SignupPage = () => {
         <button
           type="button"
           aria-hidden="true"
-          className={`text-gray-600 mb-8 pointer-events-none ${role === 'elder' ? 'text-lg' : 'text-sm'}`}
+          className={`cursor-pointer text-gray-600 mb-8 pointer-events-none ${role === 'elder' ? 'text-lg' : 'text-sm'}`}
           style={{ visibility: 'hidden' }}
         >
           아직 가입이 안되어있다면?

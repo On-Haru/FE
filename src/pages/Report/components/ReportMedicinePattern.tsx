@@ -2,7 +2,7 @@ import type { MedicinePattern } from '@/types/report';
 
 interface ReportMedicinePatternProps {
     medicinePattern: MedicinePattern[];
-    averageDelayMinutes?: number;
+    averageDelayMinutes?: number | null;
 }
 
 const ReportMedicinePattern = ({
@@ -23,8 +23,10 @@ const ReportMedicinePattern = ({
                                     {medicine.medicineName}
                                 </h3>
                                 <p className="text-sm text-gray-500 font-semibold mb-2">
-                                    복약률 {medicine.rate}% · 평균 지연{' '}
-                                    {averageDelayMinutes || 12}분
+                                    복약률 {medicine.rate}%
+                                    {averageDelayMinutes !== null && (
+                                        <> · 평균 지연 {averageDelayMinutes}분</>
+                                    )}
                                 </p>
                             </div>
                             <p className="text-xs text-gray-500">최근 1달 기준</p>

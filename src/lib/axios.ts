@@ -1,12 +1,24 @@
-import axios, { type AxiosInstance, type InternalAxiosRequestConfig, type AxiosResponse, type AxiosError } from 'axios';
+import axios, {
+  type AxiosInstance,
+  type InternalAxiosRequestConfig,
+  type AxiosResponse,
+  type AxiosError,
+} from 'axios';
 import { getAccessToken, clearTokens } from './storage';
 
 /**
  * axios 인스턴스 생성
  */
-const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
+// 개발 환경에서는 Vite 프록시를 사용하므로 상대 경로 사용
+// 프로덕션에서는 환경 변수 또는 절대 경로 사용
+const isDevelopment = import.meta.env.DEV;
+const baseURL = isDevelopment
+  ? '' // 개발 환경: Vite 프록시 사용 (상대 경로)
+  : import.meta.env.VITE_API_BASE_URL || '/api';
 // baseURL 끝의 슬래시 제거
-const normalizedBaseURL = baseURL.endsWith('/') ? baseURL.slice(0, -1) : baseURL;
+const normalizedBaseURL = baseURL.endsWith('/')
+  ? baseURL.slice(0, -1)
+  : baseURL;
 
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: normalizedBaseURL,
@@ -16,9 +28,9 @@ const axiosInstance: AxiosInstance = axios.create({
   },
 });
 
-
 /**
  * 요청 인터셉터: JWT 토큰 자동 주입 (토큰이 있을 때만)
+ * FormData일 때는 Content-Type 헤더를 제거하여 브라우저가 자동으로 boundary를 설정하도록 함
  */
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -27,6 +39,12 @@ axiosInstance.interceptors.request.use(
     // 토큰이 있으면 자동으로 추가, 없어도 요청은 진행
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // FormData일 때는 Content-Type 헤더를 제거
+    // 브라우저가 자동으로 boundary를 포함한 multipart/form-data를 설정함
+    if (config.data instanceof FormData && config.headers) {
+      delete config.headers['Content-Type'];
     }
 
     return config;
@@ -57,4 +75,3 @@ axiosInstance.interceptors.response.use(
 );
 
 export default axiosInstance;
-
