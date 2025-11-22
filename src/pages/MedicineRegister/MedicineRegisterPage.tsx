@@ -1,56 +1,25 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Dropdown, { type DropdownOption } from '@/components/Dropdown';
 import { ROUTES } from '@/constants/routes';
 import CameraBox from '@/pages/MedicineRegister/components/CameraBox';
 import MedicineAddButton from '@/pages/MedicineRegister/components/MedicineAddButton';
 import ViewPrescriptionButton from '@/pages/MedicineRegister/components/ViewPrescriptionButton';
+import NameHeader from '@/pages/MedicineRegister/components/NameHeader';
 //import PreviewModal from '@/pages/MedicineRegister/components/PreviewModal';
 
 const MedicineRegisterPage = () => {
   const navigate = useNavigate();
 
-  const [elderOptions, setElderOptions] = useState<DropdownOption[]>([]);
-  const [selectedOption, setSelectedOption] = useState<DropdownOption | null>(
-    null
-  );
-
-  useEffect(() => {
-    const fetchedUsers = ['김노인 님', '이노인 님', '박노인 님'];
-
-    const options = fetchedUsers.map((name) => ({
-      label: name,
-      value: name,
-    }));
-
-    setElderOptions(options);
-    setSelectedOption(options[0]);
-  }, []);
-
   return (
-    <div className="px-4 py-6">
-      {selectedOption && (
-        <Dropdown
-          selected={selectedOption}
-          options={elderOptions}
-          onSelect={(value) => {
-            const newElder = elderOptions.find((o) => o.value === value);
-            if (newElder) {
-              setSelectedOption(newElder);
-            }
+    <div className="flex flex-col min-h-full relative">
+      <NameHeader />
+      <div className="flex-1 overflow-y-auto py-3">
+        <CameraBox
+          onCapture={() => {
+            navigate(ROUTES.MEDICINE_DETAIL);
           }}
-          fontSize="clamp(16px, 5vw, 20px)"
-          width={140}
         />
-      )}
 
-      <CameraBox
-        onCapture={() => {
-          navigate(ROUTES.MEDICINE_DETAIL);
-        }}
-      />
-
-      {/* {isPreviewOpen && selectedOption && (
+        {/* {isPreviewOpen && selectedOption && (
         <PreviewModal
           file={capturedFile}
           name={selectedOption.label}
@@ -62,10 +31,11 @@ const MedicineRegisterPage = () => {
         />
       )} */}
 
-      <MedicineAddButton onClick={() => navigate(ROUTES.MEDICINE_DETAIL)} />
-      <ViewPrescriptionButton
-        onClick={() => navigate(ROUTES.MEDICINE_PREVIOUS)}
-      />
+        <MedicineAddButton onClick={() => navigate(ROUTES.MEDICINE_DETAIL)} />
+        <ViewPrescriptionButton
+          onClick={() => navigate(ROUTES.MEDICINE_PREVIOUS)}
+        />
+      </div>
     </div>
   );
 };

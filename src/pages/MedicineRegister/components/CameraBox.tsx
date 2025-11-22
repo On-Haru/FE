@@ -18,7 +18,7 @@ const CameraBox = ({ onCapture }: CameraBoxProps) => {
   };
 
   return (
-    <div onClick={handleClick} className="mt-4 cursor-pointer">
+    <div onClick={handleClick} className="cursor-pointer">
       <div className="flex flex-col items-center justify-center w-full h-60 
                       border border-gray-300 rounded-xl">
         <Camera className="w-10 h-10 text-gray-300 mb-3" />

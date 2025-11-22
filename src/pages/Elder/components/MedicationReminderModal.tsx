@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Check, SunDim, Sun, Moon } from 'lucide-react';
 import { type Medication } from './TodayMedicationCard';
 
@@ -51,11 +51,22 @@ const MedicationReminderModal = ({
     }, 800);
   };
 
+  // 30분 후 자동으로 모달 닫기
+  useEffect(() => {
+    const timer = setTimeout(
+      () => {
+        onClose();
+      },
+      30 * 60 * 1000
+    ); // 30분 = 1,800,000 밀리초
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [onClose]);
+
   return (
-    <div
-      className="absolute inset-0 bg-black/50 flex items-center justify-center z-50"
-      onClick={onClose}
-    >
+    <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
       <div
         className="bg-white rounded-xl w-[90%] max-w-md min-h-[400px] px-6 pt-8 pb-6 flex flex-col items-center justify-start"
         onClick={(e) => e.stopPropagation()}
@@ -85,18 +96,20 @@ const MedicationReminderModal = ({
         </div>
 
         {/* 복용 버튼 */}
-        <button
-          onClick={handleTakeClick}
-          className={`w-40 h-40 rounded-full flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity border-primary border-2 ${isConfirmed ? 'bg-primary' : 'bg-white'}`}
-        >
-          {isConfirmed ? (
-            <Check className="w-20 h-20 text-white" />
-          ) : (
-            <span className="text-3xl font-semibold text-primary">
-              복용 완료
-            </span>
-          )}
-        </button>
+        <div className="pb-5">
+          <button
+            onClick={handleTakeClick}
+            className={`cursor-pointer w-40 h-40 rounded-full flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity border-primary border-2 ${isConfirmed ? 'bg-primary' : 'bg-white'}`}
+          >
+            {isConfirmed ? (
+              <Check className="w-20 h-20 text-white" />
+            ) : (
+              <span className="text-3xl font-semibold text-primary">
+                복용 완료
+              </span>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
