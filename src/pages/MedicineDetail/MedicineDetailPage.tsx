@@ -136,9 +136,19 @@ const MedicineDetailPage = () => {
       console.log('저장 성공 응답:', result);
 
       // 저장 후 새로 생성된 처방전 ID로 데이터 다시 불러오기
-      // result에 새로 생성된 처방전 ID가 포함되어 있을 수 있음
-      const newPrescriptionId = result?.id || result?.data?.id || await getLatestPrescriptionId();
+      // 백엔드 API가 일관된 형식(result.id)으로 ID를 반환해야 함
+      if (!result || !result.id) {
+        console.error('❌ 저장 응답에 처방전 ID가 없습니다:', result);
+        alert('저장은 완료되었지만 데이터를 불러오지 못했습니다. 페이지를 새로고침해주세요.');
+        setEditMode(false);
+        return;
+      }
+
+      const newPrescriptionId = result.id;
       console.log('📋 새로 생성된 처방전 ID:', newPrescriptionId);
+      
+      // localStorage에 새로 생성된 처방전 ID 저장 (새로고침 시 사용)
+      localStorage.setItem('currentPrescriptionId', String(newPrescriptionId));
       
       const detail = await getPrescriptionDetail(newPrescriptionId);
       

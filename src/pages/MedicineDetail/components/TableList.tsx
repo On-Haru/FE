@@ -92,7 +92,7 @@ const TableList = ({
                 {editMode ? (
                   <input
                     type="text"
-                    className="w-1/3 bg-gray-100 rounded text-center focus:outline-none"
+                    className="w-1/3 rounded text-center focus:outline-none"
                     value={item.dosage ?? ''}
                     onChange={(e) =>
                       onChangeField?.(item.id, 'dosage', Number(e.target.value) || 0)

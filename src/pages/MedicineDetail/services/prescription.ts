@@ -11,5 +11,6 @@ export async function getPrescriptionDetail(id: number) {
 
 export async function updatePrescription(_id: number, data: any) {
   const res = await axiosInstance.post(`/api/prescriptions`, data);
+  // API 응답 구조: { success: true, data: { id: number, ... } }
   return res.data.data;
 }
