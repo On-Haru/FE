@@ -199,7 +199,7 @@ const SignupPage = () => {
             {/* 버튼 */}
             <button
               type="submit"
-              className={`w-full rounded-lg text-white font-semibold bg-primary ${role === 'elder' ? 'py-5 text-xl' : 'py-4 text-base'}`}
+              className={`cursor-pointer w-full rounded-xl text-white font-semibold bg-primary ${role === 'elder' ? 'py-5 text-xl' : 'py-4 text-base'}`}
             >
               다음
             </button>
@@ -253,7 +253,7 @@ const SignupPage = () => {
               <button
                 type="button"
                 onClick={() => setIsYearOpen(!isYearOpen)}
-                className={`w-full px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary bg-white flex items-center justify-between ${role === 'elder' ? 'py-4 text-lg' : 'py-3 text-base'}`}
+                className={`w-full px-4 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary bg-white flex items-center justify-between ${role === 'elder' ? 'py-4 text-lg' : 'py-3 text-base'}`}
               >
                 <span className={birthYear ? '' : 'text-gray-400'}>
                   {birthYear || '연도를 선택해주세요'}
@@ -265,7 +265,7 @@ const SignupPage = () => {
 
               {/* 드롭다운 메뉴 */}
               {isYearOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-md z-50 max-h-60 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-md z-50 max-h-60 overflow-y-auto">
                   {years.map((year) => (
                     <button
                       key={year}
@@ -291,7 +291,7 @@ const SignupPage = () => {
           {/* 버튼 */}
           <button
             type="submit"
-            className={`w-full rounded-lg text-white font-semibold bg-primary ${role === 'elder' ? 'py-5 text-xl' : 'py-4 text-base'}`}
+            className={`cursor-pointer w-full rounded-xl text-white font-semibold bg-primary ${role === 'elder' ? 'py-5 text-xl' : 'py-4 text-base'}`}
           >
             가입하기
           </button>
@@ -301,7 +301,7 @@ const SignupPage = () => {
         <button
           type="button"
           aria-hidden="true"
-          className={`text-gray-600 mb-8 pointer-events-none ${role === 'elder' ? 'text-lg' : 'text-sm'}`}
+          className={`cursor-pointer text-gray-600 mb-8 pointer-events-none ${role === 'elder' ? 'text-lg' : 'text-sm'}`}
           style={{ visibility: 'hidden' }}
         >
           아직 가입이 안되어있다면?

@@ -66,7 +66,7 @@ const LoginPage = () => {
           {/* 버튼 */}
           <button
             type="submit"
-            className={`w-full rounded-lg text-white font-semibold bg-primary ${role === 'elder' ? 'py-5 text-xl' : 'py-4 text-base'}`}
+            className={`cursor-pointer w-full rounded-xl text-white font-semibold bg-primary ${role === 'elder' ? 'py-5 text-xl' : 'py-4 text-base'}`}
           >
             로그인
           </button>
@@ -75,7 +75,7 @@ const LoginPage = () => {
         {/* 회원가입 링크 표시 */}
         <button
           onClick={() => navigate(`/${role}/signup`)}
-          className={`text-gray-600 hover:text-primary transition-colors mb-8 ${role === 'elder' ? 'text-lg' : 'text-sm'}`}
+          className={`cursor-pointer text-gray-600 hover:text-primary transition-colors mb-8 ${role === 'elder' ? 'text-lg' : 'text-sm'}`}
         >
           아직 가입이 안되어있다면?
         </button>
