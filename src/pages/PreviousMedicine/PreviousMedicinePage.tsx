@@ -1,19 +1,10 @@
 import { useState, useEffect } from 'react';
 import TableHeader from '@/pages/PreviousMedicine/components/TableHeader';
-import TableList, {
-  type MedicineItem,
-} from '@/pages/PreviousMedicine/components/TableList';
-import { getPreviousPrescriptions } from '@/pages/PreviousMedicine/services/previous';
-
-export interface Prescription {
-  id: number;
-  seniorId: number;
-  issuedDate: string;
-  hospitalName: string;
-  doctorName: string;
-  note: string;
-  medicines: MedicineItem[];
-}
+import TableList from '@/pages/PreviousMedicine/components/TableList';
+import {
+  getPreviousPrescriptions,
+  type Prescription,
+} from '@/pages/PreviousMedicine/services/previous';
 
 const PreviousMedicinePage = () => {
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
@@ -25,29 +16,7 @@ const PreviousMedicinePage = () => {
         // TODO: 실제 seniorId를 가져와야 함 (예: URL 파라미터, 상태 관리 등)
         const seniorId = 1001; // 임시 값
         const data = await getPreviousPrescriptions(seniorId);
-        
-        // API 응답 데이터 매핑 (필드가 없을 경우 기본값 처리)
-        const mappedPrescriptions: Prescription[] = (data || []).map((prescription: any) => ({
-          id: prescription.id,
-          seniorId: prescription.seniorId,
-          issuedDate: prescription.issuedDate,
-          hospitalName: prescription.hospitalName || '',
-          doctorName: prescription.doctorName || '',
-          note: prescription.note || '',
-          medicines: (prescription.medicines || []).map((m: any) => ({
-            id: m.id,
-            prescriptionId: m.prescriptionId,
-            name: m.name || '',
-            dailyDoseCount: m.dosage ?? m.dailyDoseCount ?? null,
-            administrationMethod: m.administrationMethod ?? null,
-            memo: m.memo ?? null,
-            totalCount: m.totalCount ?? null,
-            durationDays: m.durationDays ?? null,
-            aiDescription: m.aiDescription ?? null,
-          })),
-        }));
-        
-        setPrescriptions(mappedPrescriptions);
+        setPrescriptions(data);
       } catch (error: any) {
         console.error('이전 처방전 조회 실패', {
           status: error.response?.status,
