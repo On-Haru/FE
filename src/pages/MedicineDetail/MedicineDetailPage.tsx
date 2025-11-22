@@ -100,8 +100,8 @@ const MedicineDetailPage = () => {
           return;
         }
         
-        // 최신 처방전 (첫 번째 항목, 발급일 역순 정렬)
-        const latestPrescription = prescriptions[0];
+        // 최신 처방전을 가져오기 위해 발급일 기준으로 내림차순 정렬합니다.
+        const latestPrescription = [...prescriptions].sort((a, b) => new Date(b.issuedDate).getTime() - new Date(a.issuedDate).getTime())[0];
         const { prescriptionInfo: info, medicines: fetchedMedicines } =
           await getPrescriptionDetail(latestPrescription.id);
 
