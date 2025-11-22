@@ -7,6 +7,10 @@ import {
 import { getUser } from './services/user';
 import { getCalendar } from '@/pages/Detail/services/takingLog';
 import type { CalendarResponse } from '@/pages/Detail/types/takingLog';
+import {
+  findTodayCalendarDay,
+  calculateTodayStatus,
+} from './utils/takingLogUtils';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import EmptyStateScreen from './components/EmptyStateScreen';
 import CaregiverCard from './components/CaregiverCard';
@@ -58,19 +62,24 @@ const HomePage = () => {
           try {
             calendarData = await getCalendar(year, month, link.seniorId);
           } catch (calendarError) {
-            // 캘린더 API 호출 실패 시 null로 처리 (다음 단계에서 기본값 사용)
+            // 캘린더 API 호출 실패 시 null로 처리
             calendarData = null;
           }
+
+          // 오늘 날짜의 CalendarDay 찾기
+          const todayCalendarDay = calendarData
+            ? findTodayCalendarDay(calendarData.days)
+            : null;
+
+          // 오늘의 복용 현황 계산
+          const todayStatus = calculateTodayStatus(todayCalendarDay);
 
           return {
             id: link.seniorId.toString(),
             linkId: link.id, // 연결 해제에 필요한 linkId 저장
             name: userInfo.name, // 실제 이름 사용
             calendarData, // 캘린더 데이터 저장
-            todayStatus: {
-              takenCount: 0, // 다음 단계에서 계산
-              totalCount: 0, // 다음 단계에서 계산
-            },
+            todayStatus, // 계산된 복용 현황
             missedMedications: [], // 다음 단계에서 계산
             statusMessage: undefined, // 다음 단계에서 계산
           };
