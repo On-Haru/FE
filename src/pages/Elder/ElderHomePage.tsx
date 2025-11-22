@@ -143,7 +143,20 @@ const ElderHomePage = () => {
           missedMedication={missedMedication}
           hasNoMedication={allMedicationsTaken}
         />
-        <TodayMedicationList medications={sortedMedications} />
+        <TodayMedicationList
+          medications={sortedMedications}
+          onMedicationClick={(medication) => {
+            if (!medication.isTaken) {
+              setReminderMedication({
+                id: medication.id,
+                time: medication.time,
+                medicationName: medication.medicationName,
+                dosage: medication.dosage,
+              });
+              setShowReminderModal(true);
+            }
+          }}
+        />
       </div>
       {showReminderModal && reminderMedication && (
         <MedicationReminderModal

@@ -89,12 +89,12 @@ const PreviousMedicinePage = () => {
       {prescriptions.map((prescription) => (
         <div key={prescription.prescription_id} className="mb-8">
           <div className="px-2 py-2">
-            <h2 className="text-lg font-semibold text-gray-800">
-              처방전 {prescription.prescription_id}
-            </h2>
-            <h2 className="text-md font-base text-gray-400">
+            <span className="text-lg font-semibold text-gray-800">
+              처방전 {prescription.prescription_id} &ensp;
+            </span>
+            <span className="text-md font-base text-gray-400">
               {formatDate(prescription.date)}
-            </h2>
+            </span>
           </div>
           <TableHeader />
           <TableList medicines={prescription.medicines} />

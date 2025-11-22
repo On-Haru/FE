@@ -30,8 +30,9 @@ const Header = () => {
             <img src="/logo.svg" alt="하루온" className="h-8" />
           </div>
           {isElderHome && hasGuardian ? (
-            <div className="flex-1 flex justify-end text-base text-primary">
-              연결 코드: {connectionCode}
+            <div className="flex-1 flex justify-end text-lg text-primary">
+              연결 코드:
+              <span className="font-bold">&nbsp;{connectionCode}</span>
             </div>
           ) : !isElderHome ? (
             // 보호자 홈화면일 때 오른쪽에 연결 추가 버튼
