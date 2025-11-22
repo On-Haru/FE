@@ -30,6 +30,7 @@ const axiosInstance: AxiosInstance = axios.create({
 
 /**
  * 요청 인터셉터: JWT 토큰 자동 주입 (토큰이 있을 때만)
+ * FormData일 때는 Content-Type 헤더를 제거하여 브라우저가 자동으로 boundary를 설정하도록 함
  */
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -38,6 +39,12 @@ axiosInstance.interceptors.request.use(
     // 토큰이 있으면 자동으로 추가, 없어도 요청은 진행
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // FormData일 때는 Content-Type 헤더를 제거
+    // 브라우저가 자동으로 boundary를 포함한 multipart/form-data를 설정함
+    if (config.data instanceof FormData && config.headers) {
+      delete config.headers['Content-Type'];
     }
 
     return config;
