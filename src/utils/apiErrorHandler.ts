@@ -6,6 +6,7 @@ import axios from 'axios';
 const API_ERROR_MESSAGES: Record<string, string> = {
   US003: '피보호자 정보가 일치하지 않습니다.',
   CG001: '이미 등록된 보호자입니다.',
+  CG002: '연결 해제 권한이 없습니다.',
   AU001: '인증 토큰이 필요합니다. 다시 로그인해주세요.',
   AU002: '유효하지 않은 토큰입니다. 다시 로그인해주세요.',
   US004: '피보호자를 찾을 수 없습니다.',

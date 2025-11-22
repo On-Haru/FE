@@ -19,3 +19,11 @@ export const createCaregiverLink = async (
 export const getCaregiverLinks = async (): Promise<CaregiverLinkResponse[]> => {
   return apiClient.get<CaregiverLinkResponse[]>('/api/caregiver-links');
 };
+
+/**
+ * CaregiverLink 삭제 (연결 해제)
+ * @param linkId 삭제할 연결 ID
+ */
+export const deleteCaregiverLink = async (linkId: number): Promise<null> => {
+  return apiClient.delete<null>(`/api/caregiver-links/${linkId}`);
+};
