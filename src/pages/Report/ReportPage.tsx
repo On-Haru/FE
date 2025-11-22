@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ChevronDown, BarChart3, Clock, Pill, AlertTriangle } from 'lucide-react';
 import { gsap } from 'gsap';
@@ -12,6 +12,7 @@ import ReportRiskSignals from './components/ReportRiskSignals';
 import ReportLoading from './components/ReportLoading';
 import ReportErrorScreen from './components/ReportErrorScreen';
 import { getReport } from './services/report';
+import { generateReportPDF } from '@/utils/pdfGenerator';
 import type { ReportData } from '@/types/report';
 
 // 토글 가능한 섹션 컴포넌트
@@ -246,6 +247,32 @@ const ReportPage = () => {
     ? parseInt(reportData.reportMeta.userYear, 10)
     : 1954;
 
+  // PDF 공유 핸들러
+  const handleShareReport = useCallback(async () => {
+    if (!reportData) {
+      return;
+    }
+
+    try {
+      await generateReportPDF(reportData);
+    } catch (error) {
+      console.error('PDF 생성 실패:', error);
+      alert('PDF 생성 중 오류가 발생했습니다.');
+    }
+  }, [reportData]);
+
+  // Header의 공유 버튼 클릭 이벤트 리스너
+  useEffect(() => {
+    const handleShareEvent = () => {
+      handleShareReport();
+    };
+
+    window.addEventListener('shareReport', handleShareEvent);
+    return () => {
+      window.removeEventListener('shareReport', handleShareEvent);
+    };
+  }, [handleShareReport]);
+
   return (
     <div className="relative min-h-full">
       <ReportLoading isLoading={isLoading} />
@@ -318,7 +345,7 @@ const ReportPage = () => {
 
       {/* 리포트 데이터 표시 */}
       {!isLoading && reportData && (
-        <div className="flex flex-col min-h-full gap-4">
+        <div data-report-container className="flex flex-col min-h-full gap-4">
           <ReportUserInfo name={userName} birthYear={birthYear} />
 
           <ReportAISummary summary={reportData.aiAnalysis.summary} />

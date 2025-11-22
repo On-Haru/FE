@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react'; // 뒤로가기 아이콘
+import { ChevronLeft, Share2 } from 'lucide-react'; // 뒤로가기 아이콘
 import {
   isHomePage,
   isFooterPage,
@@ -15,6 +15,7 @@ const Header = () => {
   const footerPage = isFooterPage(location.pathname);
   const title = getPageTitle(location.pathname);
   const isElderHome = location.pathname === ROUTES.ELDER_HOME;
+  const isReportPage = location.pathname.startsWith(ROUTES.REPORT);
 
   // TODO: API 연동 시 실제 보호자 연결 여부 및 연결 코드로 교체
   const hasGuardian = true; // 임시: 보호자 연결 여부
@@ -63,7 +64,22 @@ const Header = () => {
           <h1 className="absolute left-1/2 -translate-x-1/2 text-center font-semibold whitespace-nowrap">
             {title}
           </h1>
-          <div className="w-20" /> {/* 오른쪽 공간 맞추기 */}
+          {isReportPage ? (
+            <div className="flex-1 flex justify-end">
+              <button
+                onClick={() => {
+                  // 커스텀 이벤트 발생
+                  window.dispatchEvent(new CustomEvent('shareReport'));
+                }}
+                className="flex items-center justify-center w-8 h-8 hover:opacity-70 cursor-pointer"
+                aria-label="리포트 공유하기"
+              >
+                <Share2 className="w-6 h-6 text-primary" />
+              </button>
+            </div>
+          ) : (
+            <div className="w-20" /> // 오른쪽 공간 맞추기
+          )}
         </>
       )}
     </header>
