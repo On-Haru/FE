@@ -1,5 +1,4 @@
-import axiosInstance from '@/lib/axios';
-import type { ApiResponse } from '../types/takingLog';
+import { apiClient } from '@/lib/api/apiClient';
 import type { NotifyRequest, SubscribeRequest } from '../types/push';
 
 /**
@@ -9,10 +8,7 @@ export const sendNotification = async (
     userId: number,
     request: NotifyRequest
 ): Promise<void> => {
-    await axiosInstance.post<ApiResponse<null>>(
-        `/api/push/notify/${userId}`,
-        request
-    );
+    await apiClient.post<null>(`/api/push/notify/${userId}`, request);
 };
 
 /**
@@ -22,9 +18,6 @@ export const subscribePush = async (
     userId: number,
     request: SubscribeRequest
 ): Promise<void> => {
-    await axiosInstance.post<ApiResponse<null>>(
-        `/api/push/subscribe/${userId}`,
-        request
-    );
+    await apiClient.post<null>(`/api/push/subscribe/${userId}`, request);
 };
 
