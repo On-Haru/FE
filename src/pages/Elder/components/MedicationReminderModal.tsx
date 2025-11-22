@@ -85,25 +85,18 @@ const MedicationReminderModal = ({
         </div>
 
         {/* 복용 버튼 */}
-        <div className="pb-5">
+        <button
+          onClick={handleTakeClick}
+          className={`w-40 h-40 rounded-full flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity border-primary border-2 ${isConfirmed ? 'bg-primary' : 'bg-white'}`}
+        >
           {isConfirmed ? (
-            <button
-              onClick={handleTakeClick}
-              className="w-40 h-40 rounded-full flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity bg-primary border-primary border-2"
-            >
-              <Check className="w-20 h-20 text-white" />
-            </button>
+            <Check className="w-20 h-20 text-white" />
           ) : (
-            <button
-              onClick={handleTakeClick}
-              className="w-40 h-40 rounded-full flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity bg-white border-primary border-2"
-            >
-              <span className="text-3xl font-semibold text-primary">
-                복용 완료
-              </span>
-            </button>
+            <span className="text-3xl font-semibold text-primary">
+              복용 완료
+            </span>
           )}
-        </div>
+        </button>
       </div>
     </div>
   );
