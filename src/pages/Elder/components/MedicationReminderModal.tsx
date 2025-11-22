@@ -53,32 +53,32 @@ const MedicationReminderModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30"
+      className="absolute inset-0 bg-black/50 flex items-center justify-center z-50"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl w-[90%] max-w-md p-6 flex flex-col items-center"
+        className="bg-white rounded-xl w-[90%] max-w-md min-h-[400px] px-6 pt-8 pb-6 flex flex-col items-center justify-start"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 메시지 */}
         <p
-          className="text-2xl font-bold mb-6"
+          className="text-4xl font-bold mb-8"
           style={{ color: 'var(--color-primary)' }}
         >
           약 드실 시간입니다!
         </p>
 
         {/* 약 정보 */}
-        <div className="w-full flex items-center gap-4 mb-8">
+        <div className="w-full flex items-center gap-6 mb-10">
           <div
-            className="w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0"
+            className="w-24 h-24 rounded-full flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: config.iconBg }}
           >
-            <Icon className="w-10 h-10" style={{ color: config.iconColor }} />
+            <Icon className="w-16 h-16" style={{ color: config.iconColor }} />
           </div>
           <div className="flex-1">
-            <p className="text-xl font-bold text-black mb-1">{config.label}</p>
-            <p className="text-lg text-gray-600">
+            <p className="text-2xl font-bold text-black mb-2">{config.label}</p>
+            <p className="text-xl text-gray-600">
               {medication.medicationName} {medication.dosage}
             </p>
           </div>
@@ -87,13 +87,14 @@ const MedicationReminderModal = ({
         {/* 복용 버튼 */}
         <button
           onClick={handleTakeClick}
-          className="w-24 h-24 rounded-full flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity"
-          style={{ backgroundColor: 'var(--color-primary)' }}
+          className={`w-40 h-40 rounded-full flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity border-primary border-2 ${isConfirmed ? 'bg-primary' : 'bg-white'}`}
         >
           {isConfirmed ? (
-            <Check className="w-12 h-12 text-white" />
+            <Check className="w-20 h-20 text-white" />
           ) : (
-            <span className="text-lg font-semibold text-white">복용하기</span>
+            <span className="text-3xl font-semibold text-primary">
+              복용 완료
+            </span>
           )}
         </button>
       </div>

@@ -59,7 +59,7 @@ const TodayMedicationCard = ({
   return (
     <div className="mb-3">
       <div
-        className={`rounded-2xl px-6 py-4 flex items-center justify-between ${
+        className={`rounded-xl px-6 py-4 flex items-center justify-between ${
           !isTaken ? 'hover:opacity-90 transition-opacity cursor-pointer' : ''
         }`}
         style={{ backgroundColor: cardBgColor }}

@@ -25,7 +25,7 @@ const RoleSelectPage = () => {
           onClick={() => navigate('/caregiver/login')}
           className="w-full py-5 rounded-lg font-semibold border-2 border-primary bg-white text-primary text-lg hover:bg-primary/5 transition-colors"
         >
-          보호자
+          보호자 등록하기
         </button>
       </div>
 

@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { House, Pill, Calendar, User } from 'lucide-react';
-import { FOOTER_ROUTES, ROUTES } from '@/constants/routes';
+import { FOOTER_ROUTES } from '@/constants/routes';
 
 const FOOTER_ITEMS = [
   { label: '홈', path: FOOTER_ROUTES[0], icon: House },
@@ -19,7 +19,7 @@ const Footer = () => {
   const location = useLocation();
 
   return (
-    <footer className="sticky h-15 bottom-0 bg-white border-t border-gray-200 z-10">
+    <footer className="sticky bottom-0 bg-white border-t border-gray-200 z-10" style={{ height: '60px', minHeight: '60px' }}>
       <nav className="flex justify-around items-center pb-3">
         {FOOTER_ITEMS.map((item) => {
           const Icon = item.icon;
