@@ -259,13 +259,35 @@ const MedicineDetailPage = () => {
     }
   }, [prescriptionInfo, medicines]);
 
-  // OCR 처리 후 자동 저장
+  // OCR 처리 후 자동 저장 (한 번만 실행되도록 보장)
   useEffect(() => {
-    if (shouldAutoSave.current && prescriptionInfo && medicines.length > 0) {
-      shouldAutoSave.current = false; // 플래그 리셋
-      handleSaveEdit();
+    // shouldAutoSave 플래그가 false이면 실행하지 않음
+    if (!shouldAutoSave.current) {
+      return;
     }
-  }, [prescriptionInfo, medicines, handleSaveEdit]);
+
+    // prescriptionInfo와 medicines가 준비되지 않았으면 대기
+    if (!prescriptionInfo || medicines.length === 0) {
+      return;
+    }
+
+    // 플래그를 먼저 리셋하여 중복 실행 방지
+    shouldAutoSave.current = false;
+
+    // 비동기로 실행하여 현재 렌더 사이클과 분리
+    // 이렇게 하면 handleSaveEdit이 상태를 업데이트해도
+    // 이 useEffect가 다시 실행되지 않음 (shouldAutoSave.current가 이미 false)
+    const timeoutId = setTimeout(() => {
+      handleSaveEdit();
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+    // handleSaveEdit은 useCallback으로 메모이즈되어 있지만,
+    // 의존성 배열에 포함하지 않아도 ref를 통해 한 번만 실행되도록 보장됨
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prescriptionInfo, medicines]);
 
   /** 필드 수정 */
   const handleChangeField = (id: number, field: string, value: string | number) => {
