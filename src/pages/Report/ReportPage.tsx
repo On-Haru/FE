@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, BarChart3, Clock, Pill, AlertTriangle } from 'lucide-react';
 import ReportUserInfo from './components/ReportUserInfo';
 import ReportAISummary from './components/ReportAISummary';
@@ -6,6 +6,7 @@ import ReportOverallStats from './components/ReportOverallStats';
 import ReportTimePattern from './components/ReportTimePattern';
 import ReportMedicinePattern from './components/ReportMedicinePattern';
 import ReportRiskSignals from './components/ReportRiskSignals';
+import ReportLoading from './components/ReportLoading';
 
 // 토글 가능한 섹션 컴포넌트
 interface CollapsibleSectionProps {
@@ -46,11 +47,24 @@ const CollapsibleSection = ({
 };
 
 const ReportPage = () => {
+  // 로딩 상태 관리
+  const [isLoading, setIsLoading] = useState(true);
+
   // 각 섹션의 열림/닫힘 상태 관리 (기본값: 모두 열림)
   const [isOverallStatsOpen, setIsOverallStatsOpen] = useState(true);
   const [isTimePatternOpen, setIsTimePatternOpen] = useState(true);
   const [isMedicinePatternOpen, setIsMedicinePatternOpen] = useState(true);
   const [isRiskSignalsOpen, setIsRiskSignalsOpen] = useState(true);
+
+  // 로딩 시뮬레이션 (실제로는 API 호출로 대체)
+  useEffect(() => {
+    // 3초 후 로딩 완료 (실제로는 API 응답을 기다림)
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
   // 임시 mock 데이터
   const mockData = {
     name: '김노인',
@@ -95,53 +109,59 @@ const ReportPage = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-full gap-2">
-      <ReportUserInfo name={mockData.name} birthYear={mockData.birthYear} />
+    <div className="relative min-h-full">
+      <ReportLoading isLoading={isLoading} />
 
-      <ReportAISummary summary={mockData.aiSummary} />
+      {!isLoading && (
+        <div className="flex flex-col min-h-full gap-2">
+          <ReportUserInfo name={mockData.name} birthYear={mockData.birthYear} />
 
-      <CollapsibleSection
-        title="전체 복약 통계"
-        icon={<BarChart3 className="w-5 h-5 text-primary" />}
-        isOpen={isOverallStatsOpen}
-        onToggle={() => setIsOverallStatsOpen(!isOverallStatsOpen)}
-      >
-        <ReportOverallStats statistics={mockData.statistics} />
-      </CollapsibleSection>
+          <ReportAISummary summary={mockData.aiSummary} />
 
-      <CollapsibleSection
-        title="시간대별 복약 패턴"
-        icon={<Clock className="w-5 h-5 text-primary" />}
-        isOpen={isTimePatternOpen}
-        onToggle={() => setIsTimePatternOpen(!isTimePatternOpen)}
-      >
-        <ReportTimePattern timePattern={mockData.timePattern} />
-      </CollapsibleSection>
+          <CollapsibleSection
+            title="전체 복약 통계"
+            icon={<BarChart3 className="w-5 h-5 text-primary" />}
+            isOpen={isOverallStatsOpen}
+            onToggle={() => setIsOverallStatsOpen(!isOverallStatsOpen)}
+          >
+            <ReportOverallStats statistics={mockData.statistics} />
+          </CollapsibleSection>
 
-      <CollapsibleSection
-        title="약별 복용 패턴"
-        icon={<Pill className="w-5 h-5 text-primary" />}
-        isOpen={isMedicinePatternOpen}
-        onToggle={() => setIsMedicinePatternOpen(!isMedicinePatternOpen)}
-      >
-        <ReportMedicinePattern
-          medicinePattern={mockData.medicinePattern}
-          averageDelayMinutes={mockData.statistics.averageDelayMinutes}
-        />
-      </CollapsibleSection>
+          <CollapsibleSection
+            title="시간대별 복약 패턴"
+            icon={<Clock className="w-5 h-5 text-primary" />}
+            isOpen={isTimePatternOpen}
+            onToggle={() => setIsTimePatternOpen(!isTimePatternOpen)}
+          >
+            <ReportTimePattern timePattern={mockData.timePattern} />
+          </CollapsibleSection>
 
-      <CollapsibleSection
-        title="위험 신호 & 행동 제안"
-        icon={<AlertTriangle className="w-5 h-5 text-primary" />}
-        isOpen={isRiskSignalsOpen}
-        onToggle={() => setIsRiskSignalsOpen(!isRiskSignalsOpen)}
-      >
-        <ReportRiskSignals
-          quickResponseRate={mockData.riskSignals.quickResponseRate}
-          delayedResponseRate={mockData.riskSignals.delayedResponseRate}
-          suggestion={mockData.riskSignals.suggestion}
-        />
-      </CollapsibleSection>
+          <CollapsibleSection
+            title="약별 복용 패턴"
+            icon={<Pill className="w-5 h-5 text-primary" />}
+            isOpen={isMedicinePatternOpen}
+            onToggle={() => setIsMedicinePatternOpen(!isMedicinePatternOpen)}
+          >
+            <ReportMedicinePattern
+              medicinePattern={mockData.medicinePattern}
+              averageDelayMinutes={mockData.statistics.averageDelayMinutes}
+            />
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            title="위험 신호 & 행동 제안"
+            icon={<AlertTriangle className="w-5 h-5 text-primary" />}
+            isOpen={isRiskSignalsOpen}
+            onToggle={() => setIsRiskSignalsOpen(!isRiskSignalsOpen)}
+          >
+            <ReportRiskSignals
+              quickResponseRate={mockData.riskSignals.quickResponseRate}
+              delayedResponseRate={mockData.riskSignals.delayedResponseRate}
+              suggestion={mockData.riskSignals.suggestion}
+            />
+          </CollapsibleSection>
+        </div>
+      )}
     </div>
   );
 };
