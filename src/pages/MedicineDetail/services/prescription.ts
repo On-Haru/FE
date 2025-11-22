@@ -55,7 +55,11 @@ export interface PrescriptionCreateRequest {
 
 export interface PrescriptionCreateResponse {
   id: number;
-  [key: string]: unknown;
+  seniorId: number;
+  issuedDate: string;
+  hospitalName: string;
+  doctorName: string;
+  note: string;
 }
 
 /**
@@ -99,6 +103,13 @@ function mapApiMedicineToMedicineItem(apiMedicine: {
 }
 
 /**
+ * 기본 seniorId 생성 (OCR 응답에 seniorId가 없을 때 사용)
+ */
+function getDefaultSeniorId(): number {
+  return 1005;
+}
+
+/**
  * OCR 응답을 MedicineItem으로 변환 (임시 ID 생성)
  */
 export function mapOCRResponseToMedicineItems(
@@ -122,12 +133,20 @@ export function mapOCRResponseToMedicineItems(
     };
   });
 
+  // seniorId가 null이면 기본값 사용
+  const seniorId = ocrData.seniorId ?? getDefaultSeniorId();
+
+  // 필수 필드 검증 및 기본값 설정 (백엔드 validation 통과를 위해)
+  const hospitalName = (ocrData.hospitalName?.trim() || '') || '병원명 미입력';
+  const doctorName = (ocrData.doctorName?.trim() || '') || '의사명 미입력';
+  const issuedDate = ocrData.issuedDate || new Date().toISOString().split('T')[0];
+
   const prescriptionInfo: PrescriptionInfo = {
-    seniorId: ocrData.seniorId ?? 1001, // TODO: 실제 seniorId 가져오기
-    hospitalName: ocrData.hospitalName ?? '',
-    doctorName: ocrData.doctorName ?? '',
-    issuedDate: ocrData.issuedDate ?? new Date().toISOString().split('T')[0],
-    note: ocrData.note ?? '',
+    seniorId,
+    hospitalName,
+    doctorName,
+    issuedDate,
+    note: ocrData.note || '',
   };
 
   return { medicines, prescriptionInfo };
@@ -162,11 +181,14 @@ export async function getPrescriptionDetail(
 
 /**
  * 처방전 등록/수정
+ * @param _id 처방전 ID (백엔드가 업데이트를 지원하지 않으므로 사용하지 않음, 항상 새로 생성)
  */
 export async function updatePrescription(
   _id: number,
   data: PrescriptionCreateRequest
 ): Promise<PrescriptionCreateResponse> {
+  // 백엔드가 POST /api/prescriptions/{id}를 지원하지 않으므로
+  // 항상 POST /api/prescriptions로 새로 생성
   const res = await axiosInstance.post<{ data: PrescriptionCreateResponse }>(
     `/api/prescriptions`,
     data

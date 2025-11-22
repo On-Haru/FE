@@ -45,16 +45,25 @@ const MedicineDetailPage = () => {
             console.warn('⚠️ OCR 결과가 비어있습니다. 처방전을 인식하지 못했을 수 있습니다.');
           }
           
+          // OCR 처리 후 최신 처방전 ID 조회 및 저장
+          try {
+            const latestId = await getLatestPrescriptionId();
+            localStorage.setItem('currentPrescriptionId', String(latestId));
+          } catch (error) {
+            console.error('최신 처방전 ID 조회 실패:', error);
+          }
+          
           // OCR 데이터를 사용했으므로 여기서 종료 (기존 처방전 조회 로직 실행 안 함)
           return;
         }
 
-        // 2. OCR 결과가 없거나 이미 처리했으면 기존 로직 사용
+        // 2. OCR 결과가 없거나 이미 처리했으면 최신 처방전 조회
         // 단, OCR을 이미 처리했다면 기존 로직을 실행하지 않음
         if (hasProcessedOCR.current) {
           return;
         }
         
+        // 저장된 처방전 ID가 있으면 사용, 없으면 최신 처방전 ID 조회
         const storedId = localStorage.getItem('currentPrescriptionId');
         const initialId = storedId ? Number(storedId) : await getLatestPrescriptionId();
         
@@ -63,6 +72,9 @@ const MedicineDetailPage = () => {
 
         setPrescriptionInfo(info);
         setMedicines(fetchedMedicines);
+        
+        // 조회한 처방전 ID를 localStorage에 저장 (다음 로드 시 사용)
+        localStorage.setItem('currentPrescriptionId', String(initialId));
       } catch (error: unknown) {
         const err = error as { response?: { status?: number; data?: unknown } };
         console.error('처방전 조회 실패', {
@@ -105,13 +117,26 @@ const MedicineDetailPage = () => {
         return;
       }
 
+      // seniorId 검증
+      if (!prescriptionInfo.seniorId) {
+        alert('시니어 ID가 없습니다. 처방전 정보를 확인해주세요.');
+        return;
+      }
+
+      // 필수 필드 검증 및 기본값 설정 
+      const hospitalName = prescriptionInfo.hospitalName?.trim() || '병원명 미입력';
+      const doctorName = prescriptionInfo.doctorName?.trim() || '의사명 미입력';
+      const issuedDate = prescriptionInfo.issuedDate || new Date().toISOString().split('T')[0];
+
       // 처방전 등록 API 형식으로 payload 생성
+      // 백엔드가 업데이트를 지원하지 않으므로 항상 새로 생성
+      // seniorId는 항상 1005 사용 (백엔드에 존재하는 피보호자 ID)
       const payload: PrescriptionCreateRequest = {
-        seniorId: prescriptionInfo.seniorId,
-        hospitalName: prescriptionInfo.hospitalName,
-        doctorName: prescriptionInfo.doctorName,
-        issuedDate: prescriptionInfo.issuedDate,
-        note: prescriptionInfo.note,
+        seniorId: 1005,
+        hospitalName,
+        doctorName,
+        issuedDate,
+        note: prescriptionInfo.note || '',
         medicines: medicines.map((m) => ({
           name: m.name,
           dosage: m.dosage,
@@ -126,17 +151,16 @@ const MedicineDetailPage = () => {
         })),
       };
 
+      // 항상 새로 생성 (백엔드가 업데이트를 지원하지 않음)
       const result = await updatePrescription(0, payload);
 
       // 저장 후 새로 생성된 처방전 ID로 데이터 다시 불러오기
-      // 백엔드 API가 일관된 형식(result.id)으로 ID를 반환해야 함
       if (!result || !result.id) {
-        console.error('❌ 저장 응답에 처방전 ID가 없습니다:', result);
         alert('저장은 완료되었지만 데이터를 불러오지 못했습니다. 페이지를 새로고침해주세요.');
         setEditMode(false);
         return;
       }
-
+      
       const newPrescriptionId = result.id;
       
       // localStorage에 새로 생성된 처방전 ID 저장 (새로고침 시 사용)
@@ -151,12 +175,32 @@ const MedicineDetailPage = () => {
       alert('저장 완료!');
       setEditMode(false);
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const error = err as {
+        response?: {
+          status?: number;
+          statusText?: string;
+          data?: { message?: string };
+        };
+        message?: string;
+      };
+      
       console.error('저장 실패', {
         message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
         response: error.response?.data,
       });
-      alert(`저장 실패: ${error.response?.data?.message || error.message || '알 수 없는 오류'}`);
+      
+      // 404 에러인 경우 더 명확한 메시지 제공
+      if (error.response?.status === 404) {
+        alert(
+          '저장 실패: API 엔드포인트를 찾을 수 없습니다.\n\n백엔드 서버가 실행 중인지 확인하거나, API 경로가 올바른지 확인해주세요.'
+        );
+      } else {
+        alert(
+          `저장 실패: ${error.response?.data?.message || error.message || '알 수 없는 오류'}`
+        );
+      }
     }
   };
 
