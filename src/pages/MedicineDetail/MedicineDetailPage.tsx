@@ -24,6 +24,7 @@ const MedicineDetailPage = () => {
   // OCR 데이터 처리 여부 추적 (중복 실행 방지)
   const hasProcessedOCR = useRef(false);
   const shouldAutoSave = useRef(false); // OCR 후 자동 저장 플래그
+  const hasAutoSaved = useRef(false); // 자동 저장 실행 여부 추적
 
   useEffect(() => {
     const fetchData = async () => {
@@ -261,8 +262,8 @@ const MedicineDetailPage = () => {
 
   // OCR 처리 후 자동 저장 (한 번만 실행되도록 보장)
   useEffect(() => {
-    // shouldAutoSave 플래그가 false이면 실행하지 않음
-    if (!shouldAutoSave.current) {
+    // shouldAutoSave 플래그가 false이거나 이미 자동 저장을 실행했으면 실행하지 않음
+    if (!shouldAutoSave.current || hasAutoSaved.current) {
       return;
     }
 
@@ -273,10 +274,11 @@ const MedicineDetailPage = () => {
 
     // 플래그를 먼저 리셋하여 중복 실행 방지
     shouldAutoSave.current = false;
+    hasAutoSaved.current = true;
 
     // 비동기로 실행하여 현재 렌더 사이클과 분리
     // 이렇게 하면 handleSaveEdit이 상태를 업데이트해도
-    // 이 useEffect가 다시 실행되지 않음 (shouldAutoSave.current가 이미 false)
+    // 이 useEffect가 다시 실행되지 않음 (hasAutoSaved.current가 이미 true)
     const timeoutId = setTimeout(() => {
       handleSaveEdit();
     }, 0);
