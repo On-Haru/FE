@@ -146,8 +146,6 @@ const SignupPage = () => {
       sessionStorage.removeItem(STORAGE_KEY);
       navigate(`/${role}/login`);
     } catch (error: any) {
-      console.error('Failed to sign up', error);
-
       // 에러 응답 처리
       if (error.response) {
         const status = error.response.status;

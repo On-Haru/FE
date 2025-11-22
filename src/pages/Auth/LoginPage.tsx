@@ -61,8 +61,6 @@ const LoginPage = () => {
         navigate('/home');
       }
     } catch (error: any) {
-      console.error('Failed to login', error);
-
       // 에러 응답 처리
       if (error.response) {
         const status = error.response.status;

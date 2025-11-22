@@ -48,30 +48,20 @@ export default defineConfig({
         secure: true,
         rewrite: (path) => path, // 경로 그대로 전달
         configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('proxy error', err);
+          proxy.on('error', (_err, _req, _res) => {
+            // 프록시 에러는 조용히 처리
           });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
+          proxy.on('proxyReq', (proxyReq, _req, _res) => {
             // CORS 관련 헤더 제거 (프록시가 서버로 요청할 때는 불필요)
             proxyReq.removeHeader('origin');
             proxyReq.removeHeader('referer');
-
-            console.log('Sending Request to the Target:', req.method, req.url);
-            console.log('Request Headers:', proxyReq.getHeaders());
           });
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
+          proxy.on('proxyRes', (proxyRes, _req, _res) => {
             // CORS 헤더 제거 (프록시 응답에는 불필요)
             delete proxyRes.headers['access-control-allow-origin'];
             delete proxyRes.headers['access-control-allow-credentials'];
             delete proxyRes.headers['access-control-allow-methods'];
             delete proxyRes.headers['access-control-allow-headers'];
-
-            console.log(
-              'Received Response from the Target:',
-              proxyRes.statusCode,
-              req.url
-            );
-            console.log('Response Headers:', proxyRes.headers);
           });
         },
       },
