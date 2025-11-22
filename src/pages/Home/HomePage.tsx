@@ -10,6 +10,7 @@ import type { CalendarResponse } from '@/pages/Detail/types/takingLog';
 import {
   findTodayCalendarDay,
   calculateTodayStatus,
+  getMissedMedications,
 } from './utils/takingLogUtils';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import EmptyStateScreen from './components/EmptyStateScreen';
@@ -74,13 +75,16 @@ const HomePage = () => {
           // 오늘의 복용 현황 계산
           const todayStatus = calculateTodayStatus(todayCalendarDay);
 
+          // 미복용 약 목록 생성
+          const missedMedications = getMissedMedications(todayCalendarDay);
+
           return {
             id: link.seniorId.toString(),
             linkId: link.id, // 연결 해제에 필요한 linkId 저장
             name: userInfo.name, // 실제 이름 사용
             calendarData, // 캘린더 데이터 저장
             todayStatus, // 계산된 복용 현황
-            missedMedications: [], // 다음 단계에서 계산
+            missedMedications, // 계산된 미복용 약 목록
             statusMessage: undefined, // 다음 단계에서 계산
           };
         })
