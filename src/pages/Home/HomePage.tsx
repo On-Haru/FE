@@ -1,13 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { CareRecipient } from '@/types/caregiver';
-import { getCaregiverLinks } from './services/caregiverLink';
+import {
+  getCaregiverLinks,
+  deleteCaregiverLink,
+} from './services/caregiverLink';
 import { getUser } from './services/user';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import EmptyStateScreen from './components/EmptyStateScreen';
 import CaregiverCard from './components/CaregiverCard';
 
+// CareRecipient에 linkId 추가
+interface RecipientWithLinkId extends CareRecipient {
+  linkId: number;
+}
+
 const HomePage = () => {
-  const [recipients, setRecipients] = useState<CareRecipient[]>([]);
+  const [recipients, setRecipients] = useState<RecipientWithLinkId[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +34,7 @@ const HomePage = () => {
             const userInfo = await getUser(link.seniorId);
             return {
               id: link.seniorId.toString(),
+              linkId: link.id, // 연결 해제에 필요한 linkId 저장
               name: userInfo.name, // 실제 이름 사용
               todayStatus: {
                 takenCount: 0, // TODO: 실제 데이터는 별도 API에서 가져와야 함
@@ -38,6 +47,7 @@ const HomePage = () => {
             // User API 호출 실패 시 기본값 사용
             return {
               id: link.seniorId.toString(),
+              linkId: link.id, // 연결 해제에 필요한 linkId 저장
               name: `피보호자 ${link.seniorId}`, // 폴백: User API 실패 시
               todayStatus: {
                 takenCount: 0,
@@ -63,12 +73,24 @@ const HomePage = () => {
   }, [fetchRecipients]);
 
   // 연결 해제 핸들러
-  const handleDisconnect = (id: string) => {
-    // TODO: API 호출 추가 (9단계에서 구현)
-    // await disconnectRecipient(id);
+  const handleDisconnect = async (id: string) => {
+    // 해당 피보호자의 linkId 찾기
+    const recipient = recipients.find((r) => r.id === id);
+    if (!recipient) {
+      alert('피보호자를 찾을 수 없습니다.');
+      return;
+    }
 
-    // 임시로 로컬 상태에서 제거
-    setRecipients((prev) => prev.filter((r) => r.id !== id));
+    try {
+      // 연결 해제 API 호출
+      await deleteCaregiverLink(recipient.linkId);
+
+      // 성공 시 로컬 상태에서 제거
+      setRecipients((prev) => prev.filter((r) => r.id !== id));
+    } catch (error) {
+      // 에러 발생 시 사용자에게 알림
+      alert(getApiErrorMessage(error));
+    }
   };
 
   // 로딩 중
