@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import TableHeader from '@/pages/MedicineDetail/components/TableHeader';
 import TableList, { type MedicineItem } from '@/pages/MedicineDetail/components/TableList';
 import FixandDeleteBtn from '@/pages/MedicineDetail/components/FixandDeleteBtn';
@@ -8,6 +8,7 @@ import {
   getPrescriptionDetail,
   updatePrescription,
 } from '@/pages/MedicineDetail/services/prescription';
+import type { OCRResponse } from '../MedicineRegister/services/ocr';
 
 const MedicineDetailPage = () => {
   const [medicines, setMedicines] = useState<MedicineItem[]>([]);
@@ -20,14 +21,72 @@ const MedicineDetailPage = () => {
     issuedDate: string;
     note: string;
   } | null>(null);
+  
+  // OCR 데이터 처리 여부 추적 (중복 실행 방지)
+  const hasProcessedOCR = useRef(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const latestId = await getLatestPrescriptionId();
-        const detail = await getPrescriptionDetail(latestId);
+        // 1. localStorage에서 OCR 결과 확인
+        const ocrDataStr = localStorage.getItem('ocrPrescriptionData');
+        if (ocrDataStr && !hasProcessedOCR.current) {
+          hasProcessedOCR.current = true; // OCR 처리 시작 표시
+          const ocrData = JSON.parse(ocrDataStr) as OCRResponse;
+          
+          // OCR 데이터 사용 후 즉시 localStorage에서 제거 (중복 실행 방지)
+          localStorage.removeItem('ocrPrescriptionData');
+          
+          // OCR 결과 사용 (id는 모두 null이므로 임시 ID 생성)
+          setPrescriptionInfo({
+            seniorId: ocrData.seniorId ?? 1001, // TODO: 실제 seniorId 가져오기
+            hospitalName: ocrData.hospitalName ?? '',
+            doctorName: ocrData.doctorName ?? '',
+            issuedDate: ocrData.issuedDate ?? new Date().toISOString().split('T')[0],
+            note: ocrData.note ?? '',
+          });
 
-        console.log('📋 Prescription detail:', detail);
+          // medicines 매핑 (임시 ID 생성)
+          const mapped: MedicineItem[] = (ocrData.medicines || []).map((m, idx: number) => {
+            const medicineId = Date.now() + idx; // 임시 ID
+            return {
+              id: medicineId,
+              name: m.name || '',
+              dosage: m.dosage ?? 0,
+              totalCount: m.totalCount ?? 0,
+              durationDays: m.durationDays ?? 0,
+              memo: m.memo ?? null,
+              aiDescription: m.aiDescription ?? null,
+              schedules: (m.schedules || []).map((s, sIdx: number) => ({
+                id: medicineId * 1000 + sIdx, // 임시 ID
+                notifyTime: s.notifyTime,
+                timeTag: s.timeTag,
+              })),
+            };
+          });
+
+          // medicines state 업데이트
+          setMedicines(mapped);
+          
+          // OCR 결과가 비어있는 경우 사용자에게 알림
+          if (mapped.length === 0) {
+            console.warn('⚠️ OCR 결과가 비어있습니다. 처방전을 인식하지 못했을 수 있습니다.');
+          }
+          
+          // OCR 데이터를 사용했으므로 여기서 종료 (기존 처방전 조회 로직 실행 안 함)
+          return;
+        }
+
+        // 2. OCR 결과가 없거나 이미 처리했으면 기존 로직 사용
+        // 단, OCR을 이미 처리했다면 기존 로직을 실행하지 않음
+        if (hasProcessedOCR.current) {
+          return;
+        }
+        
+        const storedId = localStorage.getItem('currentPrescriptionId');
+        const initialId = storedId ? Number(storedId) : await getLatestPrescriptionId();
+        
+        const detail = await getPrescriptionDetail(initialId);
 
         // 처방전 기본 정보 저장
         setPrescriptionInfo({
@@ -45,8 +104,20 @@ const MedicineDetailPage = () => {
           return;
         }
 
-        const mapped: MedicineItem[] = detail.medicines.map((m: any) => {
-          console.log('💊 Medicine item:', m);
+        const mapped: MedicineItem[] = detail.medicines.map((m: {
+          id: number;
+          name: string;
+          dosage: number;
+          totalCount: number;
+          durationDays: number;
+          memo?: string | null;
+          aiDescription?: string | null;
+          schedules?: Array<{
+            id: number;
+            notifyTime: string;
+            timeTag: 'MORNING' | 'LUNCH' | 'EVENING';
+          }>;
+        }) => {
           return {
             id: m.id,
             name: m.name || '',
@@ -55,7 +126,7 @@ const MedicineDetailPage = () => {
             durationDays: m.durationDays ?? 0,
             memo: m.memo ?? null,
             aiDescription: m.aiDescription ?? null,
-            schedules: (m.schedules || []).map((s: any) => ({
+            schedules: (m.schedules || []).map((s) => ({
               id: s.id,
               notifyTime: s.notifyTime,
               timeTag: s.timeTag,
@@ -65,9 +136,10 @@ const MedicineDetailPage = () => {
 
         setMedicines(mapped);
       } catch (error: any) {
-        console.error('처방전 조회 실패');
-        console.log('status:', error.response?.status);
-        console.log('data:', error.response?.data);
+        console.error('처방전 조회 실패', {
+          status: error.response?.status,
+          data: error.response?.data,
+        });
         setMedicines([]);
       }
     };
@@ -125,15 +197,7 @@ const MedicineDetailPage = () => {
         })),
       };
 
-      console.log('📦 Update payload:', JSON.stringify(payload, null, 2));
-      console.log('📦 Schedules 확인:', medicines.map(m => ({ 
-        name: m.name, 
-        schedulesCount: m.schedules.length, 
-        schedules: m.schedules 
-      })));
-
       const result = await updatePrescription(0, payload);
-      console.log('저장 성공 응답:', result);
 
       // 저장 후 새로 생성된 처방전 ID로 데이터 다시 불러오기
       // 백엔드 API가 일관된 형식(result.id)으로 ID를 반환해야 함
@@ -145,19 +209,27 @@ const MedicineDetailPage = () => {
       }
 
       const newPrescriptionId = result.id;
-      console.log('📋 새로 생성된 처방전 ID:', newPrescriptionId);
       
       // localStorage에 새로 생성된 처방전 ID 저장 (새로고침 시 사용)
       localStorage.setItem('currentPrescriptionId', String(newPrescriptionId));
       
       const detail = await getPrescriptionDetail(newPrescriptionId);
       
-      console.log('📋 저장 후 조회한 데이터:', detail);
-      console.log('📋 저장 후 조회한 medicines:', detail.medicines);
-      
       if (detail.medicines && Array.isArray(detail.medicines)) {
-        const mapped: MedicineItem[] = detail.medicines.map((m: any) => {
-          console.log('💊 Medicine:', m.name, 'Schedules:', m.schedules);
+        const mapped: MedicineItem[] = detail.medicines.map((m: {
+          id: number;
+          name: string;
+          dosage: number;
+          totalCount: number;
+          durationDays: number;
+          memo?: string | null;
+          aiDescription?: string | null;
+          schedules?: Array<{
+            id: number;
+            notifyTime: string;
+            timeTag: 'MORNING' | 'LUNCH' | 'EVENING';
+          }>;
+        }) => {
           return {
             id: m.id,
             name: m.name || '',
@@ -166,14 +238,13 @@ const MedicineDetailPage = () => {
             durationDays: m.durationDays ?? 0,
             memo: m.memo ?? null,
             aiDescription: m.aiDescription ?? null,
-            schedules: (m.schedules || []).map((s: any) => ({
+            schedules: (m.schedules || []).map((s) => ({
               id: s.id,
               notifyTime: s.notifyTime,
               timeTag: s.timeTag,
             })),
           };
         });
-        console.log('📋 매핑된 medicines:', mapped);
         setMedicines(mapped);
         
         // 처방전 기본 정보도 업데이트

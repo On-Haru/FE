@@ -65,15 +65,26 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  /* 스크롤바 숨기기 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE, Edge */
 }
 
 .mobile-content::-webkit-scrollbar {
-  width: 4px;
+  display: none; /* Chrome, Safari, Opera */
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
+.mobile-content::-webkit-scrollbar-track {
+  display: none;
+  background: transparent;
 }
 
 .mobile-content::-webkit-scrollbar-thumb {
-  background-color: #ccc;
-  border-radius: 2px;
+  display: none;
+  background: transparent;
 }
 
 input[type='checkbox'].accent-primary {
