@@ -10,9 +10,10 @@ interface ChecklistProps {
     date: string;
     items: ChecklistItem[];
     elderName: string;
+    userId: number;
 }
 
-const Checklist = ({ date, items, elderName }: ChecklistProps) => {
+const Checklist = ({ date, items, elderName, userId }: ChecklistProps) => {
     const [selectedItem, setSelectedItem] = useState<ChecklistItem | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -84,6 +85,7 @@ const Checklist = ({ date, items, elderName }: ChecklistProps) => {
                     date={date}
                     item={selectedItem}
                     elderName={elderName}
+                    userId={userId}
                 />
             )}
         </>
