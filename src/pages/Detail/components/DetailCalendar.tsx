@@ -84,7 +84,7 @@ const DetailCalendar = ({
     const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
     return (
-        <div className="relative w-full border rounded-xl p-4 pb-10 border-[#E4E4E7] shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
+        <div className="relative w-full min-h-[400px] border rounded-xl p-4 pb-10 border-[#E4E4E7] shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
             {/* 월 네비게이션 */}
             <div className="flex items-center justify-between mb-4">
                 <button
