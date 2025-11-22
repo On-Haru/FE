@@ -8,6 +8,8 @@ export interface Medication {
   medicationName: string;
   dosage: string;
   isTaken: boolean;
+  scheduleId?: number; // API 호출에 필요 (복용 여부 업데이트)
+  scheduledDateTime?: string; // API 호출에 필요 (복용 여부 업데이트)
 }
 
 // timeConfig는 컴포넌트 외부로 이동하여 렌더링마다 재생성되지 않도록 최적화

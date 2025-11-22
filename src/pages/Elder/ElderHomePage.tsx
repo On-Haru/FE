@@ -3,6 +3,13 @@ import { getAccessToken } from '@/lib/storage';
 import { getUserIdFromToken } from '@/lib/jwt';
 import { getUser } from './services/user';
 import { hasCaregiverLink } from '@/pages/Home/services/caregiverLink';
+import {
+  getCalendar,
+  updateTakenStatus,
+} from '@/pages/Detail/services/takingLog';
+import { findTodayCalendarDay } from '@/pages/Home/utils/takingLogUtils';
+import { convertTodaySlotsToMedications } from './utils/medicationUtils';
+import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import ConnectionCodeScreen from './components/ConnectionCodeScreen';
 import DateTimeDisplay from './components/DateTimeDisplay';
 import GreetingCard from './components/GreetingCard';
@@ -20,31 +27,10 @@ const ElderHomePage = () => {
   const [connectionCode, setConnectionCode] = useState<string>(''); // 연결 코드 (User API에서 가져옴)
   const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true); // 사용자 정보 로딩 상태
   const [userError, setUserError] = useState<string | null>(null); // 사용자 정보 조회 에러
-
-  // 임시: 오늘의 약 데이터 (state로 관리)
-  const [todayMedications, setTodayMedications] = useState<Medication[]>([
-    {
-      id: 1,
-      time: 'morning' as MedicationTime,
-      medicationName: '혈압약',
-      dosage: '1정',
-      isTaken: true,
-    },
-    {
-      id: 2,
-      time: 'lunch' as MedicationTime,
-      medicationName: '비타민 D',
-      dosage: '1정',
-      isTaken: false,
-    },
-    {
-      id: 3,
-      time: 'evening' as MedicationTime,
-      medicationName: '혈압약',
-      dosage: '1정',
-      isTaken: false,
-    },
-  ]);
+  const [todayMedications, setTodayMedications] = useState<Medication[]>([]); // 오늘의 약 데이터 (API에서 가져옴)
+  const [isLoadingMedications, setIsLoadingMedications] =
+    useState<boolean>(false); // 약 데이터 로딩 상태
+  const [medicationError, setMedicationError] = useState<string | null>(null); // 약 데이터 조회 에러
 
   // 모달 상태 관리
   const [showReminderModal, setShowReminderModal] = useState(false);
@@ -54,16 +40,50 @@ const ElderHomePage = () => {
   > | null>(null);
 
   // 약 복용 처리 함수
-  const handleMedicationTaken = (id: number) => {
-    setTodayMedications((prev) =>
-      prev.map((med) => (med.id === id ? { ...med, isTaken: true } : med))
-    );
+  const handleMedicationTaken = async (id: number) => {
+    // 해당 약 찾기
+    const medication = todayMedications.find((med) => med.id === id);
+    if (!medication) {
+      alert('약 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    // 이미 복용한 경우
+    if (medication.isTaken) {
+      return;
+    }
+
+    // scheduleId와 scheduledDateTime이 없는 경우 (이론적으로는 발생하지 않아야 함)
+    if (!medication.scheduleId || !medication.scheduledDateTime) {
+      alert('약 정보가 올바르지 않습니다.');
+      return;
+    }
+
+    try {
+      // API 호출: 복용 여부 업데이트
+      await updateTakenStatus({
+        scheduleId: medication.scheduleId,
+        scheduledDateTime: medication.scheduledDateTime,
+        taken: true,
+      });
+
+      // 성공 시 로컬 상태 업데이트
+      setTodayMedications((prev) =>
+        prev.map((med) => (med.id === id ? { ...med, isTaken: true } : med))
+      );
+    } catch (error) {
+      // 에러 발생 시 사용자에게 알림
+      alert(getApiErrorMessage(error));
+    }
   };
 
   // 모달에서 복용 버튼 클릭 시
-  const handleModalTake = () => {
+  const handleModalTake = async () => {
     if (reminderMedication) {
-      handleMedicationTaken(reminderMedication.id);
+      await handleMedicationTaken(reminderMedication.id);
+      // 복용 완료 후 모달 닫기
+      setShowReminderModal(false);
+      setReminderMedication(null);
     }
   };
 
@@ -164,6 +184,86 @@ const ElderHomePage = () => {
 
     fetchUserInfo();
   }, []);
+
+  // 오늘의 약 데이터 조회 (보호자가 연결된 경우에만)
+  useEffect(() => {
+    if (!hasGuardian || isLoadingUser) {
+      return;
+    }
+
+    const fetchTodayMedications = async () => {
+      setIsLoadingMedications(true);
+      setMedicationError(null);
+      try {
+        const token = getAccessToken();
+        if (!token) {
+          setMedicationError('로그인이 필요합니다.');
+          return;
+        }
+
+        const userId = getUserIdFromToken(token);
+        if (!userId) {
+          setMedicationError('사용자 정보를 불러올 수 없습니다.');
+          return;
+        }
+
+        // 오늘 날짜 정보
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth() + 1; // 0-based이므로 +1
+
+        // 캘린더 API 호출
+        const calendarData = await getCalendar(year, month, userId);
+
+        // 오늘 날짜의 CalendarDay 찾기
+        const todayCalendarDay = findTodayCalendarDay(calendarData.days);
+
+        if (todayCalendarDay) {
+          // 오늘 날짜의 슬롯들을 Medication 배열로 변환
+          const medications = convertTodaySlotsToMedications(
+            todayCalendarDay.slots
+          );
+          setTodayMedications(medications);
+        } else {
+          // 오늘 날짜에 약이 없는 경우
+          setTodayMedications([]);
+        }
+      } catch (error: any) {
+        // 에러 응답 처리
+        if (error.response) {
+          const status = error.response.status;
+          const errorData = error.response.data;
+          const errorCode = errorData?.errorCode;
+          const errorMessage = errorData?.message;
+
+          if (status === 404) {
+            if (errorCode === 'US001') {
+              setMedicationError('유저가 존재하지 않습니다.');
+            } else {
+              setMedicationError(errorMessage || '약 정보를 찾을 수 없습니다.');
+            }
+          } else if (status === 502) {
+            setMedicationError(
+              '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.'
+            );
+          } else {
+            setMedicationError(
+              errorMessage || '약 정보를 불러오는데 실패했습니다.'
+            );
+          }
+        } else {
+          // 네트워크 에러 또는 기타 에러
+          setMedicationError(
+            error.message || '약 정보를 불러오는데 실패했습니다.'
+          );
+        }
+      } finally {
+        setIsLoadingMedications(false);
+      }
+    };
+
+    fetchTodayMedications();
+  }, [hasGuardian, isLoadingUser]);
 
   // 보호자 미연결 상태일 때 주기적으로 연결 여부 확인 (폴링)
   useEffect(() => {
@@ -309,24 +409,42 @@ const ElderHomePage = () => {
       <div className="flex flex-col pb-6">
         <DateTimeDisplay />
         <GreetingCard userName={userName} />
-        <MissedMedicationAlert
-          missedMedication={missedMedication}
-          hasNoMedication={allMedicationsTaken}
-        />
-        <TodayMedicationList
-          medications={sortedMedications}
-          onMedicationClick={(medication) => {
-            if (!medication.isTaken) {
-              setReminderMedication({
-                id: medication.id,
-                time: medication.time,
-                medicationName: medication.medicationName,
-                dosage: medication.dosage,
-              });
-              setShowReminderModal(true);
-            }
-          }}
-        />
+        {isLoadingMedications ? (
+          <div className="flex items-center justify-center py-8">
+            <p className="text-gray-500">약 정보를 불러오는 중...</p>
+          </div>
+        ) : medicationError ? (
+          <div className="flex flex-col items-center justify-center py-8 px-4">
+            <p className="text-red-500 text-center mb-4">{medicationError}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-primary text-white rounded-xl hover:opacity-90 transition-opacity"
+            >
+              다시 시도
+            </button>
+          </div>
+        ) : (
+          <>
+            <MissedMedicationAlert
+              missedMedication={missedMedication}
+              hasNoMedication={allMedicationsTaken}
+            />
+            <TodayMedicationList
+              medications={sortedMedications}
+              onMedicationClick={(medication) => {
+                if (!medication.isTaken) {
+                  setReminderMedication({
+                    id: medication.id,
+                    time: medication.time,
+                    medicationName: medication.medicationName,
+                    dosage: medication.dosage,
+                  });
+                  setShowReminderModal(true);
+                }
+              }}
+            />
+          </>
+        )}
       </div>
       {showReminderModal && reminderMedication && (
         <MedicationReminderModal
