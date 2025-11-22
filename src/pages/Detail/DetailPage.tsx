@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import DetailPageHeader from './components/DetailPageHeader';
@@ -14,6 +14,7 @@ interface Elder {
 
 const DetailPage = () => {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const [currentElder, setCurrentElder] = useState<Elder | null>(null);
     const [elders, setElders] = useState<Elder[]>([]);
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -160,10 +161,25 @@ const DetailPage = () => {
         ];
         setElders(mockElders);
 
+        // id가 없거나 유효하지 않으면 첫 번째 어르신으로 리다이렉트
+        if (!id || mockElders.length === 0) {
+            if (mockElders.length > 0) {
+                const firstElderId = mockElders[0].id;
+                navigate(`/detail/${firstElderId}`, { replace: true });
+                return;
+            }
+        }
+
         // 현재 선택된 어르신 찾기
-        const elder = mockElders.find((e) => e.id === id) || mockElders[0];
-        setCurrentElder(elder);
-    }, [id]);
+        const elder = mockElders.find((e) => e.id === id);
+        if (elder) {
+            setCurrentElder(elder);
+        } else if (mockElders.length > 0) {
+            // 유효하지 않은 id인 경우 첫 번째 어르신으로 리다이렉트
+            const firstElderId = mockElders[0].id;
+            navigate(`/detail/${firstElderId}`, { replace: true });
+        }
+    }, [id, navigate]);
 
     // 어르신이 변경되면 해당 어르신의 체크리스트 데이터 로드
     useEffect(() => {
@@ -208,7 +224,7 @@ const DetailPage = () => {
                 elders={elders}
                 onElderChange={handleElderChange}
             />
-            <div className="flex-1 overflow-y-auto py-6">
+            <div className="flex-1 overflow-y-auto py-3">
                 <DetailCalendar
                     checklistData={checklistData}
                     selectedDate={selectedDate}

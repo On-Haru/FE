@@ -11,7 +11,8 @@ const Profile = ({ name, onLogout }: MyPageProfileProps) => {
 
   const handleInstallClick = () => {
     console.log('앱 설치하기 클릭됨');
-    showInstallPrompt();
+    // 사용자가 명시적으로 클릭한 경우이므로 force=true로 전달
+    showInstallPrompt(true);
   };
 
   return (
