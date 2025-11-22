@@ -1,5 +1,9 @@
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react'; // 뒤로가기 아이콘
+import { getAccessToken } from '@/lib/storage';
+import { getUserIdFromToken } from '@/lib/jwt';
+import { getUser } from '@/pages/Elder/services/user';
 import {
   isHomePage,
   isFooterPage,
@@ -17,8 +21,36 @@ const Header = () => {
   const isElderHome = location.pathname === ROUTES.ELDER_HOME;
 
   // TODO: API 연동 시 실제 보호자 연결 여부 및 연결 코드로 교체
-  const hasGuardian = true; // 임시: 보호자 연결 여부
-  const connectionCode = '0837'; // 임시: 연결 코드
+  const [hasGuardian] = useState<boolean>(true); // 임시: 보호자 연결 여부
+  const [connectionCode, setConnectionCode] = useState<string>(''); // 연결 코드
+
+  // 어르신 홈화면일 때만 사용자 정보 조회
+  useEffect(() => {
+    if (!isElderHome) {
+      return;
+    }
+
+    const fetchUserInfo = async () => {
+      try {
+        const token = getAccessToken();
+        if (!token) {
+          return;
+        }
+
+        const userId = getUserIdFromToken(token);
+        if (!userId) {
+          return;
+        }
+
+        const userData = await getUser(userId);
+        setConnectionCode(userData.code.toString());
+      } catch (error) {
+        // 에러 발생 시 기본값 유지
+      }
+    };
+
+    fetchUserInfo();
+  }, [isElderHome]);
 
   return (
     <header className="sticky top-0 z-10 flex items-center min-h-[60px] h-[60px] px-4 py-3 border-b border-gray-200 bg-white flex-shrink-0 pr-6 pl-6">
