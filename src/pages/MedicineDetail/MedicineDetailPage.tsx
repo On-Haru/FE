@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import TableHeader from '@/pages/MedicineDetail/components/TableHeader';
 import TableList, { type MedicineItem } from '@/pages/MedicineDetail/components/TableList';
 import FixandDeleteBtn from '@/pages/MedicineDetail/components/FixandDeleteBtn';
@@ -20,18 +20,27 @@ const MedicineDetailPage = () => {
     issuedDate: string;
     note: string;
   } | null>(null);
+  
+  // OCR 데이터 처리 여부 추적 (중복 실행 방지)
+  const hasProcessedOCR = useRef(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         // 1. localStorage에서 OCR 결과 확인
         const ocrDataStr = localStorage.getItem('ocrPrescriptionData');
-        if (ocrDataStr) {
+        if (ocrDataStr && !hasProcessedOCR.current) {
+          hasProcessedOCR.current = true; // OCR 처리 시작 표시
           console.log('📸 OCR 데이터 발견, OCR 결과 사용');
           const ocrData = JSON.parse(ocrDataStr);
           
           console.log('📋 OCR 원본 데이터:', ocrData);
+          console.log('📋 OCR medicines:', ocrData.medicines);
           console.log('📋 OCR medicines 개수:', ocrData.medicines?.length || 0);
+          
+          // OCR 데이터 사용 후 즉시 localStorage에서 제거 (중복 실행 방지)
+          localStorage.removeItem('ocrPrescriptionData');
+          console.log('🗑️ OCR 데이터 localStorage에서 제거 완료 (중복 실행 방지)');
           
           // OCR 결과 사용 (id는 모두 null이므로 임시 ID 생성)
           setPrescriptionInfo({
@@ -45,6 +54,13 @@ const MedicineDetailPage = () => {
           // medicines 매핑 (임시 ID 생성)
           const mapped: MedicineItem[] = (ocrData.medicines || []).map((m: any, idx: number) => {
             const medicineId = Date.now() + idx; // 임시 ID
+            console.log(`💊 OCR Medicine ${idx + 1}:`, {
+              name: m.name,
+              dosage: m.dosage,
+              totalCount: m.totalCount,
+              durationDays: m.durationDays,
+              schedulesCount: m.schedules?.length || 0,
+            });
             return {
               id: medicineId,
               name: m.name || '',
@@ -61,22 +77,31 @@ const MedicineDetailPage = () => {
             };
           });
 
-          console.log('📋 OCR로 매핑된 medicines:', mapped);
+          console.log('📋 OCR로 매핑된 medicines (최종):', mapped);
+          console.log('📋 OCR로 매핑된 medicines 개수:', mapped.length);
+          
+          // medicines state 업데이트
           setMedicines(mapped);
-
-          // OCR 데이터 사용 후 localStorage에서 제거
-          localStorage.removeItem('ocrPrescriptionData');
+          console.log('✅ medicines state 업데이트 완료');
           
           // OCR 결과가 비어있는 경우 사용자에게 알림
           if (mapped.length === 0) {
             console.warn('⚠️ OCR 결과가 비어있습니다. 처방전을 인식하지 못했을 수 있습니다.');
-            // 사용자가 수동으로 약을 추가할 수 있도록 editMode는 유지
+          } else {
+            console.log(`✅ ${mapped.length}개의 약물 정보를 성공적으로 불러왔습니다.`);
           }
           
+          // OCR 데이터를 사용했으므로 여기서 종료 (기존 처방전 조회 로직 실행 안 함)
           return;
         }
 
-        // 2. OCR 결과가 없으면 기존 로직 사용
+        // 2. OCR 결과가 없거나 이미 처리했으면 기존 로직 사용
+        // 단, OCR을 이미 처리했다면 기존 로직을 실행하지 않음
+        if (hasProcessedOCR.current) {
+          console.log('📋 OCR 데이터를 이미 처리했으므로 기존 처방전 조회 로직을 건너뜁니다.');
+          return;
+        }
+        
         console.log('📋 기존 처방전 조회 로직 사용');
         const storedId = localStorage.getItem('currentPrescriptionId');
         const initialId = storedId ? Number(storedId) : await getLatestPrescriptionId();
@@ -331,6 +356,13 @@ const MedicineDetailPage = () => {
       },
     ]);
   };
+
+  // 디버깅: medicines state 확인
+  console.log('🔍 MedicineDetailPage 렌더링:', {
+    medicinesCount: medicines.length,
+    medicines: medicines,
+    editMode,
+  });
 
   return (
     <div className="w-full h-full flex flex-col">
