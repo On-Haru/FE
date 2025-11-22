@@ -99,9 +99,8 @@ const ElderHomePage = () => {
         setConnectionCode(userData.code.toString());
 
         // 보호자 연결 여부 확인
-        // 어르신 관점에서 자신에게 연결된 보호자가 있는지 확인
-        // getCaregiverLinks는 보호자 관점 API이지만, 어르신이 호출하면 자신에게 연결된 보호자 목록을 반환할 수 있음
-        // 또는 별도 API가 필요할 수 있음 (API 스펙 확인 필요)
+        // 어르신이 getCaregiverLinks를 호출하면 자신에게 연결된 보호자 목록을 반환
+        // 각 link의 seniorId는 어르신 자신의 ID이므로, 일치하는 link가 있으면 보호자가 연결된 것
         try {
           const links = await getCaregiverLinks();
           // 어르신의 userId와 일치하는 seniorId가 있는지 확인
@@ -111,7 +110,6 @@ const ElderHomePage = () => {
           setHasGuardian(hasConnectedGuardian);
         } catch (linkError) {
           // CaregiverLink 조회 실패 시 보호자 미연결로 처리
-          // (어르신이 호출하면 404 또는 다른 에러가 발생할 수 있음)
           setHasGuardian(false);
         }
       } catch (error: any) {
@@ -150,6 +148,47 @@ const ElderHomePage = () => {
 
     fetchUserInfo();
   }, []);
+
+  // 보호자 미연결 상태일 때 주기적으로 연결 여부 확인 (폴링)
+  useEffect(() => {
+    // 보호자가 이미 연결되어 있으면 폴링 불필요
+    if (hasGuardian || isLoadingUser) {
+      return;
+    }
+
+    const checkGuardianConnection = async () => {
+      try {
+        const token = getAccessToken();
+        if (!token) {
+          return;
+        }
+
+        const userId = getUserIdFromToken(token);
+        if (!userId) {
+          return;
+        }
+
+        const links = await getCaregiverLinks();
+        const hasConnectedGuardian = links.some(
+          (link) => link.seniorId === userId
+        );
+
+        if (hasConnectedGuardian) {
+          setHasGuardian(true);
+        }
+      } catch (error) {
+        // 에러 발생 시 조용히 처리 (다음 폴링에서 다시 시도)
+      }
+    };
+
+    // 초기 확인
+    checkGuardianConnection();
+
+    // 5초마다 연결 여부 확인
+    const interval = setInterval(checkGuardianConnection, 5000);
+
+    return () => clearInterval(interval);
+  }, [hasGuardian, isLoadingUser]);
 
   // 약 복용 시간 체크 (임시: 실제로는 API나 설정에서 가져올 것)
   useEffect(() => {
