@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { getAccessToken } from '@/lib/storage';
 import { getUserIdFromToken } from '@/lib/jwt';
 import { getUser } from './services/user';
+import { getCaregiverLinks } from '@/pages/Home/services/caregiverLink';
 import ConnectionCodeScreen from './components/ConnectionCodeScreen';
 import DateTimeDisplay from './components/DateTimeDisplay';
 import GreetingCard from './components/GreetingCard';
@@ -14,9 +15,7 @@ import {
 } from './components/TodayMedicationCard';
 
 const ElderHomePage = () => {
-  // TODO: 보호자 연결 여부는 CaregiverLink API 연동 시 실제 데이터로 교체 필요
-  // 테스트: false로 변경하면 보호자 미연결 화면 확인 가능
-  const [hasGuardian] = useState<boolean>(true); // 임시: 보호자 연결 여부
+  const [hasGuardian, setHasGuardian] = useState<boolean>(false); // 보호자 연결 여부
   const [userName, setUserName] = useState<string>(''); // 사용자 이름 (User API에서 가져옴)
   const [connectionCode, setConnectionCode] = useState<string>(''); // 연결 코드 (User API에서 가져옴)
   const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true); // 사용자 정보 로딩 상태
@@ -76,7 +75,7 @@ const ElderHomePage = () => {
     });
   }, [todayMedications]);
 
-  // 사용자 정보 조회
+  // 사용자 정보 및 보호자 연결 여부 조회
   useEffect(() => {
     const fetchUserInfo = async () => {
       setIsLoadingUser(true);
@@ -94,9 +93,27 @@ const ElderHomePage = () => {
           return;
         }
 
+        // 사용자 정보 조회
         const userData = await getUser(userId);
         setUserName(userData.name);
         setConnectionCode(userData.code.toString());
+
+        // 보호자 연결 여부 확인
+        // 어르신 관점에서 자신에게 연결된 보호자가 있는지 확인
+        // getCaregiverLinks는 보호자 관점 API이지만, 어르신이 호출하면 자신에게 연결된 보호자 목록을 반환할 수 있음
+        // 또는 별도 API가 필요할 수 있음 (API 스펙 확인 필요)
+        try {
+          const links = await getCaregiverLinks();
+          // 어르신의 userId와 일치하는 seniorId가 있는지 확인
+          const hasConnectedGuardian = links.some(
+            (link) => link.seniorId === userId
+          );
+          setHasGuardian(hasConnectedGuardian);
+        } catch (linkError) {
+          // CaregiverLink 조회 실패 시 보호자 미연결로 처리
+          // (어르신이 호출하면 404 또는 다른 에러가 발생할 수 있음)
+          setHasGuardian(false);
+        }
       } catch (error: any) {
         // 에러 응답 처리
         if (error.response) {
