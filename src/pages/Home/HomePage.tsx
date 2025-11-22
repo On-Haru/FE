@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { CareRecipient } from '@/types/caregiver';
 import { getCaregiverLinks } from './services/caregiverLink';
+import { getUser } from './services/user';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import EmptyStateScreen from './components/EmptyStateScreen';
 import CaregiverCard from './components/CaregiverCard';
@@ -17,20 +18,39 @@ const HomePage = () => {
     try {
       const links = await getCaregiverLinks();
 
-      // API 응답을 CareRecipient 타입으로 변환
-      // TODO: 피보호자 상세 정보(이름, 약 복용 현황 등)는 별도 API에서 가져와야 함
-      const convertedRecipients: CareRecipient[] = links.map((link) => ({
-        id: link.seniorId.toString(),
-        name: `피보호자 ${link.seniorId}`, // 임시: 실제 이름은 별도 API에서 가져와야 함
-        todayStatus: {
-          takenCount: 0, // 임시: 실제 데이터는 별도 API에서 가져와야 함
-          totalCount: 0, // 임시: 실제 데이터는 별도 API에서 가져와야 함
-        },
-        missedMedications: [], // 임시: 실제 데이터는 별도 API에서 가져와야 함
-        statusMessage: undefined, // 임시: 실제 데이터는 별도 API에서 가져와야 함
-      }));
+      // 각 피보호자의 상세 정보(이름 등)를 User API로 가져오기
+      const recipientsWithDetails = await Promise.all(
+        links.map(async (link) => {
+          try {
+            // User API로 피보호자 정보 조회
+            const userInfo = await getUser(link.seniorId);
+            return {
+              id: link.seniorId.toString(),
+              name: userInfo.name, // 실제 이름 사용
+              todayStatus: {
+                takenCount: 0, // TODO: 실제 데이터는 별도 API에서 가져와야 함
+                totalCount: 0, // TODO: 실제 데이터는 별도 API에서 가져와야 함
+              },
+              missedMedications: [], // TODO: 실제 데이터는 별도 API에서 가져와야 함
+              statusMessage: undefined, // TODO: 실제 데이터는 별도 API에서 가져와야 함
+            };
+          } catch (userError) {
+            // User API 호출 실패 시 기본값 사용
+            return {
+              id: link.seniorId.toString(),
+              name: `피보호자 ${link.seniorId}`, // 폴백: User API 실패 시
+              todayStatus: {
+                takenCount: 0,
+                totalCount: 0,
+              },
+              missedMedications: [],
+              statusMessage: undefined,
+            };
+          }
+        })
+      );
 
-      setRecipients(convertedRecipients);
+      setRecipients(recipientsWithDetails);
     } catch (error) {
       setError(getApiErrorMessage(error));
     } finally {
