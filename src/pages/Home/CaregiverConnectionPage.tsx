@@ -107,7 +107,7 @@ const CaregiverConnectionPage = () => {
               onChange={handleCodeChange}
               placeholder="0000"
               maxLength={4}
-              className="w-full px-6 py-4 text-4xl font-bold text-center rounded-xl border-2 border-gray-300 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary transition-colors"
+              className="w-full px-6 py-4 text-lg text-center rounded-xl border-2 border-gray-300 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary transition-colors"
             />
           </div>
 
