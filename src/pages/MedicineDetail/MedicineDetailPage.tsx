@@ -169,7 +169,6 @@ const MedicineDetailPage = () => {
         1005; // 기본값
 
       // 처방전 등록 API 형식으로 payload 생성
-      // 백엔드가 업데이트를 지원하지 않으므로 항상 새로 생성
       const payload: PrescriptionCreateRequest = {
         seniorId,
         hospitalName,
@@ -190,8 +189,11 @@ const MedicineDetailPage = () => {
         })),
       };
 
-      // 항상 새로 생성 (백엔드가 업데이트를 지원하지 않음)
-      const result = await updatePrescription(0, payload);
+      // 원래 처방전 ID가 있으면 해당 ID로 저장 시도, 없으면 새로 생성
+      const currentPrescriptionId = localStorage.getItem('currentPrescriptionId');
+      const prescriptionId = currentPrescriptionId ? Number(currentPrescriptionId) : 0;
+      
+      const result = await updatePrescription(prescriptionId, payload);
 
       // 저장 후 새로 생성된 처방전 ID로 데이터 다시 불러오기
       if (!result || !result.id) {

@@ -186,14 +186,46 @@ export async function getPrescriptionDetail(
 
 /**
  * 처방전 등록/수정
- * @param _id 처방전 ID (백엔드가 업데이트를 지원하지 않으므로 사용하지 않음, 항상 새로 생성)
+ * @param id 처방전 ID (0이면 새로 생성, 있으면 해당 ID로 업데이트 시도)
  */
 export async function updatePrescription(
-  _id: number,
+  id: number,
   data: PrescriptionCreateRequest
 ): Promise<PrescriptionCreateResponse> {
-  // 백엔드가 POST /api/prescriptions/{id}를 지원하지 않으므로
-  // 항상 POST /api/prescriptions로 새로 생성
+  // ID가 있으면 해당 ID로 업데이트 시도, 없으면 새로 생성
+  if (id > 0) {
+    try {
+      // 원래 처방전 ID로 업데이트 시도
+      const res = await axiosInstance.post<{ data: PrescriptionCreateResponse }>(
+        `/api/prescriptions/${id}`,
+        data
+      );
+      return res.data.data;
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { status?: number; statusText?: string; data?: unknown };
+        message?: string;
+      };
+      
+      // 404, 405, 500 에러면 업데이트가 지원되지 않는 것으로 간주하고 새로 생성
+      if (err.response?.status === 404 || err.response?.status === 405 || err.response?.status === 500) {
+        console.warn('⚠️ 업데이트 API가 지원되지 않습니다. 새로 생성합니다.', {
+          prescriptionId: id,
+          status: err.response?.status,
+        });
+        // 새로 생성하도록 fallback
+        const res = await axiosInstance.post<{ data: PrescriptionCreateResponse }>(
+          `/api/prescriptions`,
+          data
+        );
+        return res.data.data;
+      }
+      
+      throw error;
+    }
+  }
+  
+  // ID가 없으면 새로 생성
   const res = await axiosInstance.post<{ data: PrescriptionCreateResponse }>(
     `/api/prescriptions`,
     data

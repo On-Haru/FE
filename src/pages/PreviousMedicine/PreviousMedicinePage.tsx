@@ -26,7 +26,15 @@ const PreviousMedicinePage = () => {
 
         const seniorId = Number(storedSeniorId);
         const data = await getPreviousPrescriptions(seniorId);
-        setPrescriptions(data);
+        
+        // 발급일 기준 내림차순 정렬 (최신 날짜가 맨 위)
+        const sortedData = [...data].sort((a, b) => {
+          const dateA = new Date(a.issuedDate).getTime();
+          const dateB = new Date(b.issuedDate).getTime();
+          return dateB - dateA; // 내림차순 (최신이 먼저)
+        });
+        
+        setPrescriptions(sortedData);
       } catch (error: any) {
         console.error('이전 처방전 조회 실패', {
           status: error.response?.status,
