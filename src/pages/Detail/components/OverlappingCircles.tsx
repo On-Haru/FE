@@ -1,8 +1,10 @@
+import { memo } from 'react';
+
 interface OverlappingCirclesProps {
     filledCount: number; // 틸 색상으로 채워질 원의 개수 (0-3)
 }
 
-const OverlappingCircles = ({ filledCount }: OverlappingCirclesProps) => {
+const OverlappingCircles = memo(({ filledCount }: OverlappingCirclesProps) => {
     // 32x32px 셀, 16x16px 원
     // 삼원색처럼 삼각형 패턴으로 원 세 개를 항상 겹쳐서 표시
     // 완료율에 따라 각 원의 색상만 변경 (항상 세 개 표시)
@@ -36,7 +38,9 @@ const OverlappingCircles = ({ filledCount }: OverlappingCirclesProps) => {
             })}
         </div>
     );
-};
+});
+
+OverlappingCircles.displayName = 'OverlappingCircles';
 
 export default OverlappingCircles;
 
