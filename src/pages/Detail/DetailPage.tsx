@@ -169,6 +169,7 @@ const DetailPage = () => {
                 currentElder={currentElder}
                 elders={elders}
                 onElderChange={handleElderChange}
+                currentMonth={currentMonth}
             />
             <div className="flex-1 overflow-y-auto py-3">
                 <DetailCalendar
