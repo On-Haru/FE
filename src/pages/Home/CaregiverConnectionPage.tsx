@@ -76,7 +76,7 @@ const CaregiverConnectionPage = () => {
           <button
             type="submit"
             disabled={isButtonDisabled}
-            className={`w-full py-4 px-6 rounded-xl font-semibold text-white transition-all ${
+            className={`cursor-pointer w-full py-4 px-6 rounded-xl font-semibold text-white transition-all ${
               isButtonDisabled
                 ? 'bg-gray-300 cursor-not-allowed'
                 : 'bg-primary hover:opacity-90'

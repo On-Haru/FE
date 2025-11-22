@@ -70,7 +70,7 @@ const HomePage = () => {
 
   // 피보호자가 있는 경우 - 리스트 렌더링
   return (
-    <div>
+    <div className="cursor-pointer">
       {recipients.map((recipient) => (
         <CaregiverCard
           key={recipient.id}

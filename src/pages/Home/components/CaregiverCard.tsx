@@ -55,7 +55,7 @@ const CaregiverCard = ({ recipient, onDisconnect }: CaregiverCardProps) => {
         <h2 className="text-xl font-bold text-gray-900">{name} 님</h2>
         <button
           onClick={handleDisconnectClick}
-          className="text-sm text-red-500 underline hover:text-red-600 transition-colors"
+          className="hover:opacity-80 cursor-pointer text-sm text-red-500 underline hover:text-red-600 transition-colors"
         >
           연결 해제하기
         </button>
