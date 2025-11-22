@@ -126,9 +126,55 @@ const MedicineDetailPage = () => {
       };
 
       console.log('📦 Update payload:', JSON.stringify(payload, null, 2));
+      console.log('📦 Schedules 확인:', medicines.map(m => ({ 
+        name: m.name, 
+        schedulesCount: m.schedules.length, 
+        schedules: m.schedules 
+      })));
 
-      const result = await updatePrescription(0, payload); // id는 사용하지 않음
-      console.log('저장 성공:', result);
+      const result = await updatePrescription(0, payload);
+      console.log('저장 성공 응답:', result);
+
+      // 저장 후 새로 생성된 처방전 ID로 데이터 다시 불러오기
+      // result에 새로 생성된 처방전 ID가 포함되어 있을 수 있음
+      const newPrescriptionId = result?.id || result?.data?.id || await getLatestPrescriptionId();
+      console.log('📋 새로 생성된 처방전 ID:', newPrescriptionId);
+      
+      const detail = await getPrescriptionDetail(newPrescriptionId);
+      
+      console.log('📋 저장 후 조회한 데이터:', detail);
+      console.log('📋 저장 후 조회한 medicines:', detail.medicines);
+      
+      if (detail.medicines && Array.isArray(detail.medicines)) {
+        const mapped: MedicineItem[] = detail.medicines.map((m: any) => {
+          console.log('💊 Medicine:', m.name, 'Schedules:', m.schedules);
+          return {
+            id: m.id,
+            name: m.name || '',
+            dosage: m.dosage ?? 0,
+            totalCount: m.totalCount ?? 0,
+            durationDays: m.durationDays ?? 0,
+            memo: m.memo ?? null,
+            aiDescription: m.aiDescription ?? null,
+            schedules: (m.schedules || []).map((s: any) => ({
+              id: s.id,
+              notifyTime: s.notifyTime,
+              timeTag: s.timeTag,
+            })),
+          };
+        });
+        console.log('📋 매핑된 medicines:', mapped);
+        setMedicines(mapped);
+        
+        // 처방전 기본 정보도 업데이트
+        setPrescriptionInfo({
+          seniorId: detail.seniorId,
+          hospitalName: detail.hospitalName,
+          doctorName: detail.doctorName,
+          issuedDate: detail.issuedDate,
+          note: detail.note,
+        });
+      }
 
       alert('저장 완료!');
       setEditMode(false);
