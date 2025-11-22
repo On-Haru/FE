@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect } from 'react';
 import MobileInstallPrompt from './MobileInstallPrompt';
 import { useInstallPrompt } from '@/contexts/InstallPromptContext';
 
@@ -51,9 +51,10 @@ export default function AppInstallPrompt() {
     }
   };
 
-  const handleBeforeInstallPrompt = (event: BeforeInstallPromptEvent) => {
-    event.preventDefault();
-    setDeferredPrompt(event);
+  const handleBeforeInstallPrompt = (event: Event) => {
+    const installEvent = event as unknown as BeforeInstallPromptEvent;
+    installEvent.preventDefault();
+    setDeferredPrompt(installEvent);
     // Android에서 이벤트가 발생하면 자동으로 모달 표시
     showInstallPrompt();
   };
@@ -61,13 +62,13 @@ export default function AppInstallPrompt() {
   useEffect(() => {
     // beforeinstallprompt 이벤트 리스너 추가
     // 이 이벤트는 브라우저가 자동으로 발생시킵니다 (PWA 조건 만족 시)
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
     
     // 디버깅: 이벤트가 발생하는지 확인
     console.log('beforeinstallprompt 이벤트 리스너 등록됨');
     
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
     };
   }, [setDeferredPrompt, showInstallPrompt]);
   
