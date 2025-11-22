@@ -4,7 +4,12 @@ import { FOOTER_ROUTES } from '@/constants/routes';
 
 const FOOTER_ITEMS = [
   { label: '홈', path: FOOTER_ROUTES[0], icon: House },
-  { label: '달력', path: FOOTER_ROUTES[1], icon: Calendar },
+  {
+    label: '상세',
+    path: FOOTER_ROUTES[1],
+    icon: Calendar,
+    activePrefix: '/detail',
+  },
   {
     label: '처방전',
     path: FOOTER_ROUTES[2],
@@ -37,7 +42,7 @@ const Footer = () => {
                 isActive ? 'text-primary' : 'text-gray-500'
               }`}
             >
-              <Icon className="w-5 h-5 mt-[10px]" />
+              <Icon className={`w-5 h-5 mt-[10px] ${isActive ? 'text-primary' : 'text-gray-500'}`} />
               <span className="text-xs">{item.label}</span>
             </button>
           );
