@@ -24,9 +24,64 @@ const MedicineDetailPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const latestId = await getLatestPrescriptionId();
-        const detail = await getPrescriptionDetail(latestId);
+        // 1. localStorage에서 OCR 결과 확인
+        const ocrDataStr = localStorage.getItem('ocrPrescriptionData');
+        if (ocrDataStr) {
+          console.log('📸 OCR 데이터 발견, OCR 결과 사용');
+          const ocrData = JSON.parse(ocrDataStr);
+          
+          console.log('📋 OCR 원본 데이터:', ocrData);
+          console.log('📋 OCR medicines 개수:', ocrData.medicines?.length || 0);
+          
+          // OCR 결과 사용 (id는 모두 null이므로 임시 ID 생성)
+          setPrescriptionInfo({
+            seniorId: ocrData.seniorId ?? 1001, // TODO: 실제 seniorId 가져오기
+            hospitalName: ocrData.hospitalName ?? '',
+            doctorName: ocrData.doctorName ?? '',
+            issuedDate: ocrData.issuedDate ?? new Date().toISOString().split('T')[0],
+            note: ocrData.note ?? '',
+          });
 
+          // medicines 매핑 (임시 ID 생성)
+          const mapped: MedicineItem[] = (ocrData.medicines || []).map((m: any, idx: number) => {
+            const medicineId = Date.now() + idx; // 임시 ID
+            return {
+              id: medicineId,
+              name: m.name || '',
+              dosage: m.dosage ?? 0,
+              totalCount: m.totalCount ?? 0,
+              durationDays: m.durationDays ?? 0,
+              memo: m.memo ?? null,
+              aiDescription: m.aiDescription ?? null,
+              schedules: (m.schedules || []).map((s: any, sIdx: number) => ({
+                id: medicineId * 1000 + sIdx, // 임시 ID
+                notifyTime: s.notifyTime,
+                timeTag: s.timeTag,
+              })),
+            };
+          });
+
+          console.log('📋 OCR로 매핑된 medicines:', mapped);
+          setMedicines(mapped);
+
+          // OCR 데이터 사용 후 localStorage에서 제거
+          localStorage.removeItem('ocrPrescriptionData');
+          
+          // OCR 결과가 비어있는 경우 사용자에게 알림
+          if (mapped.length === 0) {
+            console.warn('⚠️ OCR 결과가 비어있습니다. 처방전을 인식하지 못했을 수 있습니다.');
+            // 사용자가 수동으로 약을 추가할 수 있도록 editMode는 유지
+          }
+          
+          return;
+        }
+
+        // 2. OCR 결과가 없으면 기존 로직 사용
+        console.log('📋 기존 처방전 조회 로직 사용');
+        const storedId = localStorage.getItem('currentPrescriptionId');
+        const initialId = storedId ? Number(storedId) : await getLatestPrescriptionId();
+        
+        const detail = await getPrescriptionDetail(initialId);
         console.log('📋 Prescription detail:', detail);
 
         // 처방전 기본 정보 저장
