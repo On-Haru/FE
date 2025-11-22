@@ -199,7 +199,7 @@ const ReportPage = () => {
 
           <CollapsibleSection
             title="전체 복약 통계"
-            icon={<BarChart3 className="w-5 h-5 text-secondary" />}
+            icon={<BarChart3 className="w-5 h-5 text-primary" />}
             isOpen={isOverallStatsOpen}
             onToggle={() => setIsOverallStatsOpen(!isOverallStatsOpen)}
           >
@@ -208,7 +208,7 @@ const ReportPage = () => {
 
           <CollapsibleSection
             title="시간대별 복약 패턴"
-            icon={<Clock className="w-5 h-5 text-secondary" />}
+            icon={<Clock className="w-5 h-5 text-primary" />}
             isOpen={isTimePatternOpen}
             onToggle={() => setIsTimePatternOpen(!isTimePatternOpen)}
           >
@@ -217,7 +217,7 @@ const ReportPage = () => {
 
           <CollapsibleSection
             title="약별 복용 패턴"
-            icon={<Pill className="w-5 h-5 text-secondary" />}
+            icon={<Pill className="w-5 h-5 text-primary" />}
             isOpen={isMedicinePatternOpen}
             onToggle={() => setIsMedicinePatternOpen(!isMedicinePatternOpen)}
           >
@@ -229,7 +229,7 @@ const ReportPage = () => {
 
           <CollapsibleSection
             title="위험 신호 & 행동 제안"
-            icon={<AlertTriangle className="w-5 h-5 text-secondary" />}
+            icon={<AlertTriangle className="w-5 h-5 text-primary" />}
             isOpen={isRiskSignalsOpen}
             onToggle={() => setIsRiskSignalsOpen(!isRiskSignalsOpen)}
           >
