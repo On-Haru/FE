@@ -1,3 +1,5 @@
+import { useRef } from 'react';
+import { gsap } from 'gsap';
 import type { MedicinePattern } from '@/types/report';
 
 interface ReportMedicinePatternProps {
@@ -9,13 +11,44 @@ const ReportMedicinePattern = ({
     medicinePattern,
     averageDelayMinutes,
 }: ReportMedicinePatternProps) => {
+    const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+    const handleMouseEnter = (index: number) => {
+        const card = cardRefs.current[index];
+        if (card) {
+            gsap.to(card, {
+                scale: 1.01,
+                y: -2,
+                duration: 0.2,
+                ease: 'power2.out',
+            });
+        }
+    };
+
+    const handleMouseLeave = (index: number) => {
+        const card = cardRefs.current[index];
+        if (card) {
+            gsap.to(card, {
+                scale: 1,
+                y: 0,
+                duration: 0.2,
+                ease: 'power2.out',
+            });
+        }
+    };
+
     return (
         <div>
             <div className="space-y-3">
                 {medicinePattern.map((medicine, index) => (
                     <div
                         key={index}
-                        className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm"
+                        ref={(el) => {
+                            cardRefs.current[index] = el;
+                        }}
+                        onMouseEnter={() => handleMouseEnter(index)}
+                        onMouseLeave={() => handleMouseLeave(index)}
+                        className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm cursor-pointer transition-shadow hover:shadow-md"
                     >
                         <div className="flex items-start justify-between mb-2">
                             <div className="flex-1">

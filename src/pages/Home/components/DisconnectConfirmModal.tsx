@@ -1,4 +1,6 @@
+import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { gsap } from 'gsap';
 
 interface DisconnectConfirmModalProps {
   /** 모달 열림 여부 */
@@ -17,14 +19,79 @@ const DisconnectConfirmModal = ({
   onConfirm,
   onCancel,
 }: DisconnectConfirmModalProps) => {
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const overlay = overlayRef.current;
+    const modal = modalRef.current;
+
+    if (!overlay || !modal) return;
+
+    // 초기 상태 설정
+    gsap.set(overlay, { opacity: 0 });
+    gsap.set(modal, { scale: 0.8, opacity: 0, y: 20 });
+
+    // 등장 애니메이션
+    gsap.to(overlay, {
+      opacity: 1,
+      duration: 0.2,
+      ease: 'power2.out',
+    });
+
+    gsap.to(modal, {
+      scale: 1,
+      opacity: 1,
+      y: 0,
+      duration: 0.3,
+      ease: 'back.out(1.7)',
+    });
+
+    return () => {
+      gsap.killTweensOf([overlay, modal]);
+    };
+  }, [isOpen]);
+
+  const handleClose = () => {
+    const overlay = overlayRef.current;
+    const modal = modalRef.current;
+
+    if (!overlay || !modal) {
+      onCancel();
+      return;
+    }
+
+    // 퇴장 애니메이션
+    gsap.to(modal, {
+      scale: 0.8,
+      opacity: 0,
+      y: 20,
+      duration: 0.2,
+      ease: 'power2.in',
+    });
+
+    gsap.to(overlay, {
+      opacity: 0,
+      duration: 0.2,
+      ease: 'power2.in',
+      onComplete: () => {
+        onCancel();
+      },
+    });
+  };
+
   if (!isOpen) return null;
 
   const modalContent = (
     <div
+      ref={overlayRef}
       className="absolute inset-0 bg-black/50 flex items-center justify-center z-50"
-      onClick={onCancel}
+      onClick={handleClose}
     >
       <div
+        ref={modalRef}
         className="bg-white rounded-xl w-[90%] max-w-md p-6"
         onClick={(e) => e.stopPropagation()}
       >
@@ -41,13 +108,16 @@ const DisconnectConfirmModal = ({
         {/* 버튼들 */}
         <div className="flex gap-3">
           <button
-            onClick={onCancel}
+            onClick={handleClose}
             className="cursor-pointer flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-colors"
           >
             취소
           </button>
           <button
-            onClick={onConfirm}
+            onClick={() => {
+              onConfirm();
+              handleClose();
+            }}
             className="cursor-pointer flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors"
           >
             연결 해제

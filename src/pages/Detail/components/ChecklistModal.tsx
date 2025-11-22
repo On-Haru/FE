@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { gsap } from 'gsap';
 import { X } from 'lucide-react';
 import { format, parse } from 'date-fns';
 import type { ChecklistItem } from '@/types/checklist';
@@ -22,8 +23,71 @@ interface ChecklistModalProps {
 
 const ChecklistModal = ({ isOpen, onClose, date, item, elderName, userId }: ChecklistModalProps) => {
     const [isSending, setIsSending] = useState(false);
+    const overlayRef = useRef<HTMLDivElement>(null);
+    const modalRef = useRef<HTMLDivElement>(null);
     const parsedDate = parse(date, 'yyyy-MM-dd', new Date());
     const dateLabel = format(parsedDate, 'M월 d일');
+
+    // 모달 등장/퇴장 애니메이션
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const overlay = overlayRef.current;
+        const modal = modalRef.current;
+
+        if (!overlay || !modal) return;
+
+        // 초기 상태 설정
+        gsap.set(overlay, { opacity: 0 });
+        gsap.set(modal, { scale: 0.8, opacity: 0, y: 20 });
+
+        // 등장 애니메이션
+        gsap.to(overlay, {
+            opacity: 1,
+            duration: 0.2,
+            ease: 'power2.out',
+        });
+
+        gsap.to(modal, {
+            scale: 1,
+            opacity: 1,
+            y: 0,
+            duration: 0.3,
+            ease: 'back.out(1.7)',
+        });
+
+        return () => {
+            gsap.killTweensOf([overlay, modal]);
+        };
+    }, [isOpen]);
+
+    const handleClose = () => {
+        const overlay = overlayRef.current;
+        const modal = modalRef.current;
+
+        if (!overlay || !modal) {
+            onClose();
+            return;
+        }
+
+        // 퇴장 애니메이션
+        gsap.to(modal, {
+            scale: 0.8,
+            opacity: 0,
+            y: 20,
+            duration: 0.2,
+            ease: 'power2.in',
+        });
+
+        gsap.to(overlay, {
+            opacity: 0,
+            duration: 0.2,
+            ease: 'power2.in',
+            onComplete: () => {
+                onClose();
+            },
+        });
+    };
 
     // 약 이름 추출 (예: "아침약 : 타이레놀, 타이레놀" -> "타이레놀")
     const medicineName = item.label.split(':')[1]?.trim().split(',')[0] || '약';
@@ -75,14 +139,19 @@ const ChecklistModal = ({ isOpen, onClose, date, item, elderName, userId }: Chec
     if (!isOpen) return null;
 
     const modalContent = (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
+        <div 
+            ref={overlayRef}
+            className="absolute inset-0 bg-black/50 flex items-center justify-center z-50" 
+            onClick={handleClose}
+        >
             <div
+                ref={modalRef}
                 className="bg-white rounded-2xl w-[90%] max-w-md p-6 relative"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* 닫기 버튼 */}
                 <button
-                    onClick={onClose}
+                    onClick={handleClose}
                     className="absolute cursor-pointer top-4 right-4 text-gray-600 hover:text-gray-800 transition-colors"
                 >
                     <X className="w-5 h-5" />
