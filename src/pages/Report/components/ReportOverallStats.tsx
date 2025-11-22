@@ -1,4 +1,3 @@
-import { BarChart3 } from 'lucide-react';
 import type { Statistics } from '@/types/report';
 
 interface ReportOverallStatsProps {
@@ -17,11 +16,7 @@ const ReportOverallStats = ({ statistics }: ReportOverallStatsProps) => {
     };
 
     return (
-        <div className="mb-6">
-            <div className="flex items-center gap-2 mb-4">
-                <BarChart3 className="w-5 h-5 text-primary" />
-                <h2 className="text-lg font-semibold text-black">전체 복약 통계</h2>
-            </div>
+        <div>
             <div className="bg-white rounded-xl p-4 border border-gray-200">
                 <div className="space-y-4">
                     {/* 전체 복약률 */}

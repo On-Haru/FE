@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { ChevronDown, BarChart3, Clock, Pill, AlertTriangle } from 'lucide-react';
 import ReportUserInfo from './components/ReportUserInfo';
 import ReportAISummary from './components/ReportAISummary';
 import ReportOverallStats from './components/ReportOverallStats';
@@ -5,7 +7,50 @@ import ReportTimePattern from './components/ReportTimePattern';
 import ReportMedicinePattern from './components/ReportMedicinePattern';
 import ReportRiskSignals from './components/ReportRiskSignals';
 
+// 토글 가능한 섹션 컴포넌트
+interface CollapsibleSectionProps {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+const CollapsibleSection = ({
+  title,
+  icon,
+  children,
+  isOpen,
+  onToggle,
+}: CollapsibleSectionProps) => {
+  return (
+    <div className="mb-0">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between p-2 rounded-lg bg-white hover:bg-primary/5 transition-colors cursor-pointer focus:outline-none"
+      >
+        <div className="flex items-center gap-2">
+          {icon}
+          <h2 className="text-lg font-semibold text-black">{title}</h2>
+        </div>
+        <ChevronDown
+          className="w-5 h-5 text-primary transition-transform"
+          style={{
+            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+          }}
+        />
+      </button>
+      {isOpen && <div className="mt-4">{children}</div>}
+    </div>
+  );
+};
+
 const ReportPage = () => {
+  // 각 섹션의 열림/닫힘 상태 관리 (기본값: 모두 열림)
+  const [isOverallStatsOpen, setIsOverallStatsOpen] = useState(true);
+  const [isTimePatternOpen, setIsTimePatternOpen] = useState(true);
+  const [isMedicinePatternOpen, setIsMedicinePatternOpen] = useState(true);
+  const [isRiskSignalsOpen, setIsRiskSignalsOpen] = useState(true);
   // 임시 mock 데이터
   const mockData = {
     name: '김노인',
@@ -50,20 +95,53 @@ const ReportPage = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-full gap-4">
+    <div className="flex flex-col min-h-full gap-2">
       <ReportUserInfo name={mockData.name} birthYear={mockData.birthYear} />
+
       <ReportAISummary summary={mockData.aiSummary} />
-      <ReportOverallStats statistics={mockData.statistics} />
-      <ReportTimePattern timePattern={mockData.timePattern} />
-      <ReportMedicinePattern
-        medicinePattern={mockData.medicinePattern}
-        averageDelayMinutes={mockData.statistics.averageDelayMinutes}
-      />
-      <ReportRiskSignals
-        quickResponseRate={mockData.riskSignals.quickResponseRate}
-        delayedResponseRate={mockData.riskSignals.delayedResponseRate}
-        suggestion={mockData.riskSignals.suggestion}
-      />
+
+      <CollapsibleSection
+        title="전체 복약 통계"
+        icon={<BarChart3 className="w-5 h-5 text-primary" />}
+        isOpen={isOverallStatsOpen}
+        onToggle={() => setIsOverallStatsOpen(!isOverallStatsOpen)}
+      >
+        <ReportOverallStats statistics={mockData.statistics} />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="시간대별 복약 패턴"
+        icon={<Clock className="w-5 h-5 text-primary" />}
+        isOpen={isTimePatternOpen}
+        onToggle={() => setIsTimePatternOpen(!isTimePatternOpen)}
+      >
+        <ReportTimePattern timePattern={mockData.timePattern} />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="약별 복용 패턴"
+        icon={<Pill className="w-5 h-5 text-primary" />}
+        isOpen={isMedicinePatternOpen}
+        onToggle={() => setIsMedicinePatternOpen(!isMedicinePatternOpen)}
+      >
+        <ReportMedicinePattern
+          medicinePattern={mockData.medicinePattern}
+          averageDelayMinutes={mockData.statistics.averageDelayMinutes}
+        />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="위험 신호 & 행동 제안"
+        icon={<AlertTriangle className="w-5 h-5 text-primary" />}
+        isOpen={isRiskSignalsOpen}
+        onToggle={() => setIsRiskSignalsOpen(!isRiskSignalsOpen)}
+      >
+        <ReportRiskSignals
+          quickResponseRate={mockData.riskSignals.quickResponseRate}
+          delayedResponseRate={mockData.riskSignals.delayedResponseRate}
+          suggestion={mockData.riskSignals.suggestion}
+        />
+      </CollapsibleSection>
     </div>
   );
 };

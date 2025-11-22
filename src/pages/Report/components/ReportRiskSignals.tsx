@@ -1,4 +1,3 @@
-import { AlertTriangle } from 'lucide-react';
 
 interface ReportRiskSignalsProps {
     quickResponseRate: number; // 알림 후 5분 이내 복용 비율
@@ -12,11 +11,7 @@ const ReportRiskSignals = ({
     suggestion,
 }: ReportRiskSignalsProps) => {
     return (
-        <div className="mb-6">
-            <div className="flex items-center gap-2 mb-4">
-                <AlertTriangle className="w-5 h-5 text-primary" />
-                <h2 className="text-lg font-semibold text-black">위험 신호 & 행동 제안</h2>
-            </div>
+        <div>
             <div className="bg-white rounded-xl px-4 mb-4">
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">

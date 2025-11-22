@@ -1,4 +1,4 @@
-import { Sun, Moon, Clock } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 import type { TimePattern } from '@/types/report';
 
 interface ReportTimePatternProps {
@@ -30,11 +30,7 @@ const ReportTimePattern = ({ timePattern }: ReportTimePatternProps) => {
     };
 
     return (
-        <div className="mb-6">
-            <div className="flex items-center gap-2 mb-4">
-                <Clock className="w-5 h-5 text-primary" />
-                <h2 className="text-lg font-semibold text-black">시간대별 복약 패턴</h2>
-            </div>
+        <div>
             <div className="space-y-4">
                 {timePattern.map((item) => {
                     const config = getTimeConfig(item.label);
