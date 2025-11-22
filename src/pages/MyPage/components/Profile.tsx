@@ -17,7 +17,7 @@ const Profile = ({ name, onLogout }: MyPageProfileProps) => {
       {/* 로그아웃 버튼 */}
       <button
         onClick={onLogout}
-        className="w-fit mt-10 px-10 py-2 rounded-lg bg-red-100 text-red-500 font-medium"
+        className="w-fit mt-10 px-10 py-2 rounded-xl bg-red-100 text-red-500 font-medium"
       >
         로그아웃
       </button>

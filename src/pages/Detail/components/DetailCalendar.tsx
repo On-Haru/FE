@@ -55,7 +55,7 @@ const DetailCalendar = ({ checklistData, selectedDate, onDateSelect }: DetailCal
     const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 
     return (
-        <div className="w-full border rounded-lg p-4" style={{ borderColor: '#E4E4E7' }}>
+        <div className="w-full border rounded-xl p-4 pb-10 border-[#E4E4E7] shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
             {/* 월 네비게이션 */}
             <div className="flex items-center justify-between mb-4">
                 <button
@@ -91,7 +91,7 @@ const DetailCalendar = ({ checklistData, selectedDate, onDateSelect }: DetailCal
             </div>
 
             {/* 캘린더 그리드 */}
-            <div className="grid grid-cols-7 gap-1 place-items-center">
+            <div className="grid grid-cols-7 gap-3 place-items-center">
                 {/* 이전 달 날짜들 */}
                 {previousMonthDays.map((date) => (
                     <CalendarDateCell

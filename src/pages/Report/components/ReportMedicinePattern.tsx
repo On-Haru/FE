@@ -1,4 +1,3 @@
-import { Pill } from 'lucide-react';
 import type { MedicinePattern } from '@/types/report';
 
 interface ReportMedicinePatternProps {
@@ -11,12 +10,8 @@ const ReportMedicinePattern = ({
     averageDelayMinutes,
 }: ReportMedicinePatternProps) => {
     return (
-        <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <Pill className="w-5 h-5 text-primary" />
-                    <h2 className="text-lg font-semibold text-black">약별 복용 패턴</h2>
-                </div>
+        <div>
+            <div className="flex justify-end mb-4">
                 <p className="text-sm text-gray-600">
                     현재 총 복용 중인 약 · {medicinePattern.length}개
                 </p>
@@ -25,7 +20,7 @@ const ReportMedicinePattern = ({
                 {medicinePattern.map((medicine, index) => (
                     <div
                         key={index}
-                        className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
+                        className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm"
                     >
                         <div className="flex items-start justify-between mb-2">
                             <div className="flex-1">
