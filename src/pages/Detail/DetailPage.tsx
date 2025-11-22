@@ -208,7 +208,7 @@ const DetailPage = () => {
                 elders={elders}
                 onElderChange={handleElderChange}
             />
-            <div className="flex-1 overflow-y-auto py-6">
+            <div className="flex-1 overflow-y-auto py-3">
                 <DetailCalendar
                     checklistData={checklistData}
                     selectedDate={selectedDate}
