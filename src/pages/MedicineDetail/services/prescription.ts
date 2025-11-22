@@ -38,7 +38,7 @@ export interface PrescriptionCreateRequest {
   hospitalName: string;
   doctorName: string;
   issuedDate: string;
-  note: string;
+  note: string | null;
   medicines: Array<{
     name: string;
     dosage: number;
@@ -133,8 +133,13 @@ export function mapOCRResponseToMedicineItems(
     };
   });
 
-  // seniorId가 null이면 기본값 사용
-  const seniorId = ocrData.seniorId ?? getDefaultSeniorId();
+  // seniorId 결정: OCR 데이터 > localStorage 선택값 > 기본값
+  const storedSeniorId = typeof window !== 'undefined' 
+    ? localStorage.getItem('selectedSeniorId') 
+    : null;
+  const seniorId = ocrData.seniorId ?? 
+    (storedSeniorId ? Number(storedSeniorId) : null) ?? 
+    getDefaultSeniorId();
 
   // 필수 필드 검증 및 기본값 설정 (백엔드 validation 통과를 위해)
   const hospitalName = (ocrData.hospitalName?.trim() || '') || '병원명 미입력';

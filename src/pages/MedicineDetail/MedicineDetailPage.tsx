@@ -128,15 +128,21 @@ const MedicineDetailPage = () => {
       const doctorName = prescriptionInfo.doctorName?.trim() || '의사명 미입력';
       const issuedDate = prescriptionInfo.issuedDate || new Date().toISOString().split('T')[0];
 
+      // seniorId 결정: OCR 데이터 > localStorage 선택값 > prescriptionInfo > 기본값
+      const storedSeniorId = localStorage.getItem('selectedSeniorId');
+      const seniorId = 
+        prescriptionInfo.seniorId || 
+        (storedSeniorId ? Number(storedSeniorId) : null) || 
+        1005; // 기본값
+
       // 처방전 등록 API 형식으로 payload 생성
       // 백엔드가 업데이트를 지원하지 않으므로 항상 새로 생성
-      // seniorId는 항상 1005 사용 (백엔드에 존재하는 피보호자 ID)
       const payload: PrescriptionCreateRequest = {
-        seniorId: 1005,
+        seniorId,
         hospitalName,
         doctorName,
         issuedDate,
-        note: prescriptionInfo.note || '',
+        note: null,
         medicines: medicines.map((m) => ({
           name: m.name,
           dosage: m.dosage,
@@ -191,14 +197,26 @@ const MedicineDetailPage = () => {
         response: error.response?.data,
       });
       
+      // 에러 메시지 추출
+      const errorData = error.response?.data as { message?: string; errorCode?: string } | undefined;
+      const errorMessage = errorData?.message || error.message || '알 수 없는 오류';
+      
+      // note 필드 길이 초과 에러 처리
+      if (errorMessage.includes('Data too long for column') && errorMessage.includes('note')) {
+        alert(
+          '저장 실패: 비고(note) 필드가 너무 깁니다.\n\n' +
+          '비고 내용이 500자를 초과하여 저장할 수 없습니다.\n' +
+          '비고 내용을 줄여주세요.'
+        );
+      }
       // 404 에러인 경우 더 명확한 메시지 제공
-      if (error.response?.status === 404) {
+      else if (error.response?.status === 404) {
         alert(
           '저장 실패: API 엔드포인트를 찾을 수 없습니다.\n\n백엔드 서버가 실행 중인지 확인하거나, API 경로가 올바른지 확인해주세요.'
         );
       } else {
         alert(
-          `저장 실패: ${error.response?.data?.message || error.message || '알 수 없는 오류'}`
+          `저장 실패: ${errorMessage}`
         );
       }
     }

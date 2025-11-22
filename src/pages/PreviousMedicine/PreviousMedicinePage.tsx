@@ -13,8 +13,18 @@ const PreviousMedicinePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // TODO: 실제 seniorId를 가져와야 함 (예: URL 파라미터, 상태 관리 등)
-        const seniorId = 1001; // 임시 값
+        setLoading(true);
+        // localStorage에서 선택된 seniorId 가져오기
+        const storedSeniorId = localStorage.getItem('selectedSeniorId');
+        
+        if (!storedSeniorId) {
+          console.warn('선택된 피보호자가 없습니다.');
+          setPrescriptions([]);
+          setLoading(false);
+          return;
+        }
+
+        const seniorId = Number(storedSeniorId);
         const data = await getPreviousPrescriptions(seniorId);
         setPrescriptions(data);
       } catch (error: any) {

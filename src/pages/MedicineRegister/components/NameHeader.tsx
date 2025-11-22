@@ -3,7 +3,11 @@ import Dropdown, { type DropdownOption } from '@/components/Dropdown';
 import { getCaregiverLinks } from '@/pages/Home/services/caregiverLink';
 import { getUser } from '@/pages/Home/services/user';
 
-const NameHeader = () => {
+interface NameHeaderProps {
+  onSeniorIdChange?: (seniorId: number | null) => void;
+}
+
+const NameHeader = ({ onSeniorIdChange }: NameHeaderProps) => {
   const [elderOptions, setElderOptions] = useState<DropdownOption[]>([]);
   const [selectedOption, setSelectedOption] = useState<DropdownOption | null>(
     null
@@ -60,6 +64,8 @@ const NameHeader = () => {
         // localStorage에 선택된 seniorId 저장
         if (defaultOption) {
           localStorage.setItem('selectedSeniorId', defaultOption.value);
+          // 부모 컴포넌트에 선택된 seniorId 전달
+          onSeniorIdChange?.(Number(defaultOption.value));
         }
       } catch (error) {
         console.error('피보호자 목록 조회 실패:', error);
@@ -102,6 +108,8 @@ const NameHeader = () => {
                 setSelectedOption(newElder);
                 // localStorage에 선택된 seniorId 저장
                 localStorage.setItem('selectedSeniorId', value);
+                // 부모 컴포넌트에 선택된 seniorId 전달
+                onSeniorIdChange?.(Number(value));
               }
             }}
             fontSize="clamp(16px, 5vw, 20px)"
