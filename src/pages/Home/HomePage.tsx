@@ -35,12 +35,20 @@ const HomePage = () => {
     try {
       const links = await getCaregiverLinks();
 
+      // 피보호자가 없는 경우
+      if (links.length === 0) {
+        setRecipients([]);
+        setIsLoading(false);
+        return;
+      }
+
       // 오늘 날짜 정보
       const today = new Date();
       const year = today.getFullYear();
       const month = today.getMonth() + 1; // 0-based이므로 +1
 
       // 각 피보호자의 상세 정보(이름, 캘린더 데이터)를 가져오기
+      // 각 피보호자별로 독립적으로 처리하여 한 명의 API 실패가 다른 피보호자에 영향을 주지 않도록 함
       const recipientsWithDetails = await Promise.all(
         links.map(async (link) => {
           let userInfo;
@@ -50,7 +58,8 @@ const HomePage = () => {
           try {
             userInfo = await getUser(link.seniorId);
           } catch (userError) {
-            // User API 호출 실패 시 기본값 사용
+            // User API 호출 실패 시 기본값 사용 (조용히 처리)
+            // 한 피보호자의 User API 실패가 다른 피보호자에 영향을 주지 않음
             userInfo = {
               id: link.seniorId,
               name: `피보호자 ${link.seniorId}`,
@@ -64,7 +73,8 @@ const HomePage = () => {
           try {
             calendarData = await getCalendar(year, month, link.seniorId);
           } catch (calendarError) {
-            // 캘린더 API 호출 실패 시 null로 처리
+            // 캘린더 API 호출 실패 시 null로 처리 (조용히 처리)
+            // 한 피보호자의 캘린더 API 실패가 다른 피보호자에 영향을 주지 않음
             calendarData = null;
           }
 
@@ -96,6 +106,7 @@ const HomePage = () => {
 
       setRecipients(recipientsWithDetails);
     } catch (error) {
+      // getCaregiverLinks 실패 시에만 에러 표시
       setError(getApiErrorMessage(error));
     } finally {
       setIsLoading(false);
