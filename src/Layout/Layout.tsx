@@ -11,14 +11,14 @@ const Layout = () => {
   const authPage = isAuthPage(location.pathname);
 
   return (
-    <div className="mobile-container flex flex-col">
-      <div className="mobile-content flex-1 flex flex-col overflow-y-auto relative">
-        {!authPage && <Header />}
-        <div className="flex-1 p-4">
-          <Outlet />
-        </div>
-        {!isElder && !authPage && <Footer />}
-      </div>
+    <div className="flex flex-col h-dvh">
+      {!authPage && <Header />}
+
+      <main className="flex-1 overflow-y-auto p-4">
+        <Outlet />
+      </main>
+
+      {!isElder && !authPage && <Footer />}
     </div>
   );
 };
