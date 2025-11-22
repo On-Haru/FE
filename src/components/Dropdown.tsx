@@ -23,6 +23,7 @@ const Dropdown = ({
 }: SelectDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const toggleButtonRef = useRef<HTMLDivElement>(null);
 
   // 외부 클릭 → 닫기
   useEffect(() => {
@@ -40,35 +41,58 @@ const Dropdown = ({
     setIsOpen(false);
   };
 
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsOpen((prev) => !prev);
+  };
+
+  const handleContainerClick = (e: React.MouseEvent) => {
+    // 이름+화살표 div 외부를 클릭했을 때 (오른쪽 여백 등)
+    // 드롭다운이 열려있으면 닫기
+    if (
+      isOpen &&
+      toggleButtonRef.current &&
+      !toggleButtonRef.current.contains(e.target as Node)
+    ) {
+      setIsOpen(false);
+    }
+  };
+
   return (
     <div
       ref={dropdownRef}
-      className="relative flex items-center gap-2 cursor-pointer select-none"
+      className="relative"
       role="button"
       tabIndex={0}
       aria-expanded={isOpen}
+      onClick={handleContainerClick}
     >
-      {/* 현재 선택된 label */}
-      <span
-        className="font-medium text-black whitespace-nowrap"
-        style={{ fontSize }}
-      >
-        {selected.label}
-      </span>
-
-      {/* 아이콘 박스 */}
+      {/* 현재 선택된 label + 화살표 (클릭 가능한 영역) */}
       <div
-        className="flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50 active:bg-gray-100 transition-colors"
-        style={{ width: 22, height: 22 }}
-        onClick={() => setIsOpen((prev) => !prev)}
+        ref={toggleButtonRef}
+        className="inline-flex items-center gap-2 cursor-pointer select-none hover:bg-gray-50 active:bg-gray-100 transition-colors rounded"
+        onClick={handleToggle}
       >
-        <ChevronDown
-          className="w-4 h-4 text-gray-600"
-          style={{
-            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.2s',
-          }}
-        />
+        <span
+          className="font-medium text-black whitespace-nowrap"
+          style={{ fontSize }}
+        >
+          {selected.label}
+        </span>
+
+        {/* 아이콘 박스 */}
+        <div
+          className="flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50 active:bg-gray-100 transition-colors flex-shrink-0"
+          style={{ width: 22, height: 22 }}
+        >
+          <ChevronDown
+            className="w-4 h-4 text-gray-600"
+            style={{
+              transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.2s',
+            }}
+          />
+        </div>
       </div>
 
       {/* 드롭다운 리스트 */}
