@@ -371,8 +371,10 @@ const ElderHomePage = () => {
 
   const missedMedication = getMissedMedicationMessage();
 
-  // 모든 약이 복용되었는지 확인
-  const allMedicationsTaken = sortedMedications.every((med) => med.isTaken);
+  // 약이 없는 경우와 모두 복용한 경우 구분
+  const hasNoMedication = todayMedications.length === 0; // 약이 없는 경우
+  const allMedicationsTaken =
+    todayMedications.length > 0 && todayMedications.every((med) => med.isTaken); // 약이 있고 모두 복용한 경우
 
   // 사용자 정보 로딩 중
   if (isLoadingUser) {
@@ -427,7 +429,8 @@ const ElderHomePage = () => {
           <>
             <MissedMedicationAlert
               missedMedication={missedMedication}
-              hasNoMedication={allMedicationsTaken}
+              hasNoMedication={hasNoMedication}
+              allMedicationsTaken={allMedicationsTaken}
             />
             <TodayMedicationList
               medications={sortedMedications}
