@@ -14,11 +14,11 @@ import {
 } from './components/TodayMedicationCard';
 
 const ElderHomePage = () => {
-  // TODO: API 연동 시 실제 데이터로 교체
+  // TODO: 보호자 연결 여부는 CaregiverLink API 연동 시 실제 데이터로 교체 필요
   // 테스트: false로 변경하면 보호자 미연결 화면 확인 가능
   const [hasGuardian] = useState<boolean>(true); // 임시: 보호자 연결 여부
-  const [userName, setUserName] = useState<string>(''); // 사용자 이름
-  const [connectionCode, setConnectionCode] = useState<string>(''); // 연결 코드
+  const [userName, setUserName] = useState<string>(''); // 사용자 이름 (User API에서 가져옴)
+  const [connectionCode, setConnectionCode] = useState<string>(''); // 연결 코드 (User API에서 가져옴)
   const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true); // 사용자 정보 로딩 상태
   const [userError, setUserError] = useState<string | null>(null); // 사용자 정보 조회 에러
 

@@ -20,9 +20,9 @@ const Header = () => {
   const title = getPageTitle(location.pathname);
   const isElderHome = location.pathname === ROUTES.ELDER_HOME;
 
-  // TODO: API 연동 시 실제 보호자 연결 여부 및 연결 코드로 교체
+  // TODO: 보호자 연결 여부는 CaregiverLink API 연동 시 실제 데이터로 교체 필요
   const [hasGuardian] = useState<boolean>(true); // 임시: 보호자 연결 여부
-  const [connectionCode, setConnectionCode] = useState<string>(''); // 연결 코드
+  const [connectionCode, setConnectionCode] = useState<string>(''); // 연결 코드 (User API에서 가져옴)
 
   // 어르신 홈화면일 때만 사용자 정보 조회
   useEffect(() => {
