@@ -11,7 +11,8 @@ import {
   type PrescriptionInfo,
   type PrescriptionCreateRequest,
 } from '@/pages/MedicineDetail/services/prescription';
-import type { OCRResponse } from '../MedicineRegister/services/ocr';
+import { getPreviousPrescriptions } from '@/pages/PreviousMedicine/services/previous';
+import type { OCRResponse } from '@/pages/MedicineRegister/services/ocr';
 
 const MedicineDetailPage = () => {
   const [medicines, setMedicines] = useState<MedicineItem[]>([]);
@@ -63,18 +64,54 @@ const MedicineDetailPage = () => {
           return;
         }
         
-        // 저장된 처방전 ID가 있으면 사용, 없으면 최신 처방전 ID 조회
-        const storedId = localStorage.getItem('currentPrescriptionId');
-        const initialId = storedId ? Number(storedId) : await getLatestPrescriptionId();
+        // 선택된 seniorId 확인
+        const storedSeniorId = localStorage.getItem('selectedSeniorId');
+        if (!storedSeniorId) {
+          console.warn('선택된 피보호자가 없습니다.');
+          setMedicines([]);
+          return;
+        }
+
+        const seniorId = Number(storedSeniorId);
         
+        // 저장된 처방전 ID가 있으면 해당 처방전 조회 시도
+        const storedId = localStorage.getItem('currentPrescriptionId');
+        if (storedId) {
+          try {
+            const { prescriptionInfo: info, medicines: fetchedMedicines } =
+              await getPrescriptionDetail(Number(storedId));
+            
+            // 조회한 처방전이 선택된 seniorId와 일치하는지 확인
+            if (info.seniorId === seniorId) {
+              setPrescriptionInfo(info);
+              setMedicines(fetchedMedicines);
+              return;
+            }
+          } catch (error) {
+            // 저장된 ID로 조회 실패 시 최신 처방전 조회로 fallback
+            console.warn('저장된 처방전 ID로 조회 실패, 최신 처방전 조회:', error);
+          }
+        }
+        
+        // 선택된 seniorId에 맞는 최신 처방전 조회
+        const prescriptions = await getPreviousPrescriptions(seniorId);
+        
+        if (prescriptions.length === 0) {
+          // 처방전이 없으면 빈 상태로 설정
+          setMedicines([]);
+          return;
+        }
+        
+        // 최신 처방전 (첫 번째 항목, 발급일 역순 정렬)
+        const latestPrescription = prescriptions[0];
         const { prescriptionInfo: info, medicines: fetchedMedicines } =
-          await getPrescriptionDetail(initialId);
+          await getPrescriptionDetail(latestPrescription.id);
 
         setPrescriptionInfo(info);
         setMedicines(fetchedMedicines);
         
         // 조회한 처방전 ID를 localStorage에 저장 (다음 로드 시 사용)
-        localStorage.setItem('currentPrescriptionId', String(initialId));
+        localStorage.setItem('currentPrescriptionId', String(latestPrescription.id));
       } catch (error: unknown) {
         const err = error as { response?: { status?: number; data?: unknown } };
         console.error('처방전 조회 실패', {
