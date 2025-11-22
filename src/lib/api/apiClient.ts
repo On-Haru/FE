@@ -74,14 +74,20 @@ class ApiClient {
     }
 
     if (!response.data.success) {
-      throw new Error(response.data.message || 'API 요청이 실패했습니다.');
+      const error = new Error(
+        response.data.message || 'API 요청이 실패했습니다.'
+      );
+      // 에러 객체에 errorCode를 포함시켜 컨텍스트를 보존합니다.
+      (error as any).errorCode = response.data.errorCode;
+      throw error;
     }
 
-    if (response.data.data === null || response.data.data === undefined) {
+    if (response.data.data === undefined) {
       throw new Error('API 응답 데이터가 없습니다.');
     }
 
-    return response.data.data;
+    // `data`가 `null`일 수 있는 경우를 허용하고, 호출하는 쪽에서 `T` 타입을 `MyType | null`과 같이 명시하도록 합니다.
+    return response.data.data as T;
   }
 }
 
