@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { format, parse } from 'date-fns';
@@ -21,12 +20,6 @@ const ChecklistModal = ({ isOpen, onClose, date, item, elderName }: ChecklistMod
 
     // 식사 시간 추출 (예: "아침약" -> "아침")
     const mealTime = item.label.split('약')[0] || '';
-
-    const handleConfirmMedication = () => {
-        // TODO: 복약 확인 API 호출
-        console.log('복약 확인:', date, item.id);
-        onClose();
-    };
 
     const handleSendNotification = () => {
         // TODO: 알림 보내기 API 호출
@@ -56,7 +49,7 @@ const ChecklistModal = ({ isOpen, onClose, date, item, elderName }: ChecklistMod
                 </h2>
 
                 {/* 약 정보 박스 */}
-                <div className="bg-primary/10 border border-primary/30 rounded-lg p-4 mb-6">
+                <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-6">
                     <div className="flex items-center justify-between mb-2">
                         <p className="text-sm text-gray-700">{dateLabel} 12:30</p>
                         <span className="text-sm text-primary">{mealTime}</span>
@@ -68,26 +61,18 @@ const ChecklistModal = ({ isOpen, onClose, date, item, elderName }: ChecklistMod
                 <div className="flex gap-3">
                     {item.checked ? (
                         <button
-                            className="flex-1 px-4 py-2 bg-gray-200 text-gray-600 rounded-lg font-medium cursor-not-allowed"
+                            className="flex-1 px-4 py-2 bg-gray-200 text-gray-600 rounded-xl font-medium cursor-not-allowed"
                             disabled
                         >
                             이미 체크되었습니다
                         </button>
                     ) : (
-                        <>
-                            <button
-                                onClick={handleConfirmMedication}
-                                className="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/80 cursor-pointer transition-colors"
-                            >
-                                복약 수동 확인
-                            </button>
-                            <button
-                                onClick={handleSendNotification}
-                                className="flex-1 px-4 py-2 bg-secondary text-white rounded-lg font-medium hover:bg-secondary/80 cursor-pointer transition-colors"
-                            >
-                                알림 보내기
-                            </button>
-                        </>
+                        <button
+                            onClick={handleSendNotification}
+                            className="flex-1 px-4 py-2 bg-secondary text-white rounded-xl font-medium hover:bg-secondary/80 cursor-pointer transition-colors"
+                        >
+                            알림 보내기
+                        </button>
                     )}
                 </div>
             </div>

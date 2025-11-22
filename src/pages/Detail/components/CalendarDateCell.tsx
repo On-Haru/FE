@@ -52,8 +52,8 @@ const CalendarDateCell = ({
         : isSelected
             ? `${baseClasses} text-gray-900 font-semibold cursor-pointer`
             : hasChecklist
-                ? `${baseClasses} hover:scale-110 text-gray-900 cursor-pointer`
-                : `${baseClasses} hover:scale-110 text-gray-900 cursor-pointer`;
+                ? `${baseClasses} hover:scale-120 text-gray-900 cursor-pointer`
+                : `${baseClasses} hover:scale-120 text-gray-900 cursor-pointer`;
 
     return (
         <button

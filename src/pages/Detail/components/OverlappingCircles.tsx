@@ -8,9 +8,9 @@ const OverlappingCircles = ({ filledCount }: OverlappingCirclesProps) => {
     // 완료율에 따라 각 원의 색상만 변경 (항상 세 개 표시)
     // 세 원이 중앙에서 겹치도록 배치 (삼원색 RGB 패턴처럼)
     const positions = [
-        { top: '0px', left: '8px' }, // 상단 원 (수평 중앙, 최상단)
-        { top: '10px', left: '2px' }, // 하단 왼쪽 (중앙에서 약간 왼쪽, 겹치게)
-        { top: '10px', left: '14px' }, // 하단 오른쪽 (중앙에서 약간 오른쪽, 겹치게)
+        { top: '0px', left: '4px' }, // 상단 원 (수평 중앙, 최상단)
+        { top: '13px', left: '2px' }, // 하단 왼쪽 (중앙에서 약간 왼쪽, 겹치게)
+        { top: '8px', left: '14px' }, // 하단 오른쪽 (중앙에서 약간 오른쪽, 겹치게)
     ];
 
     return (
