@@ -1,19 +1,7 @@
 import AlarmList from '@/pages/MedicineDetail/components/AlarmList';
+import type { MedicineItem } from '@/pages/MedicineDetail/types/prescription';
 
-export interface MedicineItem {
-  id: number;
-  name: string;
-  dosage: number;
-  totalCount: number;
-  durationDays: number;
-  memo?: string | null;
-  aiDescription?: string | null;
-  schedules: {
-    id: number;
-    notifyTime: string;
-    timeTag: 'MORNING' | 'LUNCH' | 'EVENING';
-  }[];
-}
+export type { MedicineItem };
 
 interface TableListProps {
   medicines: MedicineItem[];

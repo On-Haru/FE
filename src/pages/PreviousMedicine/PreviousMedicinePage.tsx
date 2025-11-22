@@ -13,14 +13,32 @@ const PreviousMedicinePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // TODO: 실제 seniorId를 가져와야 함 (예: URL 파라미터, 상태 관리 등)
-        const seniorId = 1001; // 임시 값
+        setLoading(true);
+        // localStorage에서 선택된 seniorId 가져오기
+        const storedSeniorId = localStorage.getItem('selectedSeniorId');
+        
+        if (!storedSeniorId) {
+          setPrescriptions([]);
+          setLoading(false);
+          return;
+        }
+
+        const seniorId = Number(storedSeniorId);
         const data = await getPreviousPrescriptions(seniorId);
-        setPrescriptions(data);
-      } catch (error: any) {
+        
+        // 발급일 기준 내림차순 정렬 (최신 날짜가 맨 위)
+        const sortedData = [...data].sort((a, b) => {
+          const dateA = new Date(a.issuedDate).getTime();
+          const dateB = new Date(b.issuedDate).getTime();
+          return dateB - dateA; // 내림차순 (최신이 먼저)
+        });
+        
+        setPrescriptions(sortedData);
+      } catch (error: unknown) {
+        const err = error as { response?: { status?: number; data?: unknown } };
         console.error('이전 처방전 조회 실패', {
-          status: error.response?.status,
-          data: error.response?.data,
+          status: err.response?.status,
+          data: err.response?.data,
         });
         setPrescriptions([]);
       } finally {
