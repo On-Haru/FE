@@ -34,7 +34,7 @@ const MyPagePage = () => {
       } catch (error: unknown) {
         const err = error as { response?: { status?: number } };
         console.error('사용자 정보 조회 실패:', error);
-        
+
         // 401 에러면 토큰이 만료된 것이므로 로그인 페이지로 이동
         if (err.response?.status === 401) {
           clearTokens();
@@ -59,7 +59,7 @@ const MyPagePage = () => {
     } finally {
       // 토큰 삭제
       clearTokens();
-      
+
       // 로그인 페이지로 이동
       navigate('/');
     }
