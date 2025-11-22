@@ -3,6 +3,8 @@ import type { ChecklistItem } from '@/types/checklist';
 import { format, parse } from 'date-fns';
 import { Check } from 'lucide-react';
 import ChecklistModal from './ChecklistModal';
+import { updateTakenStatus } from '../services/takingLog';
+
 
 interface ChecklistProps {
     date: string;
@@ -17,7 +19,27 @@ const Checklist = ({ date, items, elderName }: ChecklistProps) => {
     const parsedDate = parse(date, 'yyyy-MM-dd', new Date());
     const dayLabel = `${format(parsedDate, 'd')}일`;
 
-    const handleItemClick = (item: ChecklistItem) => {
+    const handleItemClick = async (item: ChecklistItem) => {
+        // API 호출하여 복용 여부 업데이트
+        const extendedItem = item as ChecklistItem & {
+            scheduleId?: number;
+            scheduledDateTime?: string;
+        };
+
+        if (extendedItem.scheduleId && extendedItem.scheduledDateTime) {
+            try {
+                await updateTakenStatus({
+                    scheduleId: extendedItem.scheduleId,
+                    scheduledDateTime: extendedItem.scheduledDateTime,
+                    taken: !item.checked, // 토글
+                });
+                // 성공 시 UI 업데이트는 부모 컴포넌트에서 처리
+            } catch (error) {
+                console.error('복용 여부 업데이트 실패:', error);
+                alert('복용 여부 업데이트에 실패했습니다.');
+            }
+        }
+
         setSelectedItem(item);
         setIsModalOpen(true);
     };
@@ -26,6 +48,7 @@ const Checklist = ({ date, items, elderName }: ChecklistProps) => {
         setIsModalOpen(false);
         setSelectedItem(null);
     };
+
 
     return (
         <>

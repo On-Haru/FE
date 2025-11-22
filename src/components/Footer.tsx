@@ -38,12 +38,12 @@ const Footer = () => {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col flex-1 items-center gap-1 cursor-pointer ${
-                isActive ? 'text-primary' : 'text-gray-500'
-              }`}
+              className={`flex flex-col flex-1 items-center gap-1 cursor-pointer transition-transform duration-200 hover:scale-110 active:scale-95 ${isActive ? 'text-primary' : 'text-gray-500'
+                }`}
             >
               <Icon className={`w-5 h-5 mt-[10px] ${isActive ? 'text-primary' : 'text-gray-500'}`} />
               <span className="text-xs">{item.label}</span>
+
             </button>
           );
         })}

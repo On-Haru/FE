@@ -5,7 +5,9 @@ import DetailPageHeader from './components/DetailPageHeader';
 import DetailCalendar from './components/DetailCalendar';
 import Checklist from './components/Checklist';
 import EmptyDateActions from './components/EmptyDateActions';
-import type { DateChecklist } from '@/types/checklist';
+import { getCalendar } from './services/takingLog';
+import type { CalendarDay, CalendarSlot } from './types/takingLog';
+import type { DateChecklist, ChecklistItem } from '@/types/checklist';
 
 interface Elder {
     id: string;
@@ -20,148 +22,81 @@ const DetailPage = () => {
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [isDateClicked, setIsDateClicked] = useState<boolean>(false);
     const [checklistData, setChecklistData] = useState<Record<string, DateChecklist>>({});
+    const [currentMonth, setCurrentMonth] = useState(new Date());
+    const [isLoading, setIsLoading] = useState(false);
 
-    // 각 어르신별 임시 체크리스트 데이터 (나중에 API로 교체)
-    const getElderChecklistData = (elderId: string): Record<string, DateChecklist> => {
-        // 어르신별로 다른 데이터를 반환
-        const baseData: Record<string, DateChecklist> = {
-            '2025-11-30': {
-                date: '2025-11-30',
-                items: [
-                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
-                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: true },
-                ],
-            },
-            '2025-11-29': {
-                date: '2025-11-29',
-                items: [
-                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
-                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: false },
-                ],
-            },
-            '2025-11-28': {
-                date: '2025-11-28',
-                items: [
-                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: false },
-                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: false },
-                ],
-            },
-            '2025-11-27': {
-                date: '2025-11-27',
-                items: [
-                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: false },
-                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: false },
-                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: false },
-                ],
-            },
-            '2025-11-26': {
-                date: '2025-11-26',
-                items: [
-                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
-                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: true },
-                ],
-            },
-            '2025-11-25': {
-                date: '2025-11-25',
-                items: [
-                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
-                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: false },
-                ],
-            },
-            '2025-11-24': {
-                date: '2025-11-24',
-                items: [
-                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: false },
-                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: false },
-                ],
-            },
-            '2025-11-23': {
-                date: '2025-11-23',
-                items: [
-                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
-                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: true },
-                ],
-            },
-            '2025-11-22': {
-                date: '2025-11-22',
-                items: [
-                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
-                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: true },
-                ],
-            },
-            '2025-11-21': {
-                date: '2025-11-21',
-                items: [
-                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: false },
-                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: false },
-                ],
-            },
-            '2025-11-20': {
-                date: '2025-11-20',
-                items: [
-                    { id: '1', label: '아침약 : 타이레놀, 타이레놀', checked: true },
-                    { id: '2', label: '점심약 : 타이레놀, 타이레놀', checked: true },
-                    { id: '3', label: '저녁약 : 타이레놀, 타이레놀', checked: true },
-                ],
-            },
-        };
+    // API에서 캘린더 데이터 가져오기
+    const fetchCalendarData = async (year: number, month: number) => {
+        if (!currentElder) return;
 
-        // 어르신 ID에 따라 약 이름이나 체크 상태를 다르게 설정
-        if (elderId === '2') {
-            // 이노인: 다른 약 이름 사용
-            return Object.fromEntries(
-                Object.entries(baseData).map(([date, data]) => [
-                    date,
-                    {
-                        ...data,
-                        items: data.items.map((item) => ({
-                            ...item,
-                            label: item.label.replace('타이레놀', '아스피린'),
-                        })),
-                    },
-                ])
-            );
-        } else if (elderId === '3') {
-            // 박노인: 다른 약 이름과 체크 상태
-            return Object.fromEntries(
-                Object.entries(baseData).map(([date, data]) => [
-                    date,
-                    {
-                        ...data,
-                        items: data.items.map((item) => ({
-                            ...item,
-                            label: item.label.replace('타이레놀', '게보린'),
-                            checked: Math.random() > 0.5, // 랜덤 체크 상태
-                        })),
-                    },
-                ])
-            );
+        setIsLoading(true);
+        try {
+            const userId = Number(currentElder.id); // userId는 숫자여야 함
+            const calendarData = await getCalendar(year, month, userId);
+
+            // API 응답이 유효한지 확인
+            if (!calendarData) {
+                setChecklistData({});
+                return;
+            }
+
+            if (!calendarData.days || !Array.isArray(calendarData.days)) {
+                setChecklistData({});
+                return;
+            }
+
+            // API 응답을 checklist 형식으로 변환
+            const convertedData: Record<string, DateChecklist> = {};
+
+            calendarData.days.forEach((day: CalendarDay) => {
+                // slots가 있고 길이가 0보다 큰 경우에만 체크리스트 생성
+                if (day.slots && day.slots.length > 0) {
+                    const items: ChecklistItem[] = day.slots.map((slot: CalendarSlot) => {
+                        // scheduleType을 한글로 변환
+                        const typeMap: Record<string, string> = {
+                            'MORNING': '아침약',
+                            'LUNCH': '점심약',
+                            'EVENING': '저녁약',
+                            'BEDTIME': '취침전약',
+                        };
+
+                        return {
+                            id: slot.slotId.toString(),
+                            label: `${typeMap[slot.scheduleType] || slot.scheduleType} : ${slot.medicineName}`,
+                            checked: slot.taken,
+                            // API 데이터를 저장하기 위한 추가 필드
+                            scheduleId: slot.scheduleId,
+                            scheduledDateTime: slot.scheduledDateTime,
+                        } as ChecklistItem & { scheduleId: number; scheduledDateTime: string };
+                    });
+
+                    convertedData[day.date] = {
+                        date: day.date,
+                        items,
+                    };
+                }
+                // slots가 없거나 빈 배열인 경우는 convertedData에 추가하지 않음
+                // 이렇게 하면 getSelectedDateChecklist()가 null을 반환하여 EmptyDateActions가 표시됨
+            });
+
+            setChecklistData(convertedData);
+        } catch (error: any) {
+            // 에러는 takingLog.ts에서 이미 로깅됨
+            setChecklistData({});
+        } finally {
+            setIsLoading(false);
         }
-
-        // 김노인 (기본)
-        return baseData;
     };
 
-    // TODO: API에서 어르신 목록 가져오기
+    // 어르신 목록 조회 (TODO: 실제 API로 교체)
     useEffect(() => {
-        // 임시 데이터 (나중에 API로 교체)
         const mockElders: Elder[] = [
-            { id: '1', name: '김노인' },
+            { id: '1001', name: '김노인' },
             { id: '2', name: '이노인' },
             { id: '3', name: '박노인' },
         ];
         setElders(mockElders);
 
-        // id가 없거나 유효하지 않으면 첫 번째 어르신으로 리다이렉트
         if (!id || mockElders.length === 0) {
             if (mockElders.length > 0) {
                 const firstElderId = mockElders[0].id;
@@ -170,27 +105,23 @@ const DetailPage = () => {
             }
         }
 
-        // 현재 선택된 어르신 찾기
         const elder = mockElders.find((e) => e.id === id);
         if (elder) {
             setCurrentElder(elder);
         } else if (mockElders.length > 0) {
-            // 유효하지 않은 id인 경우 첫 번째 어르신으로 리다이렉트
             const firstElderId = mockElders[0].id;
             navigate(`/detail/${firstElderId}`, { replace: true });
         }
     }, [id, navigate]);
 
-    // 어르신이 변경되면 해당 어르신의 체크리스트 데이터 로드
+    // 어르신이 변경되거나 월이 변경되면 캘린더 데이터 로드
     useEffect(() => {
         if (currentElder) {
-            const data = getElderChecklistData(currentElder.id);
-            setChecklistData(data);
-            // 날짜 선택 초기화
-            setSelectedDate(new Date());
-            setIsDateClicked(false);
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth() + 1; // getMonth()는 0부터 시작
+            fetchCalendarData(year, month);
         }
-    }, [currentElder]);
+    }, [currentElder, currentMonth]);
 
     const handleElderChange = (elderId: string) => {
         const elder = elders.find((e) => e.id === elderId);
@@ -206,7 +137,10 @@ const DetailPage = () => {
         }
     };
 
-    // 선택된 날짜의 체크리스트 가져오기
+    const handleMonthChange = (newMonth: Date) => {
+        setCurrentMonth(newMonth);
+    };
+
     const getSelectedDateChecklist = (): DateChecklist | null => {
         if (!selectedDate) return null;
         const dateKey = format(selectedDate, 'yyyy-MM-dd');
@@ -229,22 +163,29 @@ const DetailPage = () => {
                     checklistData={checklistData}
                     selectedDate={selectedDate}
                     onDateSelect={handleDateSelect}
+                    currentMonth={currentMonth}
+                    onMonthChange={handleMonthChange}
+                    isLoading={isLoading}
                 />
-                {getSelectedDateChecklist() ? (
-                    <div className="mt-4 px-4">
-                        <Checklist
-                            date={getSelectedDateChecklist()!.date}
-                            items={getSelectedDateChecklist()!.items}
-                            elderName={currentElder.name}
-                        />
-                    </div>
-                ) : isDateClicked ? (
-                    <EmptyDateActions
-                        date={selectedDate}
-                        elderName={currentElder.name}
-                        isDateClicked={isDateClicked}
-                    />
-                ) : null}
+                {isDateClicked && (
+                    <>
+                        {getSelectedDateChecklist() && getSelectedDateChecklist()!.items.length > 0 ? (
+                            <div className="mt-4 px-4">
+                                <Checklist
+                                    date={getSelectedDateChecklist()!.date}
+                                    items={getSelectedDateChecklist()!.items}
+                                    elderName={currentElder.name}
+                                />
+                            </div>
+                        ) : (
+                            <EmptyDateActions
+                                date={selectedDate}
+                                elderName={currentElder.name}
+                                isDateClicked={isDateClicked}
+                            />
+                        )}
+                    </>
+                )}
             </div>
         </div>
     );

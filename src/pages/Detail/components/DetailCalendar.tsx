@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameDay } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { DateChecklist } from '@/types/checklist';
@@ -8,10 +8,20 @@ interface DetailCalendarProps {
     checklistData: Record<string, DateChecklist>;
     selectedDate: Date | null;
     onDateSelect: (date: Date | null) => void;
+    currentMonth: Date;
+    onMonthChange: (month: Date) => void;
+    isLoading?: boolean;
 }
 
-const DetailCalendar = ({ checklistData, selectedDate, onDateSelect }: DetailCalendarProps) => {
-    const [currentMonth, setCurrentMonth] = useState(new Date());
+const DetailCalendar = ({
+    checklistData,
+    selectedDate,
+    onDateSelect,
+    currentMonth: propCurrentMonth,
+    onMonthChange,
+    isLoading
+}: DetailCalendarProps) => {
+    const [currentMonth, setCurrentMonth] = useState(propCurrentMonth);
 
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
@@ -40,12 +50,23 @@ const DetailCalendar = ({ checklistData, selectedDate, onDateSelect }: DetailCal
         }
     }
 
+    // prop으로 받은 currentMonth가 변경되면 내부 state도 업데이트
+    useEffect(() => {
+        if (propCurrentMonth.getTime() !== currentMonth.getTime()) {
+            setCurrentMonth(propCurrentMonth);
+        }
+    }, [propCurrentMonth]);
+
     const handlePreviousMonth = () => {
-        setCurrentMonth(subMonths(currentMonth, 1));
+        const newMonth = subMonths(currentMonth, 1);
+        setCurrentMonth(newMonth);
+        onMonthChange(newMonth);
     };
 
     const handleNextMonth = () => {
-        setCurrentMonth(addMonths(currentMonth, 1));
+        const newMonth = addMonths(currentMonth, 1);
+        setCurrentMonth(newMonth);
+        onMonthChange(newMonth);
     };
 
     const handleDateClick = (date: Date) => {
@@ -56,6 +77,11 @@ const DetailCalendar = ({ checklistData, selectedDate, onDateSelect }: DetailCal
 
     return (
         <div className="w-full border rounded-xl p-4 pb-10 border-[#E4E4E7] shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
+            {isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10 rounded-xl">
+                    <div className="text-gray-500">로딩 중...</div>
+                </div>
+            )}
             {/* 월 네비게이션 */}
             <div className="flex items-center justify-between mb-4">
                 <button
