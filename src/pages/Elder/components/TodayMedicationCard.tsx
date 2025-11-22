@@ -1,4 +1,4 @@
-import { SunDim, Sun, Moon, Check } from 'lucide-react';
+import { Sunrise, Sun, Moon, Check } from 'lucide-react';
 
 export type MedicationTime = 'morning' | 'lunch' | 'evening';
 
@@ -17,7 +17,7 @@ const timeConfig = {
     bgColor: 'var(--color-morning-secondary)',
     iconColor: 'var(--color-morning-primary)',
     badgeBg: 'var(--color-morning-primary)',
-    icon: SunDim,
+    icon: Sunrise,
   },
   lunch: {
     label: '점심 약',
