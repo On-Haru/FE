@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { getAccessToken } from '@/lib/storage';
 import { getUserIdFromToken } from '@/lib/jwt';
 import { getUser } from './services/user';
-import { getCaregiverLinks } from '@/pages/Home/services/caregiverLink';
+import { hasCaregiverLink } from '@/pages/Home/services/caregiverLink';
 import ConnectionCodeScreen from './components/ConnectionCodeScreen';
 import DateTimeDisplay from './components/DateTimeDisplay';
 import GreetingCard from './components/GreetingCard';
@@ -99,17 +99,17 @@ const ElderHomePage = () => {
         setConnectionCode(userData.code.toString());
 
         // 보호자 연결 여부 확인
-        // 어르신이 getCaregiverLinks를 호출하면 자신에게 연결된 보호자 목록을 반환
-        // 각 link의 seniorId는 어르신 자신의 ID이므로, 일치하는 link가 있으면 보호자가 연결된 것
+        // has-link API를 사용하여 연결 여부를 boolean 값으로 확인
         try {
-          const links = await getCaregiverLinks();
-          // 어르신의 userId와 일치하는 seniorId가 있는지 확인
-          const hasConnectedGuardian = links.some(
-            (link) => link.seniorId === userId
-          );
-          setHasGuardian(hasConnectedGuardian);
+          const hasLink = await hasCaregiverLink();
+          console.log('[ElderHomePage] 초기 로드 - hasLink:', hasLink);
+          setHasGuardian(hasLink);
         } catch (linkError) {
-          // CaregiverLink 조회 실패 시 보호자 미연결로 처리
+          // 연결 여부 확인 실패 시 보호자 미연결로 처리
+          console.error(
+            '[ElderHomePage] 초기 로드 - 연결 여부 확인 실패:',
+            linkError
+          );
           setHasGuardian(false);
         }
       } catch (error: any) {
@@ -163,21 +163,16 @@ const ElderHomePage = () => {
           return;
         }
 
-        const userId = getUserIdFromToken(token);
-        if (!userId) {
-          return;
-        }
+        const hasLink = await hasCaregiverLink();
+        console.log('[ElderHomePage] 폴링 - hasLink:', hasLink);
 
-        const links = await getCaregiverLinks();
-        const hasConnectedGuardian = links.some(
-          (link) => link.seniorId === userId
-        );
-
-        if (hasConnectedGuardian) {
+        if (hasLink) {
+          console.log('[ElderHomePage] 보호자 연결 감지! 화면 전환');
           setHasGuardian(true);
         }
       } catch (error) {
         // 에러 발생 시 조용히 처리 (다음 폴링에서 다시 시도)
+        console.error('[ElderHomePage] 폴링 에러:', error);
       }
     };
 
