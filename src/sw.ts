@@ -13,21 +13,18 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 // SPA 라우팅 처리
 const fileExtensionRegexp = new RegExp('/[^/?]+\\.[^/]+$');
-registerRoute(
-  ({ request, url }: { request: Request; url: URL }) => {
-    if (request.mode !== 'navigate') {
-      return false;
-    }
-    if (url.pathname.startsWith('/_')) {
-      return false;
-    }
-    if (url.pathname.match(fileExtensionRegexp)) {
-      return false;
-    }
-    return true;
-  },
-  createHandlerBoundToURL('/index.html')
-);
+registerRoute(({ request, url }: { request: Request; url: URL }) => {
+  if (request.mode !== 'navigate') {
+    return false;
+  }
+  if (url.pathname.startsWith('/_')) {
+    return false;
+  }
+  if (url.pathname.match(fileExtensionRegexp)) {
+    return false;
+  }
+  return true;
+}, createHandlerBoundToURL('/index.html'));
 
 // Push 이벤트 처리
 self.addEventListener('push', (event: PushEvent) => {
@@ -72,7 +69,10 @@ self.addEventListener('push', (event: PushEvent) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(notificationData.title, notificationOptions)
+    self.registration.showNotification(
+      notificationData.title,
+      notificationOptions
+    )
   );
 
   // 모든 클라이언트에게 메시지 전송 (앱이 열려있을 때 모달 표시용)
@@ -115,4 +115,3 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
     })
   );
 });
-
