@@ -1,55 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MinusCircle, Plus } from 'lucide-react';
 import TimeTag, { type TimeLabel } from '@/components/TimeTag';
 
-// ==================== 시간 입력 유틸리티 함수 ====================
-
-/**
- * 시간 문자열을 HH:MM 형식으로 정규화
- */
 const normalizeTimeFormat = (value: string): string => {
   const digits = value.replace(/[^\d]/g, '').padEnd(4, '0');
   return `${digits[0] || '0'}${digits[1] || '8'}:${digits[2] || '0'}${digits[3] || '0'}`;
 };
 
-/**
- * 시간 유효성 검사 (0-23)
- */
 const isValidHour = (hour: number): boolean => {
   return hour >= 0 && hour <= 23;
 };
 
-/**
- * 분 유효성 검사 (0-59)
- */
 const isValidMinute = (minute: number): boolean => {
   return minute >= 0 && minute <= 59;
 };
 
-/**
- * 시간을 0-23 범위로 제한
- */
 const clampHour = (hour: number): number => {
   return Math.max(0, Math.min(23, hour));
 };
 
-/**
- * 분을 0-59 범위로 제한
- */
 const clampMinute = (minute: number): number => {
   return Math.max(0, Math.min(59, minute));
 };
 
-/**
- * 시간과 분을 HH:MM 형식으로 포맷팅
- */
 const formatTimeString = (hour: number, minute: number): string => {
   return `${String(clampHour(hour)).padStart(2, '0')}:${String(clampMinute(minute)).padStart(2, '0')}`;
 };
 
-/**
- * 시간 문자열을 파싱하여 hour, minute 반환
- */
 const parseTimeString = (timeStr: string): { hour: number; minute: number } | null => {
   const parts = timeStr.split(':');
   if (parts.length === 2) {
@@ -62,9 +39,6 @@ const parseTimeString = (timeStr: string): { hour: number; minute: number } | nu
   return null;
 };
 
-/**
- * HHMM 형식 문자열을 파싱
- */
 const parseCompactTime = (value: string): { hour: number; minute: number } | null => {
   if (value.length >= 2) {
     const hour = Number(value.slice(0, 2)) || 0;
@@ -74,9 +48,6 @@ const parseCompactTime = (value: string): { hour: number; minute: number } | nul
   return null;
 };
 
-/**
- * 특정 위치에 숫자 삽입
- */
 const insertDigitAtPosition = (
   position: number,
   digit: string,
@@ -140,9 +111,6 @@ const insertDigitAtPosition = (
   return { newValue, nextCursorPos };
 };
 
-/**
- * 입력 값을 정리하고 포맷팅
- */
 const sanitizeTimeInput = (value: string): string => {
   // 숫자와 콜론만 허용
   let sanitized = value.replace(/[^\d:]/g, '');
@@ -166,9 +134,6 @@ const sanitizeTimeInput = (value: string): string => {
   return sanitized;
 };
 
-/**
- * 시간 문자열을 검증하고 정규화
- */
 const validateAndNormalizeTime = (value: string): string | null => {
   const trimmed = value.trim();
   if (!trimmed) return null;
@@ -370,25 +335,25 @@ const AlarmList = ({
   onChangeAlarm,
   onAddAlarm,
 }: AlarmListProps) => {
-  const formatTime = (time: string) => {
-    // 24시간 형태로 반환 (예: "14:30", "09:00")
+  // 24시간 형태로 반환 (예: "14:30", "09:00")
+  const formatTime = useCallback((time: string) => {
     const [hour, minute] = time.split(':');
     return `${hour}:${minute}`;
-  };
+  }, []);
 
-  const getScheduleType = (time: string): AlarmItem['schedule_type'] => {
+  const getScheduleType = useCallback((time: string): AlarmItem['schedule_type'] => {
     const [h] = time.split(':');
     const hour = Number(h);
 
     if (hour >= 5 && hour <= 10) return 'MORNING';
     if (hour >= 11 && hour <= 14) return 'LUNCH';
     return 'EVENING';
-  };
+  }, []);
 
   // 24시간 형식을 그대로 표시 (00:00 ~ 23:59)
-  const formatTimeDisplay = (time24: string): string => {
+  const formatTimeDisplay = useCallback((time24: string): string => {
     return time24; // 이미 24시간 형식이므로 그대로 반환
-  };
+  }, []);
 
   const containerClass = editMode
     ? 'flex flex-col gap-2 items-start'
