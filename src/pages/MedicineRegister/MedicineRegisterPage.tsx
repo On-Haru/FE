@@ -6,7 +6,6 @@ import MedicineAddButton from '@/pages/MedicineRegister/components/MedicineAddBu
 import ViewPrescriptionButton from '@/pages/MedicineRegister/components/ViewPrescriptionButton';
 import NameHeader from '@/pages/MedicineRegister/components/NameHeader';
 import { uploadPrescriptionOCR } from '@/pages/MedicineRegister/services/ocr';
-//import PreviewModal from '@/pages/MedicineRegister/components/PreviewModal';
 
 const MedicineRegisterPage = () => {
   const navigate = useNavigate();
@@ -72,18 +71,6 @@ const MedicineRegisterPage = () => {
           onCapture={handleCapture}
           disabled={isUploading}
         />
-
-        {/* {isPreviewOpen && selectedOption && (
-        <PreviewModal
-          file={capturedFile}
-          name={selectedOption.label}
-          onClose={() => setIsPreviewOpen(false)}
-          onConfirm={() => {
-            // Todo: OCR 연결
-            setIsPreviewOpen(false);
-          }}
-        />
-      )} */}
 
         <MedicineAddButton onClick={() => navigate(ROUTES.MEDICINE_DETAIL)} />
         <ViewPrescriptionButton

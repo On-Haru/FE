@@ -1,73 +1,22 @@
 import axiosInstance from '@/lib/axios';
-import type { MedicineItem } from '../components/TableList';
-import type { OCRResponse } from '../../MedicineRegister/services/ocr';
+import type {
+  PrescriptionInfo,
+  MedicineItem,
+  PrescriptionDetailResponse,
+  PrescriptionCreateRequest,
+  PrescriptionCreateResponse,
+} from '@/pages/MedicineDetail/types/prescription';
+import type { OCRResponse } from '@/pages/MedicineRegister/services/ocr';
 
-export interface PrescriptionInfo {
-  seniorId: number;
-  hospitalName: string;
-  doctorName: string;
-  issuedDate: string;
-  note: string;
-}
+// 타입 재export
+export type {
+  PrescriptionInfo,
+  MedicineItem,
+  PrescriptionDetailResponse,
+  PrescriptionCreateRequest,
+  PrescriptionCreateResponse,
+};
 
-export interface PrescriptionDetailResponse {
-  id: number;
-  seniorId: number;
-  hospitalName: string;
-  doctorName: string;
-  issuedDate: string;
-  note: string;
-  medicines?: Array<{
-    id: number;
-    name: string;
-    dosage: number;
-    totalCount: number;
-    durationDays: number;
-    memo?: string | null;
-    aiDescription?: string | null;
-    schedules?: Array<{
-      id: number;
-      notifyTime: string;
-      timeTag: 'MORNING' | 'LUNCH' | 'EVENING';
-    }>;
-  }>;
-}
-
-export interface PrescriptionCreateRequest {
-  seniorId: number;
-  hospitalName: string;
-  doctorName: string;
-  issuedDate: string;
-  note: string | null;
-  medicines: Array<{
-    name: string;
-    dosage: number;
-    totalCount: number;
-    durationDays: number;
-    memo?: string | null;
-    aiDescription?: string | null;
-    schedules: Array<{
-      notifyTime: string;
-      timeTag: 'MORNING' | 'LUNCH' | 'EVENING';
-    }>;
-  }>;
-}
-
-export interface PrescriptionCreateResponse {
-  id: number;
-  seniorId: number;
-  issuedDate: string;
-  hospitalName: string;
-  doctorName: string;
-  note: string;
-}
-
-/**
- * 최신 처방전 ID 조회
- */
-export async function getLatestPrescriptionId(): Promise<number> {
-  return 5001; // 실제 존재하는 처방전 ID
-}
 
 /**
  * API 응답을 MedicineItem으로 변환
@@ -115,23 +64,27 @@ function getDefaultSeniorId(): number {
 export function mapOCRResponseToMedicineItems(
   ocrData: OCRResponse
 ): { medicines: MedicineItem[]; prescriptionInfo: PrescriptionInfo } {
-  const medicines: MedicineItem[] = (ocrData.medicines || []).map((m, idx) => {
-    const medicineId = Date.now() + idx; // 임시 ID
-    return {
-      id: medicineId,
-      name: m.name || '',
-      dosage: m.dosage ?? 0,
-      totalCount: m.totalCount ?? 0,
-      durationDays: m.durationDays ?? 0,
-      memo: m.memo ?? null,
-      aiDescription: m.aiDescription ?? null,
-      schedules: (m.schedules || []).map((s, sIdx) => ({
-        id: medicineId * 1000 + sIdx, // 임시 ID
-        notifyTime: s.notifyTime,
-        timeTag: s.timeTag,
-      })),
-    };
-  });
+  const medicines: MedicineItem[] = (ocrData.medicines || []).map(
+    (m: OCRResponse['medicines'][0], idx: number) => {
+      const medicineId = Date.now() + idx; // 임시 ID
+      return {
+        id: medicineId,
+        name: m.name || '',
+        dosage: m.dosage ?? 0,
+        totalCount: m.totalCount ?? 0,
+        durationDays: m.durationDays ?? 0,
+        memo: m.memo ?? null,
+        aiDescription: m.aiDescription ?? null,
+        schedules: (m.schedules || []).map(
+          (s: OCRResponse['medicines'][0]['schedules'][0], sIdx: number) => ({
+            id: medicineId * 1000 + sIdx, // 임시 ID
+            notifyTime: s.notifyTime,
+            timeTag: s.timeTag,
+          })
+        ),
+      };
+    }
+  );
 
   // seniorId 결정: OCR 데이터 > localStorage 선택값 > 기본값
   const storedSeniorId = typeof window !== 'undefined' 
@@ -209,10 +162,6 @@ export async function updatePrescription(
       
       // 404, 405, 500 에러면 업데이트가 지원되지 않는 것으로 간주하고 새로 생성
       if (err.response?.status === 404 || err.response?.status === 405 || err.response?.status === 500) {
-        console.warn('⚠️ 업데이트 API가 지원되지 않습니다. 새로 생성합니다.', {
-          prescriptionId: id,
-          status: err.response?.status,
-        });
         // 새로 생성하도록 fallback
         const res = await axiosInstance.post<{ data: PrescriptionCreateResponse }>(
           `/api/prescriptions`,

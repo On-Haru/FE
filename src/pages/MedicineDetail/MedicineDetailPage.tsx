@@ -7,9 +7,11 @@ import {
   getPrescriptionDetail,
   updatePrescription,
   mapOCRResponseToMedicineItems,
-  type PrescriptionInfo,
-  type PrescriptionCreateRequest,
 } from '@/pages/MedicineDetail/services/prescription';
+import type {
+  PrescriptionInfo,
+  PrescriptionCreateRequest,
+} from '@/pages/MedicineDetail/types/prescription';
 import { getPreviousPrescriptions } from '@/pages/PreviousMedicine/services/previous';
 import type { OCRResponse } from '@/pages/MedicineRegister/services/ocr';
 

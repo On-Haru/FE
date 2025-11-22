@@ -18,7 +18,6 @@ const PreviousMedicinePage = () => {
         const storedSeniorId = localStorage.getItem('selectedSeniorId');
         
         if (!storedSeniorId) {
-          console.warn('선택된 피보호자가 없습니다.');
           setPrescriptions([]);
           setLoading(false);
           return;
@@ -35,10 +34,11 @@ const PreviousMedicinePage = () => {
         });
         
         setPrescriptions(sortedData);
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const err = error as { response?: { status?: number; data?: unknown } };
         console.error('이전 처방전 조회 실패', {
-          status: error.response?.status,
-          data: error.response?.data,
+          status: err.response?.status,
+          data: err.response?.data,
         });
         setPrescriptions([]);
       } finally {
