@@ -61,7 +61,7 @@ const CalendarDateCell = memo(({
         const handleMouseEnter = () => {
             gsap.to(cell, {
                 scale: 1.4,
-                duration: 0.05,
+                duration: 0.01,
                 ease: 'power2.out',
             });
         };
