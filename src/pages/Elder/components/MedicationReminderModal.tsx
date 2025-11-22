@@ -85,7 +85,7 @@ const MedicationReminderModal = ({
         <div className="pb-5">
           <button
             onClick={handleTakeClick}
-            className={`w-40 h-40 rounded-full flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity border-primary border-2 ${isConfirmed ? 'bg-primary' : 'bg-white'}`}
+            className={`cursor-pointer w-40 h-40 rounded-full flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity border-primary border-2 ${isConfirmed ? 'bg-primary' : 'bg-white'}`}
           >
             {isConfirmed ? (
               <Check className="w-20 h-20 text-white" />
