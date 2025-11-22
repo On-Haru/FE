@@ -77,7 +77,7 @@ const HomePage = () => {
 
   // 피보호자가 있는 경우 - 리스트 렌더링
   return (
-    <div className="p-4 pb-24">
+    <div>
       {recipients.map((recipient) => (
         <CaregiverCard
           key={recipient.id}
@@ -89,7 +89,7 @@ const HomePage = () => {
       {/* 피보호자 연결 추가하기 버튼 */}
       <button
         onClick={handleAddConnection}
-        className="w-full bg-primary text-white rounded-xl py-3 px-6 mt-6 font-semibold hover:opacity-90 transition-opacity"
+        className="w-full bg-primary text-white rounded-xl py-3 px-6 font-semibold hover:opacity-90 transition-opacity"
       >
         피보호자 연결 추가하기
       </button>
