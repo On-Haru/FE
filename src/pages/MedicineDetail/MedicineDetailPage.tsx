@@ -1,10 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import TableHeader from '@/pages/MedicineDetail/components/TableHeader';
 import TableList, { type MedicineItem } from '@/pages/MedicineDetail/components/TableList';
 import FixandDeleteBtn from '@/pages/MedicineDetail/components/FixandDeleteBtn';
 
 import {
-  getLatestPrescriptionId,
   getPrescriptionDetail,
   updatePrescription,
   mapOCRResponseToMedicineItems,
@@ -22,6 +21,7 @@ const MedicineDetailPage = () => {
   
   // OCR 데이터 처리 여부 추적 (중복 실행 방지)
   const hasProcessedOCR = useRef(false);
+  const shouldAutoSave = useRef(false); // OCR 후 자동 저장 플래그
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,15 +44,11 @@ const MedicineDetailPage = () => {
           // OCR 결과가 비어있는 경우 사용자에게 알림
           if (medicines.length === 0) {
             console.warn('⚠️ OCR 결과가 비어있습니다. 처방전을 인식하지 못했을 수 있습니다.');
+            return;
           }
           
-          // OCR 처리 후 최신 처방전 ID 조회 및 저장
-          try {
-            const latestId = await getLatestPrescriptionId();
-            localStorage.setItem('currentPrescriptionId', String(latestId));
-          } catch (error) {
-            console.error('최신 처방전 ID 조회 실패:', error);
-          }
+          // OCR 데이터를 사용했으므로 자동 저장 플래그 설정
+          shouldAutoSave.current = true;
           
           // OCR 데이터를 사용했으므로 여기서 종료 (기존 처방전 조회 로직 실행 안 함)
           return;
@@ -147,7 +143,7 @@ const MedicineDetailPage = () => {
   const handleToggleEdit = () => setEditMode((prev) => !prev);
 
   /** 최종 저장 → 백엔드 업데이트 */
-  const handleSaveEdit = async () => {
+  const handleSaveEdit = useCallback(async () => {
     try {
       if (!prescriptionInfo) {
         alert('처방전 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
@@ -257,7 +253,15 @@ const MedicineDetailPage = () => {
         );
       }
     }
-  };
+  }, [prescriptionInfo, medicines]);
+
+  // OCR 처리 후 자동 저장
+  useEffect(() => {
+    if (shouldAutoSave.current && prescriptionInfo && medicines.length > 0) {
+      shouldAutoSave.current = false; // 플래그 리셋
+      handleSaveEdit();
+    }
+  }, [prescriptionInfo, medicines, handleSaveEdit]);
 
   /** 필드 수정 */
   const handleChangeField = (id: number, field: string, value: string | number) => {
