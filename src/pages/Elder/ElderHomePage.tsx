@@ -1,15 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
-import { getAccessToken } from '@/lib/storage';
-import { getUserIdFromToken } from '@/lib/jwt';
-import { getUser } from './services/user';
-import { hasCaregiverLink } from '@/pages/Home/services/caregiverLink';
-import {
-  getCalendar,
-  updateTakenStatus,
-} from '@/pages/Detail/services/takingLog';
-import { findTodayCalendarDay } from '@/pages/Home/utils/takingLogUtils';
-import { convertTodaySlotsToMedications } from './utils/medicationUtils';
+import { updateTakenStatus } from '@/pages/Detail/services/takingLog';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { useUser } from './hooks/useUser';
+import { useTodayMedications } from './hooks/useTodayMedications';
+import { useGuardianConnection } from './hooks/useGuardianConnection';
 import ConnectionCodeScreen from './components/ConnectionCodeScreen';
 import DateTimeDisplay from './components/DateTimeDisplay';
 import GreetingCard from './components/GreetingCard';
@@ -22,15 +16,24 @@ import {
 } from './components/TodayMedicationCard';
 
 const ElderHomePage = () => {
-  const [hasGuardian, setHasGuardian] = useState<boolean>(false); // 보호자 연결 여부
-  const [userName, setUserName] = useState<string>(''); // 사용자 이름 (User API에서 가져옴)
-  const [connectionCode, setConnectionCode] = useState<string>(''); // 연결 코드 (User API에서 가져옴)
-  const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true); // 사용자 정보 로딩 상태
-  const [userError, setUserError] = useState<string | null>(null); // 사용자 정보 조회 에러
-  const [todayMedications, setTodayMedications] = useState<Medication[]>([]); // 오늘의 약 데이터 (API에서 가져옴)
-  const [isLoadingMedications, setIsLoadingMedications] =
-    useState<boolean>(false); // 약 데이터 로딩 상태
-  const [medicationError, setMedicationError] = useState<string | null>(null); // 약 데이터 조회 에러
+  // 사용자 정보 조회
+  const {
+    userName,
+    connectionCode,
+    isLoading: isLoadingUser,
+    error: userError,
+  } = useUser();
+
+  // 보호자 연결 여부 확인
+  const { hasGuardian, setHasGuardian } = useGuardianConnection(isLoadingUser);
+
+  // 오늘의 약 데이터 조회
+  const {
+    medications: todayMedications,
+    isLoading: isLoadingMedications,
+    error: medicationError,
+    setMedications: setTodayMedications,
+  } = useTodayMedications(hasGuardian, isLoadingUser);
 
   // 모달 상태 관리
   const [showReminderModal, setShowReminderModal] = useState(false);
@@ -94,228 +97,6 @@ const ElderHomePage = () => {
       return a.isTaken ? 1 : -1;
     });
   }, [todayMedications]);
-
-  // 사용자 정보 및 보호자 연결 여부 조회
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      setIsLoadingUser(true);
-      setUserError(null);
-      try {
-        const token = getAccessToken();
-        if (!token) {
-          setUserError('로그인이 필요합니다.');
-          return;
-        }
-
-        const userId = getUserIdFromToken(token);
-        if (!userId) {
-          setUserError('사용자 정보를 불러올 수 없습니다.');
-          return;
-        }
-
-        // 사용자 정보 조회
-        const userData = await getUser(userId);
-        setUserName(userData.name);
-        setConnectionCode(userData.code.toString());
-
-        // 보호자 연결 여부 확인
-        // has-link API를 사용하여 연결 여부를 boolean 값으로 확인
-        // 어르신이 호출해도 자신에게 연결된 보호자가 있는지 확인 가능한지 테스트
-        try {
-          const hasLink = await hasCaregiverLink();
-          console.log(
-            '[ElderHomePage] 초기 로드 - hasLink:',
-            hasLink,
-            'type:',
-            typeof hasLink
-          );
-          setHasGuardian(hasLink);
-        } catch (linkError: any) {
-          // 연결 여부 확인 실패 시 보호자 미연결로 처리
-          console.error(
-            '[ElderHomePage] 초기 로드 - 연결 여부 확인 실패:',
-            linkError
-          );
-          if (linkError.response) {
-            console.error(
-              '[ElderHomePage] 응답 데이터:',
-              linkError.response.data
-            );
-            console.error(
-              '[ElderHomePage] 응답 상태:',
-              linkError.response.status
-            );
-          }
-          setHasGuardian(false);
-        }
-      } catch (error: any) {
-        // 에러 응답 처리
-        if (error.response) {
-          const status = error.response.status;
-          const errorData = error.response.data;
-          const errorCode = errorData?.errorCode;
-          const errorMessage = errorData?.message;
-
-          if (status === 404) {
-            if (errorCode === 'US001') {
-              setUserError('유저가 존재하지 않습니다.');
-            } else {
-              setUserError(errorMessage || '사용자 정보를 찾을 수 없습니다.');
-            }
-          } else if (status === 502) {
-            setUserError(
-              '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.'
-            );
-          } else {
-            setUserError(
-              errorMessage || '사용자 정보를 불러오는데 실패했습니다.'
-            );
-          }
-        } else {
-          // 네트워크 에러 또는 기타 에러
-          setUserError(
-            error.message || '사용자 정보를 불러오는데 실패했습니다.'
-          );
-        }
-      } finally {
-        setIsLoadingUser(false);
-      }
-    };
-
-    fetchUserInfo();
-  }, []);
-
-  // 오늘의 약 데이터 조회 (보호자가 연결된 경우에만)
-  useEffect(() => {
-    if (!hasGuardian || isLoadingUser) {
-      return;
-    }
-
-    const fetchTodayMedications = async () => {
-      setIsLoadingMedications(true);
-      setMedicationError(null);
-      try {
-        const token = getAccessToken();
-        if (!token) {
-          setMedicationError('로그인이 필요합니다.');
-          return;
-        }
-
-        const userId = getUserIdFromToken(token);
-        if (!userId) {
-          setMedicationError('사용자 정보를 불러올 수 없습니다.');
-          return;
-        }
-
-        // 오늘 날짜 정보
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = today.getMonth() + 1; // 0-based이므로 +1
-
-        // 캘린더 API 호출
-        const calendarData = await getCalendar(year, month, userId);
-
-        // 오늘 날짜의 CalendarDay 찾기
-        const todayCalendarDay = findTodayCalendarDay(calendarData.days);
-
-        if (todayCalendarDay) {
-          // 오늘 날짜의 슬롯들을 Medication 배열로 변환
-          const medications = convertTodaySlotsToMedications(
-            todayCalendarDay.slots
-          );
-          setTodayMedications(medications);
-        } else {
-          // 오늘 날짜에 약이 없는 경우
-          setTodayMedications([]);
-        }
-      } catch (error: any) {
-        // 에러 응답 처리
-        if (error.response) {
-          const status = error.response.status;
-          const errorData = error.response.data;
-          const errorCode = errorData?.errorCode;
-          const errorMessage = errorData?.message;
-
-          if (status === 404) {
-            if (errorCode === 'US001') {
-              setMedicationError('유저가 존재하지 않습니다.');
-            } else {
-              setMedicationError(errorMessage || '약 정보를 찾을 수 없습니다.');
-            }
-          } else if (status === 502) {
-            setMedicationError(
-              '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.'
-            );
-          } else {
-            setMedicationError(
-              errorMessage || '약 정보를 불러오는데 실패했습니다.'
-            );
-          }
-        } else {
-          // 네트워크 에러 또는 기타 에러
-          setMedicationError(
-            error.message || '약 정보를 불러오는데 실패했습니다.'
-          );
-        }
-      } finally {
-        setIsLoadingMedications(false);
-      }
-    };
-
-    fetchTodayMedications();
-  }, [hasGuardian, isLoadingUser]);
-
-  // 보호자 미연결 상태일 때 주기적으로 연결 여부 확인 (폴링)
-  useEffect(() => {
-    // 보호자가 이미 연결되어 있으면 폴링 불필요
-    if (hasGuardian || isLoadingUser) {
-      return;
-    }
-
-    const checkGuardianConnection = async () => {
-      try {
-        const token = getAccessToken();
-        if (!token) {
-          console.log('[ElderHomePage] 폴링 - 토큰 없음');
-          return;
-        }
-
-        const hasLink = await hasCaregiverLink();
-        console.log(
-          '[ElderHomePage] 폴링 - hasLink:',
-          hasLink,
-          'type:',
-          typeof hasLink
-        );
-
-        if (hasLink) {
-          console.log('[ElderHomePage] 보호자 연결 감지! 화면 전환');
-          setHasGuardian(true);
-        }
-      } catch (error: any) {
-        // 에러 발생 시 조용히 처리 (다음 폴링에서 다시 시도)
-        console.error('[ElderHomePage] 폴링 에러:', error);
-        if (error.response) {
-          console.error(
-            '[ElderHomePage] 폴링 응답 데이터:',
-            error.response.data
-          );
-          console.error(
-            '[ElderHomePage] 폴링 응답 상태:',
-            error.response.status
-          );
-        }
-      }
-    };
-
-    // 초기 확인
-    checkGuardianConnection();
-
-    // 5초마다 연결 여부 확인
-    const interval = setInterval(checkGuardianConnection, 5000);
-
-    return () => clearInterval(interval);
-  }, [hasGuardian, isLoadingUser]);
 
   // 약 복용 시간 체크 (임시: 실제로는 API나 설정에서 가져올 것)
   useEffect(() => {
