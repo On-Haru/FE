@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ChevronDown, BarChart3, Clock, Pill, AlertTriangle } from 'lucide-react';
 import { gsap } from 'gsap';
@@ -135,19 +135,13 @@ const CollapsibleSection = ({
 };
 
 const ReportPage = () => {
-
-  // 로딩 상태 관리
-  const [isLoading, setIsLoading] = useState(true);
-
   const [searchParams] = useSearchParams();
-
 
   // 각 섹션의 열림/닫힘 상태 관리 (기본값: 모두 열림)
   const [isOverallStatsOpen, setIsOverallStatsOpen] = useState(true);
   const [isTimePatternOpen, setIsTimePatternOpen] = useState(true);
   const [isMedicinePatternOpen, setIsMedicinePatternOpen] = useState(true);
   const [isRiskSignalsOpen, setIsRiskSignalsOpen] = useState(true);
-
 
   // API 데이터 상태 관리
   const [reportData, setReportData] = useState<ReportData | null>(null);
@@ -233,31 +227,26 @@ const ReportPage = () => {
     fetchReport();
   }, [elderId, year, month]);
 
-  // 로딩 상태
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-gray-500">리포트를 불러오는 중...</p>
-      </div>
-    );
-  }
+  // 사용자 정보 추출 (API에서 제공되면 사용, 없으면 제목에서 추출)
+  const userName = reportData
+    ? (reportData.reportMeta.userName || extractNameFromTitle(reportData.reportMeta.title))
+    : '사용자';
+  const birthYear = reportData?.reportMeta.userYear
+    ? parseInt(reportData.reportMeta.userYear, 10)
+    : 1954;
 
-  // 에러 상태
-  if (error || !reportData) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-red-500">{error || '리포트 데이터를 불러올 수 없습니다.'}</p>
-      </div>
-    );
-  }
-
-  // 사용자 이름 추출
-  const userName = extractNameFromTitle(reportData.reportMeta.title);
-  const birthYear = 1954; // API에 없으므로 mock 데이터 유지
-return (
+  return (
     <div className="relative min-h-full">
       <ReportLoading isLoading={isLoading} />
 
+      {/* 에러 상태 */}
+      {error && !isLoading && (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <p className="text-red-500">{error}</p>
+        </div>
+      )}
+
+      {/* 리포트 데이터 표시 */}
       {!isLoading && reportData && (
         <div className="flex flex-col min-h-full gap-2">
           <ReportUserInfo name={userName} birthYear={birthYear} />
@@ -302,8 +291,8 @@ return (
             onToggle={() => setIsRiskSignalsOpen(!isRiskSignalsOpen)}
           >
             <ReportRiskSignals
-              quickResponseRate={42}
-              delayedResponseRate={18}
+              quickResponseRate={reportData.chartData.delayStatistics?.withinFiveMinutesRate ?? 0}
+              delayedResponseRate={reportData.chartData.delayStatistics?.overThirtyMinutesRate ?? 0}
             />
           </CollapsibleSection>
         </div>

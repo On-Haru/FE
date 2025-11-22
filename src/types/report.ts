@@ -14,6 +14,8 @@ export interface ReportMeta {
   title: string;
   periodType: PeriodType;
   dateRange: string;
+  userName?: string;
+  userYear?: string;
 }
 
 export interface AIAnalysis {
@@ -33,6 +35,7 @@ export interface TimePattern {
   label: string; // '아침', '점심', '저녁'
   rate: number;
   status: TimePatternStatus;
+  averageDelayMinutes?: number;
 }
 
 export interface MedicinePattern {
@@ -41,9 +44,15 @@ export interface MedicinePattern {
   aiComment: string | null;
 }
 
+export interface DelayStatistics {
+  withinFiveMinutesRate: number;
+  overThirtyMinutesRate: number;
+}
+
 export interface ChartData {
   timePattern: TimePattern[];
   medicinePattern: MedicinePattern[];
+  delayStatistics?: DelayStatistics;
 }
 
 export interface ReportData {
