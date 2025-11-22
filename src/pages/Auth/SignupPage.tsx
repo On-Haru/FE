@@ -1,7 +1,8 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
-import axiosInstance from '@/lib/axios';
+// TODO: API 연동 시 주석 해제
+// import axiosInstance from '@/lib/axios';
 import BackButton from './components/BackButton';
 import AuthLogo from './components/AuthLogo';
 import AuthInput from './components/AuthInput';
@@ -126,23 +127,35 @@ const SignupPage = () => {
       return;
     }
 
-    try {
-      await axiosInstance.post('/auth/signup', {
-        role,
-        phoneNumber,
-        password,
-        name,
-        birthYear: Number(birthYear),
-      });
+    // TODO: API 연동 시 아래 주석 해제
+    // try {
+    //   await axiosInstance.post('/auth/signup', {
+    //     role,
+    //     phoneNumber,
+    //     password,
+    //     name,
+    //     birthYear: Number(birthYear),
+    //   });
+    //   sessionStorage.removeItem(STORAGE_KEY);
+    //   navigate(`/${role}/login`);
+    // } catch (error) {
+    //   console.error('Failed to sign up', error);
+    //   alert('회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    // }
 
-      // 회원가입 성공 시 sessionStorage 정리
-      sessionStorage.removeItem(STORAGE_KEY);
+    // 퍼블리싱 단계: 임시로 성공 처리
+    console.log('회원가입 요청 데이터 (퍼블리싱):', {
+      role,
+      phoneNumber,
+      name,
+      birthYear: Number(birthYear),
+      password: '***',
+    });
 
-      navigate(`/${role}/login`);
-    } catch (error) {
-      console.error('Failed to sign up', error);
-      alert('회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.');
-    }
+    // 회원가입 성공 시 sessionStorage 정리
+    sessionStorage.removeItem(STORAGE_KEY);
+
+    navigate(`/${role}/login`);
   };
 
   // 1단계: 전화번호, 비밀번호
