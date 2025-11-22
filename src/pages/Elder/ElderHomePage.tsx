@@ -100,16 +100,32 @@ const ElderHomePage = () => {
 
         // 보호자 연결 여부 확인
         // has-link API를 사용하여 연결 여부를 boolean 값으로 확인
+        // 어르신이 호출해도 자신에게 연결된 보호자가 있는지 확인 가능한지 테스트
         try {
           const hasLink = await hasCaregiverLink();
-          console.log('[ElderHomePage] 초기 로드 - hasLink:', hasLink);
+          console.log(
+            '[ElderHomePage] 초기 로드 - hasLink:',
+            hasLink,
+            'type:',
+            typeof hasLink
+          );
           setHasGuardian(hasLink);
-        } catch (linkError) {
+        } catch (linkError: any) {
           // 연결 여부 확인 실패 시 보호자 미연결로 처리
           console.error(
             '[ElderHomePage] 초기 로드 - 연결 여부 확인 실패:',
             linkError
           );
+          if (linkError.response) {
+            console.error(
+              '[ElderHomePage] 응답 데이터:',
+              linkError.response.data
+            );
+            console.error(
+              '[ElderHomePage] 응답 상태:',
+              linkError.response.status
+            );
+          }
           setHasGuardian(false);
         }
       } catch (error: any) {
@@ -160,19 +176,35 @@ const ElderHomePage = () => {
       try {
         const token = getAccessToken();
         if (!token) {
+          console.log('[ElderHomePage] 폴링 - 토큰 없음');
           return;
         }
 
         const hasLink = await hasCaregiverLink();
-        console.log('[ElderHomePage] 폴링 - hasLink:', hasLink);
+        console.log(
+          '[ElderHomePage] 폴링 - hasLink:',
+          hasLink,
+          'type:',
+          typeof hasLink
+        );
 
         if (hasLink) {
           console.log('[ElderHomePage] 보호자 연결 감지! 화면 전환');
           setHasGuardian(true);
         }
-      } catch (error) {
+      } catch (error: any) {
         // 에러 발생 시 조용히 처리 (다음 폴링에서 다시 시도)
         console.error('[ElderHomePage] 폴링 에러:', error);
+        if (error.response) {
+          console.error(
+            '[ElderHomePage] 폴링 응답 데이터:',
+            error.response.data
+          );
+          console.error(
+            '[ElderHomePage] 폴링 응답 상태:',
+            error.response.status
+          );
+        }
       }
     };
 
