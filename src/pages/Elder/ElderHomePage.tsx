@@ -117,6 +117,69 @@ const ElderHomePage = () => {
     });
   }, [isLoadingUser, hasGuardian, isSubscribed, isSupported, subscribe]);
 
+  // Service Worker로부터 Push 알림 메시지 수신
+  useEffect(() => {
+    if (!hasGuardian) {
+      return;
+    }
+
+    const handleMessage = (event: MessageEvent) => {
+      // Service Worker로부터 메시지 수신
+      if (event.data && event.data.type === 'PUSH_NOTIFICATION') {
+        const notificationData = event.data.data;
+
+        // scheduleId가 있으면 해당 약 정보 찾기
+        if (notificationData.scheduleId) {
+          const medication = todayMedications.find(
+            (med) => med.scheduleId === notificationData.scheduleId
+          );
+
+          if (medication && !medication.isTaken) {
+            // 약 정보가 있고 아직 복용하지 않았으면 모달 표시
+            setReminderMedication({
+              id: medication.id,
+              time: medication.time,
+              medicationName: medication.medicationName,
+              dosage: medication.dosage,
+            });
+            setShowReminderModal(true);
+          }
+        } else {
+          // scheduleId가 없으면 title과 body로 약 정보 찾기 시도
+          // 또는 기본 모달 표시 (나중에 개선 가능)
+        }
+      }
+
+      // 알림 클릭 이벤트 처리
+      if (event.data && event.data.type === 'NOTIFICATION_CLICK') {
+        const notificationData = event.data.data;
+
+        if (notificationData.scheduleId) {
+          const medication = todayMedications.find(
+            (med) => med.scheduleId === notificationData.scheduleId
+          );
+
+          if (medication && !medication.isTaken) {
+            setReminderMedication({
+              id: medication.id,
+              time: medication.time,
+              medicationName: medication.medicationName,
+              dosage: medication.dosage,
+            });
+            setShowReminderModal(true);
+          }
+        }
+      }
+    };
+
+    // Service Worker 메시지 리스너 등록
+    navigator.serviceWorker.addEventListener('message', handleMessage);
+
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', handleMessage);
+    };
+  }, [hasGuardian, todayMedications]);
+
   // 복용 예정 약을 먼저, 복용된 약을 나중에 정렬
   const sortedMedications = useMemo(() => {
     return [...todayMedications].sort((a, b) => {
