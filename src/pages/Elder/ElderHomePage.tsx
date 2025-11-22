@@ -1,4 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
+import { getAccessToken } from '@/lib/storage';
+import { getUserIdFromToken } from '@/lib/jwt';
+import { getUser } from './services/user';
 import ConnectionCodeScreen from './components/ConnectionCodeScreen';
 import DateTimeDisplay from './components/DateTimeDisplay';
 import GreetingCard from './components/GreetingCard';
@@ -14,8 +17,9 @@ const ElderHomePage = () => {
   // TODO: API 연동 시 실제 데이터로 교체
   // 테스트: false로 변경하면 보호자 미연결 화면 확인 가능
   const [hasGuardian] = useState<boolean>(true); // 임시: 보호자 연결 여부
-  const connectionCode = '0837'; // 임시: 연결 코드
-  const userName = '홍길동'; // 임시: 사용자 이름
+  const [userName, setUserName] = useState<string>(''); // 사용자 이름
+  const [connectionCode, setConnectionCode] = useState<string>(''); // 연결 코드
+  const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true); // 사용자 정보 로딩 상태
 
   // 임시: 오늘의 약 데이터 (state로 관리)
   const [todayMedications, setTodayMedications] = useState<Medication[]>([
@@ -70,6 +74,51 @@ const ElderHomePage = () => {
       return a.isTaken ? 1 : -1;
     });
   }, [todayMedications]);
+
+  // 사용자 정보 조회
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      setIsLoadingUser(true);
+      try {
+        const token = getAccessToken();
+        if (!token) {
+          // 토큰이 없으면 에러 처리 (로그인 페이지로 리다이렉트 가능)
+          return;
+        }
+
+        const userId = getUserIdFromToken(token);
+        if (!userId) {
+          // userId를 추출할 수 없으면 에러 처리
+          return;
+        }
+
+        const userData = await getUser(userId);
+        setUserName(userData.name);
+        setConnectionCode(userData.code.toString());
+      } catch (error: any) {
+        // 에러 응답 처리
+        if (error.response) {
+          const status = error.response.status;
+          const errorData = error.response.data;
+          const errorCode = errorData?.errorCode;
+
+          if (status === 404) {
+            if (errorCode === 'US001') {
+              // 유저가 존재하지 않습니다
+              // 로그인 페이지로 리다이렉트하거나 에러 메시지 표시
+            }
+          } else if (status === 502) {
+            // 서버에 연결할 수 없습니다
+          }
+        }
+        // 에러 발생 시 기본값 유지 또는 에러 처리
+      } finally {
+        setIsLoadingUser(false);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
 
   // 약 복용 시간 체크 (임시: 실제로는 API나 설정에서 가져올 것)
   useEffect(() => {
@@ -127,6 +176,15 @@ const ElderHomePage = () => {
 
   // 모든 약이 복용되었는지 확인
   const allMedicationsTaken = sortedMedications.every((med) => med.isTaken);
+
+  // 사용자 정보 로딩 중
+  if (isLoadingUser) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-gray-500">로딩 중...</p>
+      </div>
+    );
+  }
 
   // 보호자가 연결되지 않은 경우
   if (!hasGuardian) {
