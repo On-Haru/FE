@@ -86,6 +86,9 @@ const ReportPage = () => {
         return;
       }
 
+      const startTime = Date.now();
+      const MIN_LOADING_TIME = 2000; // 최소 2초 로딩 시간
+
       try {
         setIsLoading(true);
         setError(null);
@@ -101,8 +104,25 @@ const ReportPage = () => {
 
         const data = await getReport(userId, year, month);
         console.log('[ReportPage] 리포트 데이터 수신:', data);
+
+        // 최소 로딩 시간 보장
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
+
+        if (remainingTime > 0) {
+          await new Promise(resolve => setTimeout(resolve, remainingTime));
+        }
+
         setReportData(data);
       } catch (err: any) {
+        // 최소 로딩 시간 보장 (에러 발생 시에도)
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
+
+        if (remainingTime > 0) {
+          await new Promise(resolve => setTimeout(resolve, remainingTime));
+        }
+
         // 401 에러인 경우 특별 처리
         if (err.response?.status === 401) {
           setError('인증이 필요합니다. 다시 로그인해주세요.');
