@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MinusCircle, Plus } from 'lucide-react';
+import TimeTag, { type TimeLabel } from '@/components/TimeTag';
 
 export interface AlarmItem {
   id: string | number;
@@ -38,7 +39,6 @@ interface TimeInputItemProps {
   formatTimeDisplay: (time24: string) => string;
   getScheduleType: (time: string) => AlarmItem['schedule_type'];
   formatTime: (time: string) => string;
-  getColorClass: (type: AlarmItem['schedule_type']) => string;
 }
 
 const TimeInputItem = ({
@@ -50,7 +50,6 @@ const TimeInputItem = ({
   formatTimeDisplay,
   getScheduleType,
   formatTime,
-  getColorClass,
 }: TimeInputItemProps) => {
   const [inputValue, setInputValue] = useState(formatTimeDisplay(item.notify_time));
 
@@ -60,15 +59,30 @@ const TimeInputItem = ({
   }, [item.notify_time, formatTimeDisplay]);
 
   if (!editMode) {
+    // schedule_type을 TimeLabel로 변환
+    const getTimeLabel = (type: AlarmItem['schedule_type']): TimeLabel => {
+      switch (type) {
+        case 'MORNING':
+          return '아침';
+        case 'LUNCH':
+          return '점심';
+        case 'EVENING':
+          return '저녁';
+      }
+    };
+
     return (
-      <span
-        className={`
-          px-3 py-1 rounded-full text-base font-medium
-          ${getColorClass(item.schedule_type)}
-        `}
-      >
-        {formatTime(item.notify_time)}
-      </span>
+      <div className="flex items-center gap-2">
+        <span
+          className="
+            px-3 py-1 rounded-full text-sm font-medium
+            bg-gray-200 text-gray-600
+          "
+        >
+          {formatTime(item.notify_time)}
+        </span>
+        <TimeTag label={getTimeLabel(item.schedule_type)} />
+      </div>
     );
   }
 
@@ -311,17 +325,6 @@ const AlarmList = ({
     return 'EVENING';
   };
 
-  const getColorClass = (type: AlarmItem['schedule_type']) => {
-    switch (type) {
-      case 'MORNING':
-        return 'text-morning-primary bg-morning-secondary';
-      case 'LUNCH':
-        return 'text-lunch-primary bg-lunch-secondary';
-      case 'EVENING':
-        return 'text-evening-primary bg-evening-secondary';
-    }
-  };
-
   // 24시간 형식을 그대로 표시 (00:00 ~ 23:59)
   const formatTimeDisplay = (time24: string): string => {
     return time24; // 이미 24시간 형식이므로 그대로 반환
@@ -329,7 +332,7 @@ const AlarmList = ({
 
   const containerClass = editMode
     ? 'flex flex-col gap-2 items-start'
-    : 'flex gap-2 flex-wrap items-center';
+    : 'flex flex-col gap-2 items-start';
 
   return (
     <div className={containerClass}>
@@ -345,7 +348,6 @@ const AlarmList = ({
             formatTimeDisplay={formatTimeDisplay}
             getScheduleType={getScheduleType}
             formatTime={formatTime}
-            getColorClass={getColorClass}
           />
         );
       })}
