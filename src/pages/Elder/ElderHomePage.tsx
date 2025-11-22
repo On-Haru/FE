@@ -20,6 +20,7 @@ const ElderHomePage = () => {
   const [userName, setUserName] = useState<string>(''); // 사용자 이름
   const [connectionCode, setConnectionCode] = useState<string>(''); // 연결 코드
   const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true); // 사용자 정보 로딩 상태
+  const [userError, setUserError] = useState<string | null>(null); // 사용자 정보 조회 에러
 
   // 임시: 오늘의 약 데이터 (state로 관리)
   const [todayMedications, setTodayMedications] = useState<Medication[]>([
@@ -79,16 +80,17 @@ const ElderHomePage = () => {
   useEffect(() => {
     const fetchUserInfo = async () => {
       setIsLoadingUser(true);
+      setUserError(null);
       try {
         const token = getAccessToken();
         if (!token) {
-          // 토큰이 없으면 에러 처리 (로그인 페이지로 리다이렉트 가능)
+          setUserError('로그인이 필요합니다.');
           return;
         }
 
         const userId = getUserIdFromToken(token);
         if (!userId) {
-          // userId를 추출할 수 없으면 에러 처리
+          setUserError('사용자 정보를 불러올 수 없습니다.');
           return;
         }
 
@@ -101,17 +103,29 @@ const ElderHomePage = () => {
           const status = error.response.status;
           const errorData = error.response.data;
           const errorCode = errorData?.errorCode;
+          const errorMessage = errorData?.message;
 
           if (status === 404) {
             if (errorCode === 'US001') {
-              // 유저가 존재하지 않습니다
-              // 로그인 페이지로 리다이렉트하거나 에러 메시지 표시
+              setUserError('유저가 존재하지 않습니다.');
+            } else {
+              setUserError(errorMessage || '사용자 정보를 찾을 수 없습니다.');
             }
           } else if (status === 502) {
-            // 서버에 연결할 수 없습니다
+            setUserError(
+              '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.'
+            );
+          } else {
+            setUserError(
+              errorMessage || '사용자 정보를 불러오는데 실패했습니다.'
+            );
           }
+        } else {
+          // 네트워크 에러 또는 기타 에러
+          setUserError(
+            error.message || '사용자 정보를 불러오는데 실패했습니다.'
+          );
         }
-        // 에러 발생 시 기본값 유지 또는 에러 처리
       } finally {
         setIsLoadingUser(false);
       }
@@ -182,6 +196,21 @@ const ElderHomePage = () => {
     return (
       <div className="flex items-center justify-center h-full">
         <p className="text-gray-500">로딩 중...</p>
+      </div>
+    );
+  }
+
+  // 사용자 정보 조회 에러 발생 시
+  if (userError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full px-4">
+        <p className="text-red-500 text-center mb-4">{userError}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-primary text-white rounded-xl hover:opacity-90 transition-opacity"
+        >
+          다시 시도
+        </button>
       </div>
     );
   }

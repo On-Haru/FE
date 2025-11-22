@@ -44,8 +44,15 @@ const Header = () => {
 
         const userData = await getUser(userId);
         setConnectionCode(userData.code.toString());
-      } catch (error) {
-        // 에러 발생 시 기본값 유지
+      } catch (error: any) {
+        // 에러 발생 시 기본값 유지 (Header에서는 에러를 조용히 처리)
+        // 에러가 발생해도 연결 코드가 표시되지 않을 뿐, 페이지는 정상 작동
+        if (error.response) {
+          const status = error.response.status;
+          if (status === 404 || status === 502) {
+            // US001 또는 네트워크 에러는 조용히 처리
+          }
+        }
       }
     };
 
