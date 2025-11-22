@@ -4,6 +4,7 @@ import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import { useUser } from './hooks/useUser';
 import { useTodayMedications } from './hooks/useTodayMedications';
 import { useGuardianConnection } from './hooks/useGuardianConnection';
+import { usePushSubscription } from './hooks/usePushSubscription';
 import ConnectionCodeScreen from './components/ConnectionCodeScreen';
 import DateTimeDisplay from './components/DateTimeDisplay';
 import GreetingCard from './components/GreetingCard';
@@ -26,6 +27,9 @@ const ElderHomePage = () => {
 
   // 보호자 연결 여부 확인
   const { hasGuardian, setHasGuardian } = useGuardianConnection(isLoadingUser);
+
+  // Push 구독
+  const { isSupported, isSubscribed, subscribe } = usePushSubscription();
 
   // 오늘의 약 데이터 조회
   const {
@@ -89,6 +93,29 @@ const ElderHomePage = () => {
       setReminderMedication(null);
     }
   };
+
+  // 보호자가 연결되고 사용자 정보가 로드되면 자동으로 Push 구독 시도
+  useEffect(() => {
+    // 사용자 정보 로딩 중이거나 보호자가 연결되지 않았으면 구독하지 않음
+    if (isLoadingUser || !hasGuardian) {
+      return;
+    }
+
+    // 이미 구독되어 있으면 다시 구독하지 않음
+    if (isSubscribed) {
+      return;
+    }
+
+    // 브라우저가 Push를 지원하지 않으면 구독하지 않음
+    if (!isSupported) {
+      return;
+    }
+
+    // 자동으로 Push 구독 시도 (에러는 조용히 처리)
+    subscribe().catch(() => {
+      // 구독 실패는 조용히 처리 (사용자에게 강제로 권한을 요청하지 않음)
+    });
+  }, [isLoadingUser, hasGuardian, isSubscribed, isSupported, subscribe]);
 
   // 복용 예정 약을 먼저, 복용된 약을 나중에 정렬
   const sortedMedications = useMemo(() => {
