@@ -36,7 +36,6 @@ const Checklist = ({ date, items, elderName, userId }: ChecklistProps) => {
                 });
                 // 성공 시 UI 업데이트는 부모 컴포넌트에서 처리
             } catch (error) {
-                console.error('복용 여부 업데이트 실패:', error);
                 alert('복용 여부 업데이트에 실패했습니다.');
             }
         }

@@ -66,7 +66,6 @@ const ChecklistModal = ({ isOpen, onClose, date, item, elderName, userId }: Chec
             alert('알림이 전송되었습니다.');
             onClose();
         } catch (error) {
-            console.error('알림 전송 실패:', error);
             alert('알림 전송에 실패했습니다. 잠시 후 다시 시도해주세요.');
         } finally {
             setIsSending(false);
@@ -122,12 +121,12 @@ const ChecklistModal = ({ isOpen, onClose, date, item, elderName, userId }: Chec
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm text-gray-600">지연 시간:</span>
                                     <span className={`text-sm font-medium ${item.delayMinutes !== null && item.delayMinutes !== undefined
-                                            ? item.delayMinutes > 0
-                                                ? 'text-red-500'
-                                                : item.delayMinutes === 0
-                                                    ? 'text-green-500'
-                                                    : 'text-blue-500'
-                                            : 'text-gray-500'
+                                        ? item.delayMinutes > 0
+                                            ? 'text-red-500'
+                                            : item.delayMinutes === 0
+                                                ? 'text-green-500'
+                                                : 'text-blue-500'
+                                        : 'text-gray-500'
                                         }`}>
                                         {delayText || '정보 없음'}
                                     </span>
@@ -151,8 +150,8 @@ const ChecklistModal = ({ isOpen, onClose, date, item, elderName, userId }: Chec
                             onClick={handleSendNotification}
                             disabled={isSending}
                             className={`flex-1 px-4 py-2 bg-secondary text-white rounded-xl font-medium transition-colors ${isSending
-                                    ? 'opacity-50 cursor-not-allowed'
-                                    : 'hover:bg-secondary/80 cursor-pointer'
+                                ? 'opacity-50 cursor-not-allowed'
+                                : 'hover:bg-secondary/80 cursor-pointer'
                                 }`}
                         >
                             {isSending ? '전송 중...' : '알림 보내기'}

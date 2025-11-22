@@ -9,31 +9,10 @@ export const sendNotification = async (
     userId: number,
     request: NotifyRequest
 ): Promise<void> => {
-    const fullUrl = `${axiosInstance.defaults.baseURL || ''}/api/push/notify/${userId}`;
-    console.log('📤 [Push 알림 요청]', fullUrl, request);
-
-    // 토큰 확인 (디버깅용)
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-        console.warn('⚠️ [Push 알림] 인증 토큰이 없습니다. 로그인이 필요할 수 있습니다.');
-    }
-
-    try {
-        await axiosInstance.post<ApiResponse<null>>(
-            `/api/push/notify/${userId}`,
-            request
-        );
-        console.log('✅ [Push 알림 성공]', { userId, title: request.title });
-    } catch (error: any) {
-        console.error('❌ [Push 알림 에러]', {
-            url: fullUrl,
-            status: error.response?.status,
-            message: error.message,
-            data: error.response?.data,
-            hasToken: !!token,
-        });
-        throw error;
-    }
+    await axiosInstance.post<ApiResponse<null>>(
+        `/api/push/notify/${userId}`,
+        request
+    );
 };
 
 /**
