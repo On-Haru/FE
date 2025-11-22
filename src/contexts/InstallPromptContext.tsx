@@ -92,25 +92,20 @@ export const InstallPromptProvider = ({ children }: InstallPromptProviderProps) 
     }, [isDeviceIOS]);
 
     const showInstallPrompt = (force: boolean = false) => {
-        console.log('showInstallPrompt called', { platform, isDeviceIOS, deferredPrompt, force });
-
         // force가 false이고 이미 사용자가 모달을 닫았다면 표시하지 않음
         // force가 true이면 사용자가 명시적으로 클릭한 경우이므로 localStorage 체크 무시
         if (!force && isPromptDismissed()) {
-            console.log('Install prompt already dismissed, not showing');
             return;
         }
 
         // iOS인 경우
         if (isDeviceIOS) {
-            console.log('iOS - forcing prompt display');
             setDeferredPrompt(defaultBeforeInstallPromptEvent);
             setIsVisible(true);
         } else {
             // Android/Desktop인 경우
             // deferredPrompt가 있으면 그대로 사용, 없으면 기본값 설정
             const promptToUse = deferredPrompt || defaultBeforeInstallPromptEvent;
-            console.log('Setting prompt:', promptToUse);
             setDeferredPrompt(promptToUse);
             setIsVisible(true);
         }

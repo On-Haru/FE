@@ -10,9 +10,10 @@ interface ChecklistProps {
     date: string;
     items: ChecklistItem[];
     elderName: string;
+    userId: number;
 }
 
-const Checklist = ({ date, items, elderName }: ChecklistProps) => {
+const Checklist = ({ date, items, elderName, userId }: ChecklistProps) => {
     const [selectedItem, setSelectedItem] = useState<ChecklistItem | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -35,7 +36,6 @@ const Checklist = ({ date, items, elderName }: ChecklistProps) => {
                 });
                 // 성공 시 UI 업데이트는 부모 컴포넌트에서 처리
             } catch (error) {
-                console.error('복용 여부 업데이트 실패:', error);
                 alert('복용 여부 업데이트에 실패했습니다.');
             }
         }
@@ -84,6 +84,7 @@ const Checklist = ({ date, items, elderName }: ChecklistProps) => {
                     date={date}
                     item={selectedItem}
                     elderName={elderName}
+                    userId={userId}
                 />
             )}
         </>

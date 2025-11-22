@@ -67,7 +67,14 @@ const DetailPage = () => {
                             // API 데이터를 저장하기 위한 추가 필드
                             scheduleId: slot.scheduleId,
                             scheduledDateTime: slot.scheduledDateTime,
-                        } as ChecklistItem & { scheduleId: number; scheduledDateTime: string };
+                            takenDateTime: slot.takenDateTime,
+                            delayMinutes: slot.delayMinutes,
+                        } as ChecklistItem & {
+                            scheduleId: number;
+                            scheduledDateTime: string;
+                            takenDateTime: string | null;
+                            delayMinutes: number | null;
+                        };
                     });
 
                     convertedData[day.date] = {
@@ -167,7 +174,7 @@ const DetailPage = () => {
                     onMonthChange={handleMonthChange}
                     isLoading={isLoading}
                 />
-                {isDateClicked && (
+                {isDateClicked ? (
                     <>
                         {getSelectedDateChecklist() && getSelectedDateChecklist()!.items.length > 0 ? (
                             <div className="mt-4 px-4">
@@ -175,6 +182,7 @@ const DetailPage = () => {
                                     date={getSelectedDateChecklist()!.date}
                                     items={getSelectedDateChecklist()!.items}
                                     elderName={currentElder.name}
+                                    userId={Number(currentElder.id)}
                                 />
                             </div>
                         ) : (
@@ -185,6 +193,12 @@ const DetailPage = () => {
                             />
                         )}
                     </>
+                ) : (
+                    <EmptyDateActions
+                        date={selectedDate}
+                        elderName={currentElder.name}
+                        isDateClicked={isDateClicked}
+                    />
                 )}
             </div>
         </div>
