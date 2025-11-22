@@ -14,6 +14,9 @@ export default defineConfig({
         name: 'My App',
         short_name: 'App',
         description: 'My App Description',
+        start_url: '/',
+        display: 'standalone',
+        background_color: '#ffffff',
         theme_color: '#36C8B7',
         icons: [
           {
