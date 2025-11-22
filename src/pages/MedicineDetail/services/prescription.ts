@@ -9,7 +9,7 @@ export async function getPrescriptionDetail(id: number) {
   return res.data.data;
 }
 
-export async function updatePrescription(id: number, data: any) {
-  const res = await axiosInstance.put(`/api/prescriptions/${id}`, data);
+export async function updatePrescription(_id: number, data: any) {
+  const res = await axiosInstance.post(`/api/prescriptions`, data);
   return res.data.data;
 }

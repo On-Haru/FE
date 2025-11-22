@@ -13,6 +13,13 @@ const MedicineDetailPage = () => {
   const [medicines, setMedicines] = useState<MedicineItem[]>([]);
   const [selected, setSelected] = useState<number[]>([]);
   const [editMode, setEditMode] = useState(false);
+  const [prescriptionInfo, setPrescriptionInfo] = useState<{
+    seniorId: number;
+    hospitalName: string;
+    doctorName: string;
+    issuedDate: string;
+    note: string;
+  } | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -22,6 +29,15 @@ const MedicineDetailPage = () => {
 
         console.log('📋 Prescription detail:', detail);
 
+        // 처방전 기본 정보 저장
+        setPrescriptionInfo({
+          seniorId: detail.seniorId,
+          hospitalName: detail.hospitalName,
+          doctorName: detail.doctorName,
+          issuedDate: detail.issuedDate,
+          note: detail.note,
+        });
+
         // medicines 필드가 없거나 빈 배열인 경우 처리
         if (!detail.medicines || !Array.isArray(detail.medicines)) {
           console.warn('⚠️ medicines 필드가 없거나 배열이 아닙니다. 빈 배열로 설정합니다.');
@@ -29,18 +45,18 @@ const MedicineDetailPage = () => {
           return;
         }
 
-        const mapped: MedicineItem[] = detail.medicines.map((m: any, index: number) => {
+        const mapped: MedicineItem[] = detail.medicines.map((m: any) => {
           console.log('💊 Medicine item:', m);
           return {
-            id: m.id ?? Date.now() + index, // id가 없으면 임시 ID 생성
+            id: m.id,
             name: m.name || '',
             dosage: m.dosage ?? 0,
             totalCount: m.totalCount ?? 0,
             durationDays: m.durationDays ?? 0,
             memo: m.memo ?? null,
             aiDescription: m.aiDescription ?? null,
-            schedules: (m.schedules || []).map((s: any, sIndex: number) => ({
-              id: s.id ?? Date.now() + index * 1000 + sIndex, // id가 없으면 임시 ID 생성
+            schedules: (m.schedules || []).map((s: any) => ({
+              id: s.id,
               notifyTime: s.notifyTime,
               timeTag: s.timeTag,
             })),
@@ -83,11 +99,19 @@ const MedicineDetailPage = () => {
   /** 최종 저장 → 백엔드 업데이트 */
   const handleSaveEdit = async () => {
     try {
-      const latestId = await getLatestPrescriptionId();
+      if (!prescriptionInfo) {
+        alert('처방전 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+        return;
+      }
 
+      // 처방전 등록 API 형식으로 payload 생성
       const payload = {
+        seniorId: prescriptionInfo.seniorId,
+        hospitalName: prescriptionInfo.hospitalName,
+        doctorName: prescriptionInfo.doctorName,
+        issuedDate: prescriptionInfo.issuedDate,
+        note: prescriptionInfo.note,
         medicines: medicines.map((m) => ({
-          // id는 API 응답에 없으므로 저장 시 제외
           name: m.name,
           dosage: m.dosage,
           totalCount: m.totalCount,
@@ -95,7 +119,6 @@ const MedicineDetailPage = () => {
           memo: m.memo,
           aiDescription: m.aiDescription,
           schedules: m.schedules.map((s) => ({
-            // id는 API 응답에 없으므로 저장 시 제외
             notifyTime: s.notifyTime,
             timeTag: s.timeTag,
           })),
@@ -103,17 +126,16 @@ const MedicineDetailPage = () => {
       };
 
       console.log('📦 Update payload:', JSON.stringify(payload, null, 2));
-      console.log('📦 Prescription ID:', latestId);
 
-      const result = await updatePrescription(latestId, payload);
-      console.log('✅ 저장 성공:', result);
+      const result = await updatePrescription(0, payload); // id는 사용하지 않음
+      console.log('저장 성공:', result);
 
       alert('저장 완료!');
       setEditMode(false);
     } catch (err: any) {
-      console.error('❌ 저장 실패:', err);
-      console.error('❌ Error response:', err.response?.data);
-      console.error('❌ Error status:', err.response?.status);
+      console.error('저장 실패:', err);
+      console.error('Error response:', err.response?.data);
+      console.error('Error status:', err.response?.status);
       alert(`저장 실패: ${err.response?.data?.message || err.message || '알 수 없는 오류'}`);
     }
   };
