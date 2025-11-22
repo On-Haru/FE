@@ -2,9 +2,13 @@ import TodayMedicationCard, { type Medication } from './TodayMedicationCard';
 
 interface TodayMedicationListProps {
   medications: Medication[];
+  onMedicationClick?: (medication: Medication) => void;
 }
 
-const TodayMedicationList = ({ medications }: TodayMedicationListProps) => {
+const TodayMedicationList = ({
+  medications,
+  onMedicationClick,
+}: TodayMedicationListProps) => {
   if (medications.length === 0) {
     return null;
   }
@@ -22,6 +26,7 @@ const TodayMedicationList = ({ medications }: TodayMedicationListProps) => {
             medicationName={medication.medicationName}
             dosage={medication.dosage}
             isTaken={medication.isTaken}
+            onClick={() => onMedicationClick?.(medication)}
           />
         ))}
       </div>
