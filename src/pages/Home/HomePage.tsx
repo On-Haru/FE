@@ -1,12 +1,30 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { CareRecipient } from '@/types/caregiver';
-import { getCaregiverLinks } from './services/caregiverLink';
+import {
+  getCaregiverLinks,
+  deleteCaregiverLink,
+} from './services/caregiverLink';
+import { getUser } from './services/user';
+import { getCalendar } from '@/pages/Detail/services/takingLog';
+import type { CalendarResponse } from '@/pages/Detail/types/takingLog';
+import {
+  findTodayCalendarDay,
+  calculateTodayStatus,
+  getMissedMedications,
+  generateStatusMessage,
+} from './utils/takingLogUtils';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import EmptyStateScreen from './components/EmptyStateScreen';
 import CaregiverCard from './components/CaregiverCard';
 
+// CareRecipient에 linkId와 캘린더 데이터 추가
+interface RecipientWithLinkId extends CareRecipient {
+  linkId: number;
+  calendarData: CalendarResponse | null;
+}
+
 const HomePage = () => {
-  const [recipients, setRecipients] = useState<CareRecipient[]>([]);
+  const [recipients, setRecipients] = useState<RecipientWithLinkId[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,21 +35,78 @@ const HomePage = () => {
     try {
       const links = await getCaregiverLinks();
 
-      // API 응답을 CareRecipient 타입으로 변환
-      // TODO: 피보호자 상세 정보(이름, 약 복용 현황 등)는 별도 API에서 가져와야 함
-      const convertedRecipients: CareRecipient[] = links.map((link) => ({
-        id: link.seniorId.toString(),
-        name: `피보호자 ${link.seniorId}`, // 임시: 실제 이름은 별도 API에서 가져와야 함
-        todayStatus: {
-          takenCount: 0, // 임시: 실제 데이터는 별도 API에서 가져와야 함
-          totalCount: 0, // 임시: 실제 데이터는 별도 API에서 가져와야 함
-        },
-        missedMedications: [], // 임시: 실제 데이터는 별도 API에서 가져와야 함
-        statusMessage: undefined, // 임시: 실제 데이터는 별도 API에서 가져와야 함
-      }));
+      // 피보호자가 없는 경우
+      if (links.length === 0) {
+        setRecipients([]);
+        setIsLoading(false);
+        return;
+      }
 
-      setRecipients(convertedRecipients);
+      // 오늘 날짜 정보
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth() + 1; // 0-based이므로 +1
+
+      // 각 피보호자의 상세 정보(이름, 캘린더 데이터)를 가져오기
+      // 각 피보호자별로 독립적으로 처리하여 한 명의 API 실패가 다른 피보호자에 영향을 주지 않도록 함
+      const recipientsWithDetails = await Promise.all(
+        links.map(async (link) => {
+          let userInfo;
+          let calendarData: CalendarResponse | null = null;
+
+          // User API로 피보호자 정보 조회
+          try {
+            userInfo = await getUser(link.seniorId);
+          } catch (userError) {
+            // User API 호출 실패 시 기본값 사용 (조용히 처리)
+            // 한 피보호자의 User API 실패가 다른 피보호자에 영향을 주지 않음
+            userInfo = {
+              id: link.seniorId,
+              name: `피보호자 ${link.seniorId}`,
+              phone: '',
+              role: 'SENIOR' as const,
+              code: 0,
+            };
+          }
+
+          // 캘린더 API로 오늘의 복약 기록 조회
+          try {
+            calendarData = await getCalendar(year, month, link.seniorId);
+          } catch (calendarError) {
+            // 캘린더 API 호출 실패 시 null로 처리 (조용히 처리)
+            // 한 피보호자의 캘린더 API 실패가 다른 피보호자에 영향을 주지 않음
+            calendarData = null;
+          }
+
+          // 오늘 날짜의 CalendarDay 찾기
+          const todayCalendarDay = calendarData
+            ? findTodayCalendarDay(calendarData.days)
+            : null;
+
+          // 오늘의 복용 현황 계산
+          const todayStatus = calculateTodayStatus(todayCalendarDay);
+
+          // 미복용 약 목록 생성
+          const missedMedications = getMissedMedications(todayCalendarDay);
+
+          // 상태 메시지 생성
+          const statusMessage = generateStatusMessage(todayCalendarDay);
+
+          return {
+            id: link.seniorId.toString(),
+            linkId: link.id, // 연결 해제에 필요한 linkId 저장
+            name: userInfo.name, // 실제 이름 사용
+            calendarData, // 캘린더 데이터 저장
+            todayStatus, // 계산된 복용 현황
+            missedMedications, // 계산된 미복용 약 목록
+            statusMessage, // 생성된 상태 메시지
+          };
+        })
+      );
+
+      setRecipients(recipientsWithDetails);
     } catch (error) {
+      // getCaregiverLinks 실패 시에만 에러 표시
       setError(getApiErrorMessage(error));
     } finally {
       setIsLoading(false);
@@ -43,12 +118,24 @@ const HomePage = () => {
   }, [fetchRecipients]);
 
   // 연결 해제 핸들러
-  const handleDisconnect = (id: string) => {
-    // TODO: API 호출 추가 (9단계에서 구현)
-    // await disconnectRecipient(id);
+  const handleDisconnect = async (id: string) => {
+    // 해당 피보호자의 linkId 찾기
+    const recipient = recipients.find((r) => r.id === id);
+    if (!recipient) {
+      alert('피보호자를 찾을 수 없습니다.');
+      return;
+    }
 
-    // 임시로 로컬 상태에서 제거
-    setRecipients((prev) => prev.filter((r) => r.id !== id));
+    try {
+      // 연결 해제 API 호출
+      await deleteCaregiverLink(recipient.linkId);
+
+      // 성공 시 로컬 상태에서 제거
+      setRecipients((prev) => prev.filter((r) => r.id !== id));
+    } catch (error) {
+      // 에러 발생 시 사용자에게 알림
+      alert(getApiErrorMessage(error));
+    }
   };
 
   // 로딩 중

@@ -67,7 +67,7 @@ const CaregiverConnectionPage = () => {
             피보호자 연결하기
           </h1>
           <p className="text-sm text-gray-600">
-            피보호자의 홈화면에 표시되는 연결 코드를 입력하세요
+            피보호자의 전화번호와 연결 코드를 입력하세요
           </p>
         </div>
 
@@ -107,7 +107,7 @@ const CaregiverConnectionPage = () => {
               onChange={handleCodeChange}
               placeholder="0000"
               maxLength={4}
-              className="w-full px-6 py-4 text-4xl font-bold text-center rounded-xl border-2 border-gray-300 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary transition-colors"
+              className="w-full px-6 py-4 text-lg text-center rounded-xl border-2 border-gray-300 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary transition-colors"
             />
           </div>
 
@@ -127,7 +127,8 @@ const CaregiverConnectionPage = () => {
 
         {/* 안내 텍스트 */}
         <p className="text-xs text-gray-500 text-center leading-relaxed">
-          어르신 홈화면 우측 상단에 표시되는 4자리 숫자를 입력해주세요.
+          피보호자의 전화번호와 어르신 홈화면 우측 상단에 표시되는 4자리 연결
+          코드를 입력해주세요.
         </p>
       </div>
     </div>

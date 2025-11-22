@@ -1,4 +1,6 @@
 import { useNavigate } from 'react-router-dom';
+import { useRef } from 'react';
+import { gsap } from 'gsap';
 import Dropdown, { type DropdownOption } from '@/components/Dropdown';
 
 interface Elder {
@@ -18,6 +20,7 @@ const DetailPageHeader = ({
   onElderChange,
 }: DetailPageHeaderProps) => {
   const navigate = useNavigate();
+  const reportButtonRef = useRef<HTMLButtonElement>(null);
 
   // Elder 데이터를 DropdownOption 형식으로 변환
   const dropdownOptions: DropdownOption[] = elders.map((elder) => ({
@@ -55,8 +58,27 @@ const DetailPageHeader = ({
 
       {/* 오른쪽: AI 리포트 버튼 */}
       <button
+        ref={reportButtonRef}
         onClick={handleAiReportClick}
-        className="bg-primary text-white rounded-xl font-medium hover:bg-primary/90 active:bg-primary/80 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 whitespace-nowrap flex-shrink-0 flex items-center justify-center cursor-pointer"
+        onMouseEnter={() => {
+          if (reportButtonRef.current) {
+            gsap.to(reportButtonRef.current, {
+              scale: 1.05,
+              duration: 0.2,
+              ease: 'power2.out',
+            });
+          }
+        }}
+        onMouseLeave={() => {
+          if (reportButtonRef.current) {
+            gsap.to(reportButtonRef.current, {
+              scale: 1,
+              duration: 0.2,
+              ease: 'power2.out',
+            });
+          }
+        }}
+        className="bg-primary text-white rounded-xl font-medium active:bg-primary/80 focus:outline-none focus:ring-2 focus:ring-primary/20 whitespace-nowrap flex-shrink-0 flex items-center justify-center cursor-pointer"
         style={{ width: '100px', height: '35px', fontSize: '16px' }}
       >
         AI 리포트

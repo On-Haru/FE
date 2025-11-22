@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ChevronDown, BarChart3, Clock, Pill, AlertTriangle } from 'lucide-react';
 import { gsap } from 'gsap';
@@ -10,7 +10,9 @@ import ReportTimePattern from './components/ReportTimePattern';
 import ReportMedicinePattern from './components/ReportMedicinePattern';
 import ReportRiskSignals from './components/ReportRiskSignals';
 import ReportLoading from './components/ReportLoading';
+import ReportErrorScreen from './components/ReportErrorScreen';
 import { getReport } from './services/report';
+import { generateReportPDF } from '@/utils/pdfGenerator';
 import type { ReportData } from '@/types/report';
 
 // 토글 가능한 섹션 컴포넌트
@@ -125,7 +127,7 @@ const CollapsibleSection = ({
       </button>
       <div
         ref={contentRef}
-        className="overflow-hidden"
+        className=""
         style={{ height: isOpen ? 'auto' : 0 }}
       >
         <div className="mt-4">{children}</div>
@@ -147,6 +149,8 @@ const ReportPage = () => {
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [statusCode, setStatusCode] = useState<number | undefined>(undefined);
 
   // URL에서 파라미터 추출
   const elderId = searchParams.get('elderId');
@@ -173,7 +177,7 @@ const ReportPage = () => {
       }
 
       const startTime = Date.now();
-      const MIN_LOADING_TIME = 2000; // 최소 2초 로딩 시간
+      const MIN_LOADING_TIME = 1500; // 최소 1.5초 로딩 시간
 
       try {
         setIsLoading(true);
@@ -209,14 +213,22 @@ const ReportPage = () => {
           await new Promise(resolve => setTimeout(resolve, remainingTime));
         }
 
+        // 에러 정보 추출
+        const status = err.response?.status;
+        const errorData = err.response?.data;
+        const code = errorData?.errorCode || (err as any).errorCode;
+        const message = errorData?.message || err.message || '리포트를 불러오는 중 오류가 발생했습니다.';
+
+        setStatusCode(status);
+        setErrorCode(code);
+
         // 401 에러인 경우 특별 처리
-        if (err.response?.status === 401) {
+        if (status === 401) {
           setError('인증이 필요합니다. 다시 로그인해주세요.');
-        } else if (err.response?.status) {
-          const errorMessage = err.response?.data?.message || `리포트를 불러오는 중 오류가 발생했습니다. (${err.response.status})`;
-          setError(errorMessage);
+        } else if (status) {
+          setError(message);
         } else {
-          setError(err.message || '리포트를 불러오는 중 오류가 발생했습니다.');
+          setError(message);
         }
         console.error('Failed to fetch report:', err);
       } finally {
@@ -235,20 +247,105 @@ const ReportPage = () => {
     ? parseInt(reportData.reportMeta.userYear, 10)
     : 1954;
 
+  // PDF 공유 핸들러
+  const handleShareReport = useCallback(async () => {
+    if (!reportData) {
+      return;
+    }
+
+    try {
+      await generateReportPDF(reportData);
+    } catch (error) {
+      console.error('PDF 생성 실패:', error);
+      alert('PDF 생성 중 오류가 발생했습니다.');
+    }
+  }, [reportData]);
+
+  // Header의 공유 버튼 클릭 이벤트 리스너
+  useEffect(() => {
+    const handleShareEvent = () => {
+      handleShareReport();
+    };
+
+    window.addEventListener('shareReport', handleShareEvent);
+    return () => {
+      window.removeEventListener('shareReport', handleShareEvent);
+    };
+  }, [handleShareReport]);
+
   return (
     <div className="relative min-h-full">
       <ReportLoading isLoading={isLoading} />
 
       {/* 에러 상태 */}
       {error && !isLoading && (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <p className="text-red-500">{error}</p>
-        </div>
+        <ReportErrorScreen
+          error={error}
+          errorCode={errorCode}
+          statusCode={statusCode}
+          onRetry={() => {
+            setError(null);
+            setErrorCode(null);
+            setStatusCode(undefined);
+            // useEffect가 다시 실행되도록 하기 위해 상태 초기화
+            const fetchReport = async () => {
+              if (!elderId) return;
+
+              const startTime = Date.now();
+              const MIN_LOADING_TIME = 2000;
+
+              try {
+                setIsLoading(true);
+                setError(null);
+                setErrorCode(null);
+                setStatusCode(undefined);
+                const userId = parseInt(elderId, 10);
+
+                if (isNaN(userId)) {
+                  setError('유효하지 않은 사용자 ID입니다.');
+                  setIsLoading(false);
+                  return;
+                }
+
+                const data = await getReport(userId, year, month);
+
+                const elapsedTime = Date.now() - startTime;
+                const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
+
+                if (remainingTime > 0) {
+                  await new Promise(resolve => setTimeout(resolve, remainingTime));
+                }
+
+                setReportData(data);
+              } catch (err: any) {
+                const elapsedTime = Date.now() - startTime;
+                const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
+
+                if (remainingTime > 0) {
+                  await new Promise(resolve => setTimeout(resolve, remainingTime));
+                }
+
+                const status = err.response?.status;
+                const errorData = err.response?.data;
+                const code = errorData?.errorCode || (err as any).errorCode;
+                const message = errorData?.message || err.message || '리포트를 불러오는 중 오류가 발생했습니다.';
+
+                setStatusCode(status);
+                setErrorCode(code);
+                setError(message);
+              } finally {
+                setIsLoading(false);
+              }
+            };
+
+            fetchReport();
+          }}
+        />
       )}
 
       {/* 리포트 데이터 표시 */}
       {!isLoading && reportData && (
-        <div className="flex flex-col min-h-full gap-2">
+        <div data-report-container className="flex flex-col min-h-full gap-4">
           <ReportUserInfo name={userName} birthYear={birthYear} />
 
           <ReportAISummary summary={reportData.aiAnalysis.summary} />
