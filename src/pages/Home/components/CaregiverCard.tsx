@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { gsap } from 'gsap';
 import type { CareRecipient } from '@/types/caregiver';
 import MedicationProgressBar from './MedicationProgressBar';
 import DisconnectConfirmModal from './DisconnectConfirmModal';
@@ -15,6 +16,7 @@ const CaregiverCard = ({ recipient, onDisconnect }: CaregiverCardProps) => {
   const navigate = useNavigate();
   const { id, name, todayStatus, missedMedications, statusMessage } = recipient;
   const [showModal, setShowModal] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   // 시간 라벨 매핑
   const timeLabels: Record<'morning' | 'lunch' | 'evening', string> = {
@@ -23,9 +25,39 @@ const CaregiverCard = ({ recipient, onDisconnect }: CaregiverCardProps) => {
     evening: '저녁',
   };
 
-  // 카드 클릭 핸들러 - 달력 페이지로 이동
+  // 카드 클릭 핸들러 - GSAP 애니메이션 후 달력 페이지로 이동
   const handleCardClick = () => {
-    navigate(`/detail/${id}`);
+    // main 컨테이너 찾기
+    const mainContainer = document.querySelector('.mobile-content') as HTMLElement;
+
+    if (!mainContainer) {
+      navigate(`/detail/${id}`);
+      return;
+    }
+
+    // 페이드 아웃 + 왼쪽으로 슬라이드 아웃 애니메이션
+    gsap.to(mainContainer, {
+      opacity: 0,
+      x: -window.innerWidth,
+      duration: 0.2,
+      ease: 'power2.in',
+      onComplete: () => {
+        navigate(`/detail/${id}`);
+        // 다음 페이지 로드 후 오른쪽에서 슬라이드 인
+        setTimeout(() => {
+          gsap.fromTo(
+            mainContainer,
+            { opacity: 0, x: window.innerWidth },
+            {
+              opacity: 1,
+              x: 0,
+              duration: 0.1,
+              ease: 'power2.out'
+            }
+          );
+        }, 50);
+      },
+    });
   };
 
   // 연결 해제하기 버튼 클릭 핸들러 - 카드 클릭 이벤트 전파 방지
@@ -47,6 +79,7 @@ const CaregiverCard = ({ recipient, onDisconnect }: CaregiverCardProps) => {
 
   return (
     <div
+      ref={cardRef}
       onClick={handleCardClick}
       className="bg-white rounded-xl border border-gray-200 p-6 mb-4 cursor-pointer hover:bg-gray-50 hover:-translate-y-0.5 transition-all duration-200"
     >
