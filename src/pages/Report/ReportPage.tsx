@@ -173,7 +173,7 @@ const ReportPage = () => {
       }
 
       const startTime = Date.now();
-      const MIN_LOADING_TIME = 2000; // 최소 2초 로딩 시간
+      const MIN_LOADING_TIME = 1500; // 최소 1.5초 로딩 시간
 
       try {
         setIsLoading(true);
@@ -248,7 +248,7 @@ const ReportPage = () => {
 
       {/* 리포트 데이터 표시 */}
       {!isLoading && reportData && (
-        <div className="flex flex-col min-h-full gap-2">
+        <div className="flex flex-col min-h-full gap-4">
           <ReportUserInfo name={userName} birthYear={birthYear} />
 
           <ReportAISummary summary={reportData.aiAnalysis.summary} />
