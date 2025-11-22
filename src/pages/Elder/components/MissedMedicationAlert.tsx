@@ -15,7 +15,7 @@ const MissedMedicationAlert = ({
 
   return (
     <div className="px-4 mb-4">
-      <div className="bg-white rounded-2xl border-1 border-gray-200 px-6 py-6 flex flex-col items-center">
+      <div className="bg-white rounded-xl border-1 border-gray-200 px-6 py-6 flex flex-col items-center">
         {hasNoMedication ? (
           <>
             <CheckCircle
