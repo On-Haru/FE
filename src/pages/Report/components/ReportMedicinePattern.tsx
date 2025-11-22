@@ -25,7 +25,7 @@ const ReportMedicinePattern = ({
                 {medicinePattern.map((medicine, index) => (
                     <div
                         key={index}
-                        className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
+                        className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm"
                     >
                         <div className="flex items-start justify-between mb-2">
                             <div className="flex-1">

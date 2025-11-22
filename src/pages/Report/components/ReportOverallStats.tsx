@@ -22,7 +22,7 @@ const ReportOverallStats = ({ statistics }: ReportOverallStatsProps) => {
                 <BarChart3 className="w-5 h-5 text-primary" />
                 <h2 className="text-lg font-semibold text-black">전체 복약 통계</h2>
             </div>
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="bg-white rounded-xl p-4 border border-gray-200">
                 <div className="space-y-4">
                     {/* 전체 복약률 */}
                     <div className="flex items-center justify-between">
