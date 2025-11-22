@@ -78,13 +78,39 @@ export default function AppInstallPrompt() {
       // 이미 설치되어 있는지 확인
       if (window.matchMedia('(display-mode: standalone)').matches) {
         console.log('이미 PWA로 설치되어 있습니다');
+        return;
       }
       
       // beforeinstallprompt 이벤트가 발생할 수 있는지 확인
-      // (이벤트 자체는 브라우저가 발생시키므로 직접 확인할 수 없음)
       console.log('PWA 설치 가능 여부 확인 중...');
-      console.log('HTTPS:', window.location.protocol === 'https:');
+      console.log('HTTPS:', window.location.protocol === 'https:' || window.location.hostname === 'localhost');
       console.log('Manifest:', document.querySelector('link[rel="manifest"]') ? '존재' : '없음');
+      
+      // Manifest 파일 확인
+      try {
+        const manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
+        if (manifestLink) {
+          const manifestResponse = await fetch(manifestLink.href);
+          const manifest = await manifestResponse.json();
+          console.log('Manifest 내용:', manifest);
+          
+          // 아이콘 확인
+          if (manifest.icons && manifest.icons.length > 0) {
+            const icon192 = manifest.icons.find((icon: any) => icon.sizes === '192x192');
+            const icon512 = manifest.icons.find((icon: any) => icon.sizes === '512x512');
+            console.log('아이콘 192x192:', icon192 ? '존재' : '없음');
+            console.log('아이콘 512x512:', icon512 ? '존재' : '없음');
+            
+            if (!icon192 || !icon512) {
+              console.warn('⚠️ PWA 설치를 위해 192x192와 512x512 아이콘이 필요합니다!');
+            }
+          } else {
+            console.warn('⚠️ Manifest에 아이콘이 없습니다!');
+          }
+        }
+      } catch (error) {
+        console.error('Manifest 확인 중 오류:', error);
+      }
     };
     
     checkInstallability();
