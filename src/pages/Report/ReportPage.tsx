@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ChevronDown, BarChart3, Clock, Pill, AlertTriangle } from 'lucide-react';
 import ReportUserInfo from './components/ReportUserInfo';
 import ReportAISummary from './components/ReportAISummary';
@@ -6,6 +7,8 @@ import ReportOverallStats from './components/ReportOverallStats';
 import ReportTimePattern from './components/ReportTimePattern';
 import ReportMedicinePattern from './components/ReportMedicinePattern';
 import ReportRiskSignals from './components/ReportRiskSignals';
+import { getReport } from './services/report';
+import type { ReportData } from '@/types/report';
 
 // 토글 가능한 섹션 컴포넌트
 interface CollapsibleSectionProps {
@@ -46,59 +49,105 @@ const CollapsibleSection = ({
 };
 
 const ReportPage = () => {
+  const [searchParams] = useSearchParams();
+
   // 각 섹션의 열림/닫힘 상태 관리 (기본값: 모두 열림)
   const [isOverallStatsOpen, setIsOverallStatsOpen] = useState(true);
   const [isTimePatternOpen, setIsTimePatternOpen] = useState(true);
   const [isMedicinePatternOpen, setIsMedicinePatternOpen] = useState(true);
   const [isRiskSignalsOpen, setIsRiskSignalsOpen] = useState(true);
-  // 임시 mock 데이터
-  const mockData = {
-    name: '김노인',
-    birthYear: 1954,
-    aiSummary: '지난 30일 동안 김노인 님의 전체 복약률은 82%로 비교적 안정적이지만, 특히 저녁 시간대와 주말에 복약 누락이 자주 발생합니다. 관절약은 금요일 저녁에 복약률이 크게 떨어지는 패턴이 반복되고 있어, 해당 시간대에 보호자 알림을 강화하거나 복약 시간을 앞당기는 것을 추천합니다.',
-    statistics: {
-      overallRate: 82,
-      comparisonRate: {
-        diff: 6,
-        direction: 'UP' as const,
-      },
-      averageDelayMinutes: 22,
-      missedCount: 14,
-    },
-    timePattern: [
-      { label: '아침', rate: 94, status: 'GOOD' as const },
-      { label: '점심', rate: 82, status: 'WARN' as const },
-      { label: '저녁', rate: 38, status: 'BAD' as const },
-    ],
-    medicinePattern: [
-      {
-        medicineName: '혈압약',
-        rate: 92,
-        aiComment: '전반적으로 안정적인 복약 패턴입니다. 중요한 혈압약은 대부분 제때 복용하고 있습니다.',
-      },
-      {
-        medicineName: '타이레놀',
-        rate: 92,
-        aiComment: '전반적으로 안정적인 복약 패턴입니다. 중요한 혈압약은 대부분 제때 복용하고 있습니다.',
-      },
-      {
-        medicineName: '관절약',
-        rate: 92,
-        aiComment: '전반적으로 안정적인 복약 패턴입니다. 중요한 혈압약은 대부분 제때 복용하고 있습니다.',
-      },
-    ],
-    riskSignals: {
-      quickResponseRate: 42,
-      delayedResponseRate: 18,
-      suggestion: '저녁 시간대에는 TV 시청 전으로 알림 시간을 조정하거나, 보호자가 전화/메시지로 한 번 더 확인해 주면 좋습니다.',
-    },
+
+  // API 데이터 상태 관리
+  const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // URL에서 파라미터 추출
+  const elderId = searchParams.get('elderId');
+  const yearParam = searchParams.get('year');
+  const monthParam = searchParams.get('month');
+
+  // 현재 날짜 기준으로 year, month 설정
+  const now = new Date();
+  const year = yearParam ? parseInt(yearParam, 10) : now.getFullYear();
+  const month = monthParam ? parseInt(monthParam, 10) : now.getMonth() + 1;
+
+  // 리포트 제목에서 사용자 이름 추출 (예: "김노인 2025년 11월 복약 리포트" → "김노인")
+  const extractNameFromTitle = (title: string): string => {
+    const match = title.match(/^(.+?)\s+\d{4}년/);
+    return match ? match[1] : '사용자';
   };
+
+  useEffect(() => {
+    const fetchReport = async () => {
+      if (!elderId) {
+        setError('사용자 ID가 필요합니다.');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+        const userId = parseInt(elderId, 10);
+
+        console.log('[ReportPage] 리포트 조회 시작:', { elderId, userId, year, month });
+
+        if (isNaN(userId)) {
+          setError('유효하지 않은 사용자 ID입니다.');
+          setIsLoading(false);
+          return;
+        }
+
+        const data = await getReport(userId, year, month);
+        console.log('[ReportPage] 리포트 데이터 수신:', data);
+        setReportData(data);
+      } catch (err: any) {
+        // 401 에러인 경우 특별 처리
+        if (err.response?.status === 401) {
+          setError('인증이 필요합니다. 다시 로그인해주세요.');
+        } else if (err.response?.status) {
+          const errorMessage = err.response?.data?.message || `리포트를 불러오는 중 오류가 발생했습니다. (${err.response.status})`;
+          setError(errorMessage);
+        } else {
+          setError(err.message || '리포트를 불러오는 중 오류가 발생했습니다.');
+        }
+        console.error('Failed to fetch report:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchReport();
+  }, [elderId, year, month]);
+
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-gray-500">리포트를 불러오는 중...</p>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (error || !reportData) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-red-500">{error || '리포트 데이터를 불러올 수 없습니다.'}</p>
+      </div>
+    );
+  }
+
+  // 사용자 이름 추출
+  const userName = extractNameFromTitle(reportData.reportMeta.title);
+  const birthYear = 1954; // API에 없으므로 mock 데이터 유지
 
   return (
     <div className="flex flex-col min-h-full gap-2">
-      <ReportUserInfo name={mockData.name} birthYear={mockData.birthYear} />
+      <ReportUserInfo name={userName} birthYear={birthYear} />
 
-      <ReportAISummary summary={mockData.aiSummary} />
+      <ReportAISummary summary={reportData.aiAnalysis.summary} />
 
       <CollapsibleSection
         title="전체 복약 통계"
@@ -106,7 +155,7 @@ const ReportPage = () => {
         isOpen={isOverallStatsOpen}
         onToggle={() => setIsOverallStatsOpen(!isOverallStatsOpen)}
       >
-        <ReportOverallStats statistics={mockData.statistics} />
+        <ReportOverallStats statistics={reportData.statistics} />
       </CollapsibleSection>
 
       <CollapsibleSection
@@ -115,7 +164,7 @@ const ReportPage = () => {
         isOpen={isTimePatternOpen}
         onToggle={() => setIsTimePatternOpen(!isTimePatternOpen)}
       >
-        <ReportTimePattern timePattern={mockData.timePattern} />
+        <ReportTimePattern timePattern={reportData.chartData.timePattern} />
       </CollapsibleSection>
 
       <CollapsibleSection
@@ -125,21 +174,20 @@ const ReportPage = () => {
         onToggle={() => setIsMedicinePatternOpen(!isMedicinePatternOpen)}
       >
         <ReportMedicinePattern
-          medicinePattern={mockData.medicinePattern}
-          averageDelayMinutes={mockData.statistics.averageDelayMinutes}
+          medicinePattern={reportData.chartData.medicinePattern}
+          averageDelayMinutes={reportData.statistics.averageDelayMinutes}
         />
       </CollapsibleSection>
 
       <CollapsibleSection
-        title="위험 신호 & 행동 제안"
+        title="복약 지연 통계"
         icon={<AlertTriangle className="w-5 h-5 text-primary" />}
         isOpen={isRiskSignalsOpen}
         onToggle={() => setIsRiskSignalsOpen(!isRiskSignalsOpen)}
       >
         <ReportRiskSignals
-          quickResponseRate={mockData.riskSignals.quickResponseRate}
-          delayedResponseRate={mockData.riskSignals.delayedResponseRate}
-          suggestion={mockData.riskSignals.suggestion}
+          quickResponseRate={42}
+          delayedResponseRate={18}
         />
       </CollapsibleSection>
     </div>

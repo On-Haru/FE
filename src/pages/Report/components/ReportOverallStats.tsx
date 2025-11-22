@@ -33,26 +33,30 @@ const ReportOverallStats = ({ statistics }: ReportOverallStatsProps) => {
                     </div>
 
                     {/* 평균 지연 시간 */}
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <p className="text-base font-bold text-black">평균 지연 시간</p>
-                            <p className="text-xs text-gray-600">알림 이후 복용까지</p>
+                    {averageDelayMinutes !== null && (
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <p className="text-base font-bold text-black">평균 지연 시간</p>
+                                <p className="text-xs text-gray-600">알림 이후 복용까지</p>
+                            </div>
+                            <span className="text-2xl font-bold" style={{ color: '#36C8B7' }}>
+                                {averageDelayMinutes}분
+                            </span>
                         </div>
-                        <span className="text-2xl font-bold" style={{ color: '#36C8B7' }}>
-                            {averageDelayMinutes}분
-                        </span>
-                    </div>
+                    )}
 
                     {/* 미복용 알림 */}
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <p className="text-base font-bold text-black">미복용 알림</p>
-                            <p className="text-xs text-gray-600">최근 7일 기준</p>
+                    {missedCount !== null && (
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <p className="text-base font-bold text-black">미복용 알림</p>
+                                <p className="text-xs text-gray-600">최근 7일 기준</p>
+                            </div>
+                            <span className="text-2xl font-bold" style={{ color: '#36C8B7' }}>
+                                {missedCount}회
+                            </span>
                         </div>
-                        <span className="text-2xl font-bold" style={{ color: '#36C8B7' }}>
-                            {missedCount}회
-                        </span>
-                    </div>
+                    )}
                 </div>
             </div>
         </div>

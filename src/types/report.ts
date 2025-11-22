@@ -1,7 +1,7 @@
 // Report API 응답 타입 정의
 
 export type PeriodType = 'ONBOARDING' | 'MONTHLY';
-export type ComparisonDirection = 'UP' | 'DOWN' | 'SAME';
+export type ComparisonDirection = 'UP' | 'DOWN';
 export type TimePatternStatus = 'GOOD' | 'WARN' | 'BAD' | 'NONE';
 
 export interface ComparisonRate {
@@ -10,23 +10,23 @@ export interface ComparisonRate {
 }
 
 export interface ReportMeta {
-  reportId?: number;
+  reportId: number | null;
   title: string;
   periodType: PeriodType;
-  dateRange?: string;
+  dateRange: string;
 }
 
 export interface AIAnalysis {
   summary: string;
-  suggestion?: string;
+  suggestion: string | null;
   riskTags: string[];
 }
 
 export interface Statistics {
   overallRate: number;
   comparisonRate: ComparisonRate | null;
-  averageDelayMinutes: number;
-  missedCount: number;
+  averageDelayMinutes: number | null;
+  missedCount: number | null;
 }
 
 export interface TimePattern {
