@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, BarChart3, Clock, Pill, AlertTriangle } from 'lucide-react';
+import { gsap } from 'gsap';
 import ReportUserInfo from './components/ReportUserInfo';
 import ReportAISummary from './components/ReportAISummary';
 import ReportOverallStats from './components/ReportOverallStats';
@@ -24,6 +25,79 @@ const CollapsibleSection = ({
   isOpen,
   onToggle,
 }: CollapsibleSectionProps) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const chevronRef = useRef<HTMLDivElement>(null);
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    const content = contentRef.current;
+    const chevron = chevronRef.current;
+
+    if (!content) return;
+
+    // 첫 렌더링 시 애니메이션 없이 초기 상태 설정
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      if (isOpen) {
+        gsap.set(content, { height: 'auto', opacity: 1, y: 0 });
+        if (chevron) {
+          gsap.set(chevron, { rotation: 180 });
+        }
+      } else {
+        gsap.set(content, { height: 0, opacity: 0, y: -10 });
+        if (chevron) {
+          gsap.set(chevron, { rotation: 0 });
+        }
+      }
+      return;
+    }
+
+    if (isOpen) {
+      // 열릴 때: 높이 자동 계산 후 슬라이드 다운 + 페이드 인
+      gsap.set(content, { height: 'auto', opacity: 0, y: -10 });
+      const height = content.offsetHeight;
+      gsap.set(content, { height: 0, opacity: 0, y: -10 });
+
+      gsap.to(content, {
+        height: height,
+        opacity: 1,
+        y: 0,
+        duration: 0.4,
+        ease: 'power2.out',
+      });
+
+      // Chevron 회전
+      if (chevron) {
+        gsap.to(chevron, {
+          rotation: 180,
+          duration: 0.3,
+          ease: 'power2.out',
+        });
+      }
+    } else {
+      // 닫힐 때: 슬라이드 업 + 페이드 아웃
+      gsap.to(content, {
+        height: 0,
+        opacity: 0,
+        y: -10,
+        duration: 0.3,
+        ease: 'power2.in',
+        onComplete: () => {
+          gsap.set(content, { height: 0 });
+        },
+      });
+
+      // Chevron 회전
+      if (chevron) {
+        gsap.to(chevron, {
+          rotation: 0,
+          duration: 0.3,
+          ease: 'power2.out',
+        });
+      }
+    }
+  }, [isOpen]);
+
   return (
     <div className="mb-0">
       <button
@@ -34,14 +108,19 @@ const CollapsibleSection = ({
           {icon}
           <h2 className="text-lg font-semibold text-black">{title}</h2>
         </div>
-        <ChevronDown
-          className="w-5 h-5 text-primary transition-transform"
-          style={{
-            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-          }}
-        />
+        <div ref={chevronRef}>
+          <ChevronDown
+            className="w-5 h-5 text-primary"
+          />
+        </div>
       </button>
-      {isOpen && <div className="mt-4">{children}</div>}
+      <div
+        ref={contentRef}
+        className="overflow-hidden"
+        style={{ height: isOpen ? 'auto' : 0 }}
+      >
+        <div className="mt-4">{children}</div>
+      </div>
     </div>
   );
 };
@@ -120,7 +199,7 @@ const ReportPage = () => {
 
           <CollapsibleSection
             title="전체 복약 통계"
-            icon={<BarChart3 className="w-5 h-5 text-primary" />}
+            icon={<BarChart3 className="w-5 h-5 text-secondary" />}
             isOpen={isOverallStatsOpen}
             onToggle={() => setIsOverallStatsOpen(!isOverallStatsOpen)}
           >
@@ -129,7 +208,7 @@ const ReportPage = () => {
 
           <CollapsibleSection
             title="시간대별 복약 패턴"
-            icon={<Clock className="w-5 h-5 text-primary" />}
+            icon={<Clock className="w-5 h-5 text-secondary" />}
             isOpen={isTimePatternOpen}
             onToggle={() => setIsTimePatternOpen(!isTimePatternOpen)}
           >
@@ -138,7 +217,7 @@ const ReportPage = () => {
 
           <CollapsibleSection
             title="약별 복용 패턴"
-            icon={<Pill className="w-5 h-5 text-primary" />}
+            icon={<Pill className="w-5 h-5 text-secondary" />}
             isOpen={isMedicinePatternOpen}
             onToggle={() => setIsMedicinePatternOpen(!isMedicinePatternOpen)}
           >
@@ -150,7 +229,7 @@ const ReportPage = () => {
 
           <CollapsibleSection
             title="위험 신호 & 행동 제안"
-            icon={<AlertTriangle className="w-5 h-5 text-primary" />}
+            icon={<AlertTriangle className="w-5 h-5 text-secondary" />}
             isOpen={isRiskSignalsOpen}
             onToggle={() => setIsRiskSignalsOpen(!isRiskSignalsOpen)}
           >
