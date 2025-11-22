@@ -2,6 +2,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { format, parse } from 'date-fns';
 import type { ChecklistItem } from '@/types/checklist';
+import TimeTag, { type TimeLabel } from '@/components/TimeTag';
 
 interface ChecklistModalProps {
     isOpen: boolean;
@@ -49,10 +50,14 @@ const ChecklistModal = ({ isOpen, onClose, date, item, elderName }: ChecklistMod
                 </h2>
 
                 {/* 약 정보 박스 */}
-                <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-6">
+                <div className="bg-primary/5 border border-primary/30 rounded-xl p-4 mb-6">
                     <div className="flex items-center justify-between mb-2">
                         <p className="text-sm text-gray-700">{dateLabel} 12:30</p>
-                        <span className="text-sm text-primary">{mealTime}</span>
+                        {mealTime === '아침' || mealTime === '점심' || mealTime === '저녁' ? (
+                            <TimeTag label={mealTime as TimeLabel} />
+                        ) : (
+                            <span className="text-sm text-primary">{mealTime}</span>
+                        )}
                     </div>
                     <p className="text-base font-medium text-gray-900">{medicineName}</p>
                 </div>
