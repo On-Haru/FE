@@ -19,8 +19,8 @@ const Footer = () => {
   const location = useLocation();
 
   return (
-    <footer className="sticky bottom-0 bg-white border-t border-gray-200 z-10" style={{ height: '60px', minHeight: '60px' }}>
-      <nav className="flex justify-around items-center pb-3">
+    <footer className="sticky bottom-0 bg-white border-t border-gray-200 z-10 pb-4 pt-1">
+      <nav className="flex justify-around items-center h-full">
         {FOOTER_ITEMS.map((item) => {
           const Icon = item.icon;
           // 처방전 등록 페이지일 때도 활성화
@@ -33,7 +33,7 @@ const Footer = () => {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col flex-1 items-center gap-1 ${
+              className={`flex flex-col flex-1 items-center gap-1 cursor-pointer ${
                 isActive ? 'text-primary' : 'text-gray-500'
               }`}
             >

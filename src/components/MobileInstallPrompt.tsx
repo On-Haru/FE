@@ -83,10 +83,13 @@ const MobileInstallPrompt = ({
                   설치 방법
                 </p>
                 <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
-                  <li>하단 공유 버튼을 누르세요</li>
+                  <li>Safari 하단의 <strong>공유 버튼</strong>을 누르세요</li>
                   <li>"홈 화면에 추가"를 선택하세요</li>
                   <li>추가 버튼을 눌러 완료하세요</li>
                 </ol>
+                <p className="text-xs text-gray-500 mt-2">
+                  💡 Safari 하단 중앙의 공유 아이콘을 찾아주세요
+                </p>
               </div>
             </div>
           </div>
@@ -99,8 +102,7 @@ const MobileInstallPrompt = ({
               onClick={handleCancelClick}
               className="flex-1 px-4 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary/80 transition-colors flex items-center justify-center gap-2"
             >
-              <Share2 className="w-5 h-5" />
-              공유 메뉴 열기
+              확인
             </button>
           ) : (
             <button

@@ -1,9 +1,9 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-primary: #36C8B7;
-  --color-secondary: #FF9090;
-  --color-gray-custom: #71717A;
+  --color-primary: #36c8b7;
+  --color-secondary: #ff9090;
+  --color-gray-custom: #71717a;
   --color-morning-primary: #92ce97;
   --color-morning-secondary: #e6f2e7;
   --color-lunch-primary: #3a9ef4;
@@ -75,7 +75,7 @@ body {
   border-radius: 2px;
 }
 
-input[type="checkbox"].accent-primary {
+input[type='checkbox'].accent-primary {
   accent-color: var(--color-primary);
   appearance: none;
   width: 1rem;
@@ -86,13 +86,13 @@ input[type="checkbox"].accent-primary {
   position: relative;
 }
 
-input[type="checkbox"].accent-primary:checked {
+input[type='checkbox'].accent-primary:checked {
   background-color: var(--color-primary);
   border: 2px solid var(--color-primary);
 }
 
-input[type="checkbox"].accent-primary:checked::after {
-  content: "";
+input[type='checkbox'].accent-primary:checked::after {
+  content: '';
   position: absolute;
   left: 50%;
   top: 50%;
@@ -104,6 +104,6 @@ input[type="checkbox"].accent-primary:checked::after {
   transform: translate(-50%, -55%) rotate(45deg);
 }
 
-input[type="time"]::-webkit-calendar-picker-indicator {
+input[type='time']::-webkit-calendar-picker-indicator {
   display: none;
 }
