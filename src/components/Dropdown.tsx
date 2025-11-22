@@ -47,7 +47,6 @@ const Dropdown = ({
       role="button"
       tabIndex={0}
       aria-expanded={isOpen}
-      onClick={() => setIsOpen(prev => !prev)}
     >
       {/* 현재 선택된 label */}
       <span
@@ -59,8 +58,9 @@ const Dropdown = ({
 
       {/* 아이콘 박스 */}
       <div
-        className="flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50 active:bg-gray-100 transition-colors pointer-events-none"
+        className="flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50 active:bg-gray-100 transition-colors"
         style={{ width: 22, height: 22 }}
+        onClick={() => setIsOpen((prev) => !prev)}
       >
         <ChevronDown
           className="w-4 h-4 text-gray-600"
