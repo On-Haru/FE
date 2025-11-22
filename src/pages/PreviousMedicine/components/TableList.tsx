@@ -2,11 +2,11 @@ export interface MedicineItem {
   id: number;
   prescriptionId: number;
   name: string;
-  dailyDoseCount: number;
+  dailyDoseCount: number | null;
   administrationMethod: string | null;
   memo: string | null;
-  totalCount: number;
-  durationDays: number;
+  totalCount: number | null;
+  durationDays: number | null;
   aiDescription: string | null;
 }
 
@@ -33,9 +33,9 @@ const TableList = ({ medicines }: TableListProps) => {
             </span>
 
             <div className="flex flex-[2] justify-between text-center font-medium">
-              <span className="w-1/3">{item.dailyDoseCount}</span>
-              <span className="w-1/3">{item.totalCount}</span>
-              <span className="w-1/3">{item.durationDays}</span>
+              <span className="w-1/3">{item.dailyDoseCount ?? '-'}</span>
+              <span className="w-1/3">{item.totalCount ?? '-'}</span>
+              <span className="w-1/3">{item.durationDays ?? '-'}</span>
             </div>
           </div>
         </div>

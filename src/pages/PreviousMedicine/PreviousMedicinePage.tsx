@@ -25,12 +25,34 @@ const PreviousMedicinePage = () => {
         // TODO: 실제 seniorId를 가져와야 함 (예: URL 파라미터, 상태 관리 등)
         const seniorId = 1001; // 임시 값
         const data = await getPreviousPrescriptions(seniorId);
-        console.log('📋 Previous prescriptions:', data);
-        setPrescriptions(data || []);
+        
+        // API 응답 데이터 매핑 (필드가 없을 경우 기본값 처리)
+        const mappedPrescriptions: Prescription[] = (data || []).map((prescription: any) => ({
+          id: prescription.id,
+          seniorId: prescription.seniorId,
+          issuedDate: prescription.issuedDate,
+          hospitalName: prescription.hospitalName || '',
+          doctorName: prescription.doctorName || '',
+          note: prescription.note || '',
+          medicines: (prescription.medicines || []).map((m: any) => ({
+            id: m.id,
+            prescriptionId: m.prescriptionId,
+            name: m.name || '',
+            dailyDoseCount: m.dosage ?? m.dailyDoseCount ?? null,
+            administrationMethod: m.administrationMethod ?? null,
+            memo: m.memo ?? null,
+            totalCount: m.totalCount ?? null,
+            durationDays: m.durationDays ?? null,
+            aiDescription: m.aiDescription ?? null,
+          })),
+        }));
+        
+        setPrescriptions(mappedPrescriptions);
       } catch (error: any) {
-        console.error('이전 처방전 조회 실패:', error);
-        console.log('status:', error.response?.status);
-        console.log('data:', error.response?.data);
+        console.error('이전 처방전 조회 실패', {
+          status: error.response?.status,
+          data: error.response?.data,
+        });
         setPrescriptions([]);
       } finally {
         setLoading(false);
