@@ -8,6 +8,7 @@ import {
   getPrescriptionDetail,
   updatePrescription,
 } from '@/pages/MedicineDetail/services/prescription';
+import type { OCRResponse } from '../MedicineRegister/services/ocr';
 
 const MedicineDetailPage = () => {
   const [medicines, setMedicines] = useState<MedicineItem[]>([]);
@@ -32,7 +33,7 @@ const MedicineDetailPage = () => {
         if (ocrDataStr && !hasProcessedOCR.current) {
           hasProcessedOCR.current = true; // OCR 처리 시작 표시
           console.log('📸 OCR 데이터 발견, OCR 결과 사용');
-          const ocrData = JSON.parse(ocrDataStr);
+          const ocrData = JSON.parse(ocrDataStr) as OCRResponse;
           
           console.log('📋 OCR 원본 데이터:', ocrData);
           console.log('📋 OCR medicines:', ocrData.medicines);
@@ -52,7 +53,7 @@ const MedicineDetailPage = () => {
           });
 
           // medicines 매핑 (임시 ID 생성)
-          const mapped: MedicineItem[] = (ocrData.medicines || []).map((m: any, idx: number) => {
+          const mapped: MedicineItem[] = (ocrData.medicines || []).map((m, idx: number) => {
             const medicineId = Date.now() + idx; // 임시 ID
             console.log(`💊 OCR Medicine ${idx + 1}:`, {
               name: m.name,
@@ -69,7 +70,7 @@ const MedicineDetailPage = () => {
               durationDays: m.durationDays ?? 0,
               memo: m.memo ?? null,
               aiDescription: m.aiDescription ?? null,
-              schedules: (m.schedules || []).map((s: any, sIdx: number) => ({
+              schedules: (m.schedules || []).map((s, sIdx: number) => ({
                 id: medicineId * 1000 + sIdx, // 임시 ID
                 notifyTime: s.notifyTime,
                 timeTag: s.timeTag,
@@ -125,7 +126,20 @@ const MedicineDetailPage = () => {
           return;
         }
 
-        const mapped: MedicineItem[] = detail.medicines.map((m: any) => {
+        const mapped: MedicineItem[] = detail.medicines.map((m: {
+          id: number;
+          name: string;
+          dosage: number;
+          totalCount: number;
+          durationDays: number;
+          memo?: string | null;
+          aiDescription?: string | null;
+          schedules?: Array<{
+            id: number;
+            notifyTime: string;
+            timeTag: 'MORNING' | 'LUNCH' | 'EVENING';
+          }>;
+        }) => {
           console.log('💊 Medicine item:', m);
           return {
             id: m.id,
@@ -135,7 +149,7 @@ const MedicineDetailPage = () => {
             durationDays: m.durationDays ?? 0,
             memo: m.memo ?? null,
             aiDescription: m.aiDescription ?? null,
-            schedules: (m.schedules || []).map((s: any) => ({
+            schedules: (m.schedules || []).map((s) => ({
               id: s.id,
               notifyTime: s.notifyTime,
               timeTag: s.timeTag,
@@ -236,7 +250,20 @@ const MedicineDetailPage = () => {
       console.log('📋 저장 후 조회한 medicines:', detail.medicines);
       
       if (detail.medicines && Array.isArray(detail.medicines)) {
-        const mapped: MedicineItem[] = detail.medicines.map((m: any) => {
+        const mapped: MedicineItem[] = detail.medicines.map((m: {
+          id: number;
+          name: string;
+          dosage: number;
+          totalCount: number;
+          durationDays: number;
+          memo?: string | null;
+          aiDescription?: string | null;
+          schedules?: Array<{
+            id: number;
+            notifyTime: string;
+            timeTag: 'MORNING' | 'LUNCH' | 'EVENING';
+          }>;
+        }) => {
           console.log('💊 Medicine:', m.name, 'Schedules:', m.schedules);
           return {
             id: m.id,
@@ -246,7 +273,7 @@ const MedicineDetailPage = () => {
             durationDays: m.durationDays ?? 0,
             memo: m.memo ?? null,
             aiDescription: m.aiDescription ?? null,
-            schedules: (m.schedules || []).map((s: any) => ({
+            schedules: (m.schedules || []).map((s) => ({
               id: s.id,
               notifyTime: s.notifyTime,
               timeTag: s.timeTag,
