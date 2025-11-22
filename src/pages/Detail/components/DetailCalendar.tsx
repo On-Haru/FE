@@ -19,7 +19,6 @@ const DetailCalendar = ({
     onDateSelect,
     currentMonth: propCurrentMonth,
     onMonthChange,
-    isLoading
 }: DetailCalendarProps) => {
     const [currentMonth, setCurrentMonth] = useState(propCurrentMonth);
 

@@ -9,7 +9,7 @@ const ReportLoading = ({ isLoading }: ReportLoadingProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLImageElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
-  const dotsRef = useRef<HTMLDivElement[]>([]);
+  const dotsRef = useRef<HTMLSpanElement[]>([]);
 
   useEffect(() => {
     if (!isLoading) return;
