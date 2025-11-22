@@ -76,7 +76,7 @@ const CaregiverConnectionPage = () => {
           <button
             type="submit"
             disabled={isButtonDisabled}
-            className={`w-full py-4 px-6 rounded-xl font-semibold text-white transition-all ${
+            className={`cursor-pointer w-full py-4 px-6 rounded-xl font-semibold text-white transition-all ${
               isButtonDisabled
                 ? 'bg-gray-300 cursor-not-allowed'
                 : 'bg-primary hover:opacity-90'
@@ -85,6 +85,11 @@ const CaregiverConnectionPage = () => {
             연결하기
           </button>
         </form>
+
+        {/* 안내 텍스트 */}
+        <p className="text-xs text-gray-500 text-center leading-relaxed">
+          어르신 홈화면 우측 상단에 표시되는 4자리 숫자를 입력해주세요.
+        </p>
       </div>
     </div>
   );

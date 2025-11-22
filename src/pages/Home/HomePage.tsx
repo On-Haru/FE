@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import type { CareRecipient } from '@/types/caregiver';
 import EmptyStateScreen from './components/EmptyStateScreen';
 import CaregiverCard from './components/CaregiverCard';
 
 const HomePage = () => {
-  const navigate = useNavigate();
   const [recipients, setRecipients] = useState<CareRecipient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -56,11 +54,6 @@ const HomePage = () => {
     setRecipients((prev) => prev.filter((r) => r.id !== id));
   };
 
-  // 피보호자 연결 추가하기 버튼 클릭 핸들러
-  const handleAddConnection = () => {
-    navigate('/home/connect');
-  };
-
   // 로딩 중
   if (isLoading) {
     return (
@@ -77,7 +70,7 @@ const HomePage = () => {
 
   // 피보호자가 있는 경우 - 리스트 렌더링
   return (
-    <div className="p-4 pb-24">
+    <div className="cursor-pointer">
       {recipients.map((recipient) => (
         <CaregiverCard
           key={recipient.id}
@@ -85,14 +78,6 @@ const HomePage = () => {
           onDisconnect={handleDisconnect}
         />
       ))}
-
-      {/* 피보호자 연결 추가하기 버튼 */}
-      <button
-        onClick={handleAddConnection}
-        className="w-full bg-primary text-white rounded-xl py-3 px-6 mt-6 font-semibold hover:opacity-90 transition-opacity"
-      >
-        피보호자 연결 추가하기
-      </button>
     </div>
   );
 };
