@@ -6,11 +6,11 @@ import MedicineAddButton from '@/pages/MedicineRegister/components/MedicineAddBu
 import ViewPrescriptionButton from '@/pages/MedicineRegister/components/ViewPrescriptionButton';
 import NameHeader from '@/pages/MedicineRegister/components/NameHeader';
 import { uploadPrescriptionOCR } from '@/pages/MedicineRegister/services/ocr';
-//import PreviewModal from '@/pages/MedicineRegister/components/PreviewModal';
 
 const MedicineRegisterPage = () => {
   const navigate = useNavigate();
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedSeniorId, setSelectedSeniorId] = useState<number | null>(null);
 
   const handleCapture = async (file: File) => {
     try {
@@ -19,8 +19,14 @@ const MedicineRegisterPage = () => {
       // OCR API 호출
       const ocrResult = await uploadPrescriptionOCR(file);
 
+      // 선택된 seniorId를 OCR 결과에 포함
+      const ocrResultWithSeniorId = {
+        ...ocrResult,
+        seniorId: selectedSeniorId || ocrResult.seniorId,
+      };
+
       // OCR 결과를 localStorage에 저장 (MedicineDetailPage에서 사용)
-      localStorage.setItem('ocrPrescriptionData', JSON.stringify(ocrResult));
+      localStorage.setItem('ocrPrescriptionData', JSON.stringify(ocrResultWithSeniorId));
 
       // MedicineDetailPage로 이동
       navigate(ROUTES.MEDICINE_DETAIL);
@@ -59,24 +65,12 @@ const MedicineRegisterPage = () => {
 
   return (
     <div className="flex flex-col min-h-full relative">
-      <NameHeader />
+      <NameHeader onSeniorIdChange={setSelectedSeniorId} />
       <div className="flex-1 overflow-y-auto py-3">
         <CameraBox
           onCapture={handleCapture}
           disabled={isUploading}
         />
-
-        {/* {isPreviewOpen && selectedOption && (
-        <PreviewModal
-          file={capturedFile}
-          name={selectedOption.label}
-          onClose={() => setIsPreviewOpen(false)}
-          onConfirm={() => {
-            // Todo: OCR 연결
-            setIsPreviewOpen(false);
-          }}
-        />
-      )} */}
 
         <MedicineAddButton onClick={() => navigate(ROUTES.MEDICINE_DETAIL)} />
         <ViewPrescriptionButton

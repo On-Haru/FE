@@ -17,9 +17,7 @@ export const createCaregiverLink = async (
  * 보호자별 피보호자 목록 조회
  */
 export const getCaregiverLinks = async (): Promise<CaregiverLinkResponse[]> => {
-  return apiClient.get<CaregiverLinkResponse[]>(
-    '/api/caregiver-links/senior-list'
-  );
+  return apiClient.get<CaregiverLinkResponse[]>('/api/caregiver-links/senior-list');
 };
 
 /**
