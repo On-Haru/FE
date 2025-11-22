@@ -12,13 +12,13 @@ const Layout = () => {
 
   return (
     <div className="mobile-container flex flex-col">
-      <div className="mobile-content flex-1 flex flex-col overflow-y-auto relative">
-        {!authPage && <Header />}
-        <div className="flex-1 p-4">
-          <Outlet />
-        </div>
-        {!isElder && !authPage && <Footer />}
-      </div>
+      {!authPage && <Header />}
+      
+      <main className="mobile-content flex-1 min-h-0 overflow-y-auto p-4">
+        <Outlet />
+      </main>
+
+      {!isElder && !authPage && <Footer />}
     </div>
   );
 };

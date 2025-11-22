@@ -19,8 +19,8 @@ const Footer = () => {
   const location = useLocation();
 
   return (
-    <footer className="sticky bottom-0 bg-white border-t border-gray-200 z-10 pb-4 pt-1">
-      <nav className="flex justify-around items-center h-full">
+    <footer className="sticky bottom-0 bg-white border-t border-gray-200 z-10 pb-4 pt-1 min-h-[60px] flex-shrink-0">
+      <nav className="flex justify-around items-center">
         {FOOTER_ITEMS.map((item) => {
           const Icon = item.icon;
           // 처방전 등록 페이지일 때도 활성화
