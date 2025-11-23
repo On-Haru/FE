@@ -19,8 +19,6 @@ interface TableListProps {
   onAddAlarm?: (medicineId: number) => void;
   onDeleteMedicine?: (medicineId: number) => void;
   onAddMedicine?: () => void;
-  selected?: number[];
-  onToggleItem?: (id: number) => void;
 }
 
 const TableList = ({

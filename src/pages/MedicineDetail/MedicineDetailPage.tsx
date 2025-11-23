@@ -148,7 +148,6 @@ const MedicineDetailPage = () => {
     if (!deleteModal.medicineId) return;
     
     setMedicines((prev) => prev.filter((m) => m.id !== deleteModal.medicineId));
-    handleCloseDeleteModal();
   };
 
   /** 수정 모드 toggle */

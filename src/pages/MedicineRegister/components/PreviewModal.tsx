@@ -1,3 +1,4 @@
+import { useEffect, useMemo } from 'react';
 import { X } from 'lucide-react';
 import type { OCRResponse } from '@/pages/MedicineRegister/services/ocr';
 
@@ -14,9 +15,17 @@ const PreviewModal = ({
   onRetake,
   onConfirm,
 }: PreviewModalProps) => {
-  if (!file || !ocrResult) return null;
+  const imageUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
 
-  const imageUrl = URL.createObjectURL(file);
+  useEffect(() => {
+    return () => {
+      if (imageUrl) {
+        URL.revokeObjectURL(imageUrl);
+      }
+    };
+  }, [imageUrl]);
+
+  if (!file || !ocrResult || !imageUrl) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

@@ -98,7 +98,6 @@ const PreviousMedicinePage = () => {
       }
       
       alert('처방전이 삭제되었습니다.');
-      handleCloseDeleteModal();
     } catch (error: unknown) {
       const err = error as {
         response?: {
