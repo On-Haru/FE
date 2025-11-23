@@ -224,13 +224,8 @@ const MedicineDetailPage = () => {
       setPrescriptionInfo(updatedInfo);
       setMedicines(updatedMedicines);
 
-      // 저장 완료 후 달력 페이지로 이동하여 새로 등록된 처방전이 반영되도록 함
-      if (storedSeniorId) {
-        // 달력 페이지로 이동 (자동 새로고침됨)
-        navigate(`/detail/${storedSeniorId}`);
-      } else {
-        alert('저장 완료!');
-      }
+      // 저장 완료 알림
+      alert('저장 완료!');
       setEditMode(false);
     } catch (err: unknown) {
       const error = err as {
