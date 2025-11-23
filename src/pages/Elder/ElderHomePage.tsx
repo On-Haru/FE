@@ -1,9 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import {
-  updateTakenStatus,
-  createTakingLog,
-  getTakingLogsBySchedule,
-} from '@/pages/Detail/services/takingLog';
+import { updateTakenStatus } from '@/pages/Detail/services/takingLog';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import { useToast } from '@/contexts/ToastContext';
 import { useUser } from './hooks/useUser';
@@ -73,30 +69,12 @@ const ElderHomePage = () => {
     }
 
     try {
-      // 먼저 해당 스케줄의 복약 기록이 있는지 확인
-      const existingLogs = await getTakingLogsBySchedule(medication.scheduleId);
-
-      // scheduledDateTime과 일치하는 기록 찾기
-      const existingLog = existingLogs.find(
-        (log) => log.scheduledDateTime === medication.scheduledDateTime
-      );
-
-      if (existingLog) {
-        // 기록이 있으면 업데이트
-        await updateTakenStatus({
-          scheduleId: medication.scheduleId,
-          scheduledDateTime: medication.scheduledDateTime,
-          taken: true,
-        });
-      } else {
-        // 기록이 없으면 생성
-        await createTakingLog({
-          scheduleId: medication.scheduleId,
-          scheduledDateTime: medication.scheduledDateTime,
-          taken: true,
-          takenDateTime: new Date().toISOString(),
-        });
-      }
+      // updateTakenStatus가 내부에서 기록이 없으면 자동으로 생성함
+      await updateTakenStatus({
+        scheduleId: medication.scheduleId,
+        scheduledDateTime: medication.scheduledDateTime,
+        taken: true,
+      });
 
       // 성공 시 로컬 상태 업데이트
       setTodayMedications((prev) =>
