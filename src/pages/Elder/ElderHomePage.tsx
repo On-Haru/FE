@@ -4,6 +4,7 @@ import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import { useUser } from './hooks/useUser';
 import { useTodayMedications } from './hooks/useTodayMedications';
 import { useGuardianConnection } from './hooks/useGuardianConnection';
+import { usePushSubscription } from './hooks/usePushSubscription';
 import ConnectionCodeScreen from './components/ConnectionCodeScreen';
 import DateTimeDisplay from './components/DateTimeDisplay';
 import GreetingCard from './components/GreetingCard';
@@ -26,6 +27,9 @@ const ElderHomePage = () => {
 
   // 보호자 연결 여부 확인
   const { hasGuardian } = useGuardianConnection(isLoadingUser);
+
+  // Push 구독
+  const { isSupported, isSubscribed, subscribe } = usePushSubscription();
 
   // 오늘의 약 데이터 조회
   const {
@@ -90,6 +94,108 @@ const ElderHomePage = () => {
     }
   };
 
+  // 보호자가 연결되고 사용자 정보가 로드되면 자동으로 Push 구독 시도
+  useEffect(() => {
+    // 사용자 정보 로딩 중이거나 보호자가 연결되지 않았으면 구독하지 않음
+    if (isLoadingUser || !hasGuardian) {
+      return;
+    }
+
+    // 이미 구독되어 있으면 다시 구독하지 않음
+    if (isSubscribed) {
+      return;
+    }
+
+    // 브라우저가 Push를 지원하지 않으면 구독하지 않음
+    if (!isSupported) {
+      return;
+    }
+
+    // 자동으로 Push 구독 시도 (에러는 조용히 처리)
+    subscribe().catch(() => {
+      // 구독 실패는 조용히 처리 (사용자에게 강제로 권한을 요청하지 않음)
+    });
+  }, [isLoadingUser, hasGuardian, isSubscribed, isSupported, subscribe]);
+
+  // Service Worker로부터 Push 알림 메시지 수신
+  useEffect(() => {
+    if (!hasGuardian) {
+      return;
+    }
+
+    const handleMessage = (event: MessageEvent) => {
+      if (!event.data || typeof event.data !== 'object' || !event.data.type) {
+        return;
+      }
+
+      // Push 알림 수신 처리
+      if (event.data.type === 'PUSH_RECEIVED') {
+        const payload = event.data.payload as {
+          title?: string;
+          body?: string;
+          scheduleId?: number;
+          scheduledDateTime?: string;
+          receivedAt?: number;
+        };
+
+        if (!payload?.title || !payload?.body) {
+          return;
+        }
+
+        // scheduleId가 있으면 해당 약 정보 찾기
+        if (payload.scheduleId) {
+          const medication = todayMedications.find(
+            (med) => med.scheduleId === payload.scheduleId
+          );
+
+          if (medication && !medication.isTaken) {
+            // 약 정보가 있고 아직 복용하지 않았으면 모달 표시
+            setReminderMedication({
+              id: medication.id,
+              time: medication.time,
+              medicationName: medication.medicationName,
+              dosage: medication.dosage,
+            });
+            setShowReminderModal(true);
+          }
+        }
+      }
+
+      // 알림 클릭 이벤트 처리
+      if (event.data.type === 'NOTIFICATION_CLICK') {
+        const payload = event.data.payload as {
+          scheduleId?: number;
+          scheduledDateTime?: string;
+          title?: string;
+          body?: string;
+        };
+
+        if (payload?.scheduleId) {
+          const medication = todayMedications.find(
+            (med) => med.scheduleId === payload.scheduleId
+          );
+
+          if (medication && !medication.isTaken) {
+            setReminderMedication({
+              id: medication.id,
+              time: medication.time,
+              medicationName: medication.medicationName,
+              dosage: medication.dosage,
+            });
+            setShowReminderModal(true);
+          }
+        }
+      }
+    };
+
+    // Service Worker 메시지 리스너 등록
+    navigator.serviceWorker.addEventListener('message', handleMessage);
+
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', handleMessage);
+    };
+  }, [hasGuardian, todayMedications]);
+
   // 복용 예정 약을 먼저, 복용된 약을 나중에 정렬
   const sortedMedications = useMemo(() => {
     return [...todayMedications].sort((a, b) => {
@@ -98,27 +204,46 @@ const ElderHomePage = () => {
     });
   }, [todayMedications]);
 
-  // 약 복용 시간 체크 (임시: 실제로는 API나 설정에서 가져올 것)
+  // 약 복용 시간 체크 (scheduledDateTime 기반)
   useEffect(() => {
-    // TODO: 실제 복용 시간과 현재 시간을 비교하여 모달 표시
-    // 예시: 점심약 복용 시간이 되면 모달 표시
-    const checkMedicationTime = () => {
-      // 점심약 복용 시간 (12시) 예시
-      // 실제로는 각 약의 복용 시간을 확인해야 함
-      const pendingMedication = sortedMedications.find(
-        (med) => !med.isTaken && med.time === 'lunch'
-      );
+    if (!hasGuardian || todayMedications.length === 0) {
+      return;
+    }
 
-      // 임시: 테스트를 위해 항상 점심약이 있으면 모달 표시 (실제로는 시간 체크 필요)
-      // const now = new Date();
-      // const currentHour = now.getHours();
-      // if (currentHour === 12 && pendingMedication) {
-      if (pendingMedication && !showReminderModal) {
+    const checkMedicationTime = () => {
+      const now = new Date();
+
+      // 아직 복용하지 않은 약 중에서 복용 시간이 된 약 찾기
+      const dueMedication = sortedMedications.find((med) => {
+        // 이미 복용한 약은 제외
+        if (med.isTaken) {
+          return false;
+        }
+
+        // scheduledDateTime이 없으면 체크하지 않음
+        if (!med.scheduledDateTime) {
+          return false;
+        }
+
+        // scheduledDateTime 파싱
+        const scheduledTime = new Date(med.scheduledDateTime);
+
+        // 현재 시간이 복용 시간 이후이고, 30분 이내인 약만 표시
+        // (30분이 지나면 Push 알림으로 처리되므로 여기서는 표시하지 않음)
+        const timeDiff = now.getTime() - scheduledTime.getTime();
+        const thirtyMinutes = 30 * 60 * 1000; // 30분을 밀리초로 변환
+
+        // 복용 시간이 되었고, 30분 이내인 경우
+        return timeDiff >= 0 && timeDiff <= thirtyMinutes;
+      });
+
+      // 복용 시간이 된 약이 있고 모달이 열려있지 않으면 모달 표시
+      if (dueMedication && !showReminderModal) {
         setReminderMedication({
-          id: pendingMedication.id,
-          time: pendingMedication.time,
-          medicationName: pendingMedication.medicationName,
-          dosage: pendingMedication.dosage,
+          id: dueMedication.id,
+          time: dueMedication.time,
+          medicationName: dueMedication.medicationName,
+          dosage: dueMedication.dosage,
         });
         setShowReminderModal(true);
       }
@@ -127,11 +252,16 @@ const ElderHomePage = () => {
     // 초기 체크
     checkMedicationTime();
 
-    // 1분마다 체크 (실제로는 더 정확한 타이밍 필요)
+    // 1분마다 체크
     const interval = setInterval(checkMedicationTime, 60000);
 
     return () => clearInterval(interval);
-  }, [sortedMedications, showReminderModal]);
+  }, [
+    hasGuardian,
+    sortedMedications,
+    showReminderModal,
+    todayMedications.length,
+  ]);
 
   // 복용 예정인 약 찾기
   const pendingMedications = sortedMedications.filter((med) => !med.isTaken);
