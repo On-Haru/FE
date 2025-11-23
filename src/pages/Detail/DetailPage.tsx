@@ -61,9 +61,12 @@ const DetailPage = () => {
             console.log('[DetailPage] days 배열:', calendarData.days);
 
             calendarData.days.forEach((day: CalendarDay) => {
+                // slots가 배열인지 확인하고, 배열이 아니면 빈 배열로 처리
+                const slots = Array.isArray(day.slots) ? day.slots : [];
+
                 // slots가 있고 길이가 0보다 큰 경우에만 체크리스트 생성
-                if (day.slots && day.slots.length > 0) {
-                    const items: ChecklistItem[] = day.slots.map((slot: CalendarSlot, index: number) => {
+                if (slots.length > 0) {
+                    const items: ChecklistItem[] = slots.map((slot: CalendarSlot, index: number) => {
                         // scheduleType을 한글로 변환
                         const typeMap: Record<string, string> = {
                             'MORNING': '아침약',
@@ -245,15 +248,23 @@ const DetailPage = () => {
     const getSelectedDateChecklist = (): DateChecklist | null => {
         if (!selectedDate) return null;
         const dateKey = format(selectedDate, 'yyyy-MM-dd');
-        const result = checklistData[dateKey] || null;
+        const result = checklistData[dateKey];
+        if (!result) return null;
+
+        // items가 배열인지 확인하고 기본값 제공
+        const safeResult = {
+            ...result,
+            items: Array.isArray(result.items) ? result.items : []
+        };
+
         console.log('[DetailPage] getSelectedDateChecklist:', {
             dateKey,
             hasData: !!result,
-            itemsCount: result?.items.length || 0,
-            status: result?.status,
+            itemsCount: safeResult.items.length,
+            status: safeResult.status,
             checklistDataKeys: Object.keys(checklistData),
         });
-        return result;
+        return safeResult;
     };
 
     if (!currentElder) {
