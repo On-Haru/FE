@@ -22,6 +22,7 @@ const DetailPage = () => {
     const navigate = useNavigate();
     const [currentElder, setCurrentElder] = useState<Elder | null>(null);
     const [elders, setElders] = useState<Elder[]>([]);
+    const [isEldersLoading, setIsEldersLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [isDateClicked, setIsDateClicked] = useState<boolean>(false);
     const [checklistData, setChecklistData] = useState<Record<string, DateChecklist>>({});
@@ -106,6 +107,7 @@ const DetailPage = () => {
     // 어르신 목록 조회 (등록된 피보호자 목록)
     useEffect(() => {
         const fetchElders = async () => {
+            setIsEldersLoading(true);
             try {
                 const links = await getCaregiverLinks();
                 
@@ -141,31 +143,21 @@ const DetailPage = () => {
                     return;
                 }
 
-                // URL에 id가 없거나 유효하지 않은 경우 가장 먼저 연결된 피보호자로 이동
-                if (!id) {
-                    const firstElderId = fetchedElders[0].id;
-                    const firstElder = fetchedElders[0];
-                    setCurrentElder(firstElder);
-                    navigate(`/detail/${firstElderId}`, { replace: true });
-                    return;
-                }
-
-                // URL의 id와 일치하는 피보호자 찾기
-                const elder = fetchedElders.find((e) => e.id === id);
-                if (elder) {
-                    setCurrentElder(elder);
-                } else {
-                    // 일치하는 피보호자가 없으면 가장 먼저 연결된 피보호자로 이동
-                    const firstElderId = fetchedElders[0].id;
-                    const firstElder = fetchedElders[0];
-                    setCurrentElder(firstElder);
-                    navigate(`/detail/${firstElderId}`, { replace: true });
+                // URL의 id와 일치하는 피보호자를 찾고, 없으면 첫 번째 피보호자를 기본값으로 사용
+                const targetElder = fetchedElders.find((e) => e.id === id) || fetchedElders[0];
+                
+                setCurrentElder(targetElder);
+                // URL이 현재 선택된 피보호자와 다른 경우에만 URL을 업데이트
+                if (id !== targetElder.id) {
+                    navigate(`/detail/${targetElder.id}`, { replace: true });
                 }
             } catch (error) {
                 console.error('피보호자 목록 조회 실패:', error);
                 // 에러 발생 시 빈 배열로 설정하고 currentElder도 null로 설정
                 setElders([]);
                 setCurrentElder(null);
+            } finally {
+                setIsEldersLoading(false);
             }
         };
 
@@ -206,6 +198,13 @@ const DetailPage = () => {
     };
 
     if (!currentElder) {
+        if (isEldersLoading) {
+            return (
+                <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-500">로딩 중...</p>
+                </div>
+            );
+        }
         if (elders.length === 0) {
             return (
                 <div className="flex items-center justify-center h-full">
@@ -216,6 +215,7 @@ const DetailPage = () => {
                 </div>
             );
         }
+        // Fallback: elders loaded but currentElder가 아직 선택되지 않은 경우
         return (
             <div className="flex items-center justify-center h-full">
                 <p className="text-gray-500">로딩 중...</p>
