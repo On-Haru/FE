@@ -142,8 +142,15 @@ export const usePushSubscription = () => {
         },
       };
 
+      console.log('[usePushSubscription] 구독 정보:', {
+        endpoint: subscriptionData.endpoint,
+        hasKeys: !!subscriptionData.keys,
+        userId,
+      });
+
       // 8. 서버에 구독 정보 전송
       await subscribePush(userId, subscriptionData);
+      console.log('[usePushSubscription] 구독 등록 완료');
 
       setState((prev) => ({
         ...prev,

@@ -127,6 +127,11 @@ const ElderHomePage = () => {
       return;
     }
 
+    // Service Worker 지원 여부 확인
+    if (!('serviceWorker' in navigator)) {
+      return;
+    }
+
     const handleMessage = (event: MessageEvent) => {
       if (!event.data || typeof event.data !== 'object' || !event.data.type) {
         return;
@@ -193,11 +198,14 @@ const ElderHomePage = () => {
     };
 
     // Service Worker 메시지 리스너 등록
-    navigator.serviceWorker.addEventListener('message', handleMessage);
+    const serviceWorker = navigator.serviceWorker;
+    if (serviceWorker) {
+      serviceWorker.addEventListener('message', handleMessage);
 
-    return () => {
-      navigator.serviceWorker.removeEventListener('message', handleMessage);
-    };
+      return () => {
+        serviceWorker.removeEventListener('message', handleMessage);
+      };
+    }
   }, [hasGuardian, todayMedications]);
 
   // 복용 예정 약을 먼저, 복용된 약을 나중에 정렬

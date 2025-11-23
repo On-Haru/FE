@@ -4,8 +4,6 @@ import type { ChecklistItem } from '@/types/checklist';
 import { format, parse } from 'date-fns';
 import { Check } from 'lucide-react';
 import ChecklistModal from './ChecklistModal';
-import { updateTakenStatus } from '../services/takingLog';
-import { useToast } from '@/contexts/ToastContext';
 
 
 interface ChecklistProps {
@@ -16,11 +14,9 @@ interface ChecklistProps {
 }
 
 const Checklist = ({ date, items, elderName, userId }: ChecklistProps) => {
-    const { showError } = useToast();
     const [selectedItem, setSelectedItem] = useState<ChecklistItem | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
-    const checkboxesRef = useRef<(HTMLDivElement | null)[]>([]);
 
     const parsedDate = parse(date, 'yyyy-MM-dd', new Date());
     const dayLabel = `${format(parsedDate, 'd')}일`;
@@ -44,40 +40,9 @@ const Checklist = ({ date, items, elderName, userId }: ChecklistProps) => {
         });
     }, [items]);
 
-    const handleItemClick = async (item: ChecklistItem, index: number) => {
-        // 체크박스 클릭 애니메이션
-        const checkbox = checkboxesRef.current[index];
-        if (checkbox) {
-            gsap.to(checkbox, {
-                scale: 1.2,
-                duration: 0.15,
-                ease: 'power2.out',
-                yoyo: true,
-                repeat: 1,
-            });
-        }
-
-        // API 호출하여 복용 여부 업데이트
-        const extendedItem = item as ChecklistItem & {
-            scheduleId?: number;
-            scheduledDateTime?: string;
-        };
-
-        if (extendedItem.scheduleId && extendedItem.scheduledDateTime) {
-            try {
-                await updateTakenStatus({
-                    scheduleId: extendedItem.scheduleId,
-                    scheduledDateTime: extendedItem.scheduledDateTime,
-                    taken: !item.checked, // 토글
-                });
-                // 성공 시 UI 업데이트는 부모 컴포넌트에서 처리
-            } catch (error) {
-                showError('복용 여부 업데이트에 실패했습니다.', () => {
-                    handleItemClick(item, index);
-                });
-            }
-        }
-
+    const handleItemClick = (item: ChecklistItem, index: number) => {
+        // 보호자 페이지에서는 체크 불가, 모달만 열기
+        // 체크는 어르신만 할 수 있음
         setSelectedItem(item);
         setIsModalOpen(true);
     };
@@ -103,9 +68,6 @@ const Checklist = ({ date, items, elderName, userId }: ChecklistProps) => {
                             className="flex items-center gap-3 cursor-pointer"
                         >
                             <div
-                                ref={(el) => {
-                                    checkboxesRef.current[index] = el;
-                                }}
                                 className={`relative flex items-center justify-center w-5 h-5 rounded border-1 transition-colors ${item.checked
                                     ? 'bg-primary border-primary'
                                     : 'bg-transparent border-gray-300'

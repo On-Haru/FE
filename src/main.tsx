@@ -17,9 +17,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <ToastProvider>
-        <InstallPromptProvider>
-          <App />
-        </InstallPromptProvider>
+      <InstallPromptProvider>
+        <App />
+      </InstallPromptProvider>
       </ToastProvider>
     </BrowserRouter>
   </StrictMode>

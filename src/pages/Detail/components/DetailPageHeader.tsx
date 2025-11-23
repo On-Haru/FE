@@ -40,8 +40,8 @@ const DetailPageHeader = ({
   const handleElderSelect = (elderId: string) => {
     const selectedElder = elders.find((elder) => elder.id === elderId);
     if (selectedElder && selectedElder.id !== currentElder.id) {
-      onElderChange(elderId);
-      navigate(`/detail/${elderId}`);
+    onElderChange(elderId);
+    navigate(`/detail/${elderId}`);
       showToast(`${selectedElder.name}님으로 변경되었습니다`);
     }
   };
