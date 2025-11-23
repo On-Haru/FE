@@ -1,8 +1,18 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import Toast from '@/components/Toast';
+import Toast, { type ToastType } from '@/components/Toast';
+
+interface ToastConfig {
+  message: string;
+  type?: ToastType;
+  duration?: number;
+  onRetry?: () => void;
+}
 
 interface ToastContextType {
   showToast: (message: string, duration?: number) => void;
+  showSuccess: (message: string, duration?: number) => void;
+  showError: (message: string, onRetry?: () => void) => void;
+  showInfo: (message: string, duration?: number) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -20,10 +30,22 @@ interface ToastProviderProps {
 }
 
 export const ToastProvider = ({ children }: ToastProviderProps) => {
-  const [toast, setToast] = useState<{ message: string; duration?: number } | null>(null);
+  const [toast, setToast] = useState<ToastConfig | null>(null);
 
   const showToast = useCallback((message: string, duration?: number) => {
-    setToast({ message, duration });
+    setToast({ message, type: 'success', duration });
+  }, []);
+
+  const showSuccess = useCallback((message: string, duration?: number) => {
+    setToast({ message, type: 'success', duration });
+  }, []);
+
+  const showError = useCallback((message: string, onRetry?: () => void) => {
+    setToast({ message, type: 'error', onRetry });
+  }, []);
+
+  const showInfo = useCallback((message: string, duration?: number) => {
+    setToast({ message, type: 'info', duration });
   }, []);
 
   const handleClose = useCallback(() => {
@@ -31,12 +53,14 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
   }, []);
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={{ showToast, showSuccess, showError, showInfo }}>
       {children}
       {toast && (
         <Toast
           message={toast.message}
+          type={toast.type}
           duration={toast.duration}
+          onRetry={toast.onRetry}
           onClose={handleClose}
         />
       )}

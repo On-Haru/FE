@@ -6,6 +6,7 @@ import { format, parse } from 'date-fns';
 import type { ChecklistItem } from '@/types/checklist';
 import TimeTag, { type TimeLabel } from '@/components/TimeTag';
 import { sendNotification } from '../services/push';
+import { useToast } from '@/contexts/ToastContext';
 
 interface ChecklistModalProps {
     isOpen: boolean;
@@ -22,6 +23,7 @@ interface ChecklistModalProps {
 }
 
 const ChecklistModal = ({ isOpen, onClose, date, item, elderName, userId }: ChecklistModalProps) => {
+    const { showSuccess, showError } = useToast();
     const [isSending, setIsSending] = useState(false);
     const overlayRef = useRef<HTMLDivElement>(null);
     const modalRef = useRef<HTMLDivElement>(null);
@@ -127,10 +129,12 @@ const ChecklistModal = ({ isOpen, onClose, date, item, elderName, userId }: Chec
                 body,
             });
 
-            alert('알림이 전송되었습니다.');
+            showSuccess('알림이 전송되었습니다.');
             onClose();
         } catch (error) {
-            alert('알림 전송에 실패했습니다. 잠시 후 다시 시도해주세요.');
+            showError('알림 전송에 실패했습니다. 잠시 후 다시 시도해주세요.', () => {
+                handleSendNotification();
+            });
         } finally {
             setIsSending(false);
         }

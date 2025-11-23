@@ -8,6 +8,7 @@ import NameHeader from '@/pages/MedicineRegister/components/NameHeader';
 import { uploadPrescriptionOCR } from '@/pages/MedicineRegister/services/ocr';
 import { getCaregiverLinks } from '@/pages/Home/services/caregiverLink';
 import { getUser } from '@/pages/Auth/services/user';
+import { useToast } from '@/contexts/ToastContext';
 
 interface Elder {
   id: string;
@@ -17,6 +18,7 @@ interface Elder {
 
 const MedicineRegisterPage = () => {
   const navigate = useNavigate();
+  const { showError } = useToast();
   const [isUploading, setIsUploading] = useState(false);
   const [selectedSeniorId, setSelectedSeniorId] = useState<number | null>(null);
   const [currentElder, setCurrentElder] = useState<Elder | null>(null);
@@ -132,10 +134,16 @@ const MedicineRegisterPage = () => {
         errorMessage.includes('404 Not Found')
       ) {
         errorMessage =
-          '백엔드 OCR 서비스 설정 문제입니다.\n\n백엔드 개발자에게 다음을 확인 요청하세요:\n- OCR API 엔드포인트 URL\n- OCR API 키 및 인증 정보\n- 환경 변수 설정';
+          '백엔드 OCR 서비스 설정 문제입니다. 백엔드 개발자에게 다음을 확인 요청하세요: OCR API 엔드포인트 URL, OCR API 키 및 인증 정보, 환경 변수 설정';
       }
 
-      alert(`처방전 인식에 실패했습니다\n\n${errorMessage}`);
+      showError(`처방전 인식에 실패했습니다: ${errorMessage}`, () => {
+        // 다시 시도는 파일 선택을 다시 할 수 있도록 input을 초기화
+        const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+        if (input) {
+          input.value = '';
+        }
+      });
     } finally {
       setIsUploading(false);
     }

@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { updateTakenStatus } from '@/pages/Detail/services/takingLog';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { useToast } from '@/contexts/ToastContext';
 import { useUser } from './hooks/useUser';
 import { useTodayMedications } from './hooks/useTodayMedications';
 import { useGuardianConnection } from './hooks/useGuardianConnection';
@@ -17,6 +18,7 @@ import {
 } from './components/TodayMedicationCard';
 
 const ElderHomePage = () => {
+  const { showError } = useToast();
   // 사용자 정보 조회
   const {
     userName,
@@ -51,7 +53,7 @@ const ElderHomePage = () => {
     // 해당 약 찾기
     const medication = todayMedications.find((med) => med.id === id);
     if (!medication) {
-      alert('약 정보를 찾을 수 없습니다.');
+      showError('약 정보를 찾을 수 없습니다.');
       return;
     }
 
@@ -62,7 +64,7 @@ const ElderHomePage = () => {
 
     // scheduleId와 scheduledDateTime이 없는 경우 (이론적으로는 발생하지 않아야 함)
     if (!medication.scheduleId || !medication.scheduledDateTime) {
-      alert('약 정보가 올바르지 않습니다.');
+      showError('약 정보가 올바르지 않습니다.');
       return;
     }
 
@@ -80,7 +82,9 @@ const ElderHomePage = () => {
       );
     } catch (error) {
       // 에러 발생 시 사용자에게 알림
-      alert(getApiErrorMessage(error));
+      showError(getApiErrorMessage(error), () => {
+        handleMedicationTaken(id);
+      });
     }
   };
 

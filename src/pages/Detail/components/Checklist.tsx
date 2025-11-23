@@ -5,6 +5,7 @@ import { format, parse } from 'date-fns';
 import { Check } from 'lucide-react';
 import ChecklistModal from './ChecklistModal';
 import { updateTakenStatus } from '../services/takingLog';
+import { useToast } from '@/contexts/ToastContext';
 
 
 interface ChecklistProps {
@@ -15,6 +16,7 @@ interface ChecklistProps {
 }
 
 const Checklist = ({ date, items, elderName, userId }: ChecklistProps) => {
+    const { showError } = useToast();
     const [selectedItem, setSelectedItem] = useState<ChecklistItem | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -70,7 +72,9 @@ const Checklist = ({ date, items, elderName, userId }: ChecklistProps) => {
                 });
                 // 성공 시 UI 업데이트는 부모 컴포넌트에서 처리
             } catch (error) {
-                alert('복용 여부 업데이트에 실패했습니다.');
+                showError('복용 여부 업데이트에 실패했습니다.', () => {
+                    handleItemClick(item, index);
+                });
             }
         }
 
