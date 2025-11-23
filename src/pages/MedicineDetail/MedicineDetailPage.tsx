@@ -2,8 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import TableHeader from '@/pages/MedicineDetail/components/TableHeader';
 import TableList, { type MedicineItem } from '@/pages/MedicineDetail/components/TableList';
 import FixandDeleteBtn from '@/pages/MedicineDetail/components/FixandDeleteBtn';
+import MedicineDeleteConfirmModal from '@/pages/MedicineDetail/components/MedicineDeleteConfirmModal';
 import { useToast } from '@/contexts/ToastContext';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+
 
 import {
   getPrescriptionDetail,
@@ -18,11 +20,20 @@ import { getPreviousPrescriptions } from '@/pages/PreviousMedicine/services/prev
 import type { OCRResponse } from '@/pages/MedicineRegister/services/ocr';
 
 const MedicineDetailPage = () => {
+
   const { showSuccess, showError } = useToast();
   const [medicines, setMedicines] = useState<MedicineItem[]>([]);
-  const [selected, setSelected] = useState<number[]>([]);
   const [editMode, setEditMode] = useState(false);
   const [prescriptionInfo, setPrescriptionInfo] = useState<PrescriptionInfo | null>(null);
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    medicineId: number | null;
+    medicineName: string;
+  }>({
+    isOpen: false,
+    medicineId: null,
+    medicineName: '',
+  });
   
   // OCR 데이터 처리 여부 추적 (중복 실행 방지)
   const hasProcessedOCR = useRef(false);
@@ -119,22 +130,29 @@ const MedicineDetailPage = () => {
     fetchData();
   }, []);
 
-  /** 선택 토글 */
-  const toggleSelect = (id: number) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
-    );
+  /** 약 삭제 모달 열기 */
+  const handleOpenDeleteModal = (medicineId: number, medicineName: string) => {
+    setDeleteModal({
+      isOpen: true,
+      medicineId,
+      medicineName,
+    });
   };
 
-  /** 전체 선택 */
-  const toggleSelectAll = (isChecked: boolean, medicines: MedicineItem[]) => {
-    setSelected(isChecked ? medicines.map((m) => m.id) : []);
+  /** 약 삭제 모달 닫기 */
+  const handleCloseDeleteModal = () => {
+    setDeleteModal({
+      isOpen: false,
+      medicineId: null,
+      medicineName: '',
+    });
   };
 
-  /** 체크된 약 삭제 */
-  const handleDeleteSelected = () => {
-    setMedicines((prev) => prev.filter((m) => !selected.includes(m.id)));
-    setSelected([]);
+  /** 약 삭제 확인 */
+  const handleDeleteMedicineConfirm = () => {
+    if (!deleteModal.medicineId) return;
+    
+    setMedicines((prev) => prev.filter((m) => m.id !== deleteModal.medicineId));
   };
 
   /** 수정 모드 toggle */
@@ -227,6 +245,7 @@ const MedicineDetailPage = () => {
       setPrescriptionInfo(updatedInfo);
       setMedicines(updatedMedicines);
 
+      // 저장 완료
       // 저장 완료 알림
       showSuccess('저장 완료!');
       setEditMode(false);
@@ -339,10 +358,12 @@ const MedicineDetailPage = () => {
     });
   };
 
-  /** 약 삭제 */
+  /** 약 삭제 버튼 클릭 (모달 열기) */
   const handleDeleteMedicine = (medicineId: number) => {
-    setMedicines((prev) => prev.filter((m) => m.id !== medicineId));
-    setSelected((prev) => prev.filter((id) => id !== medicineId));
+    const medicine = medicines.find((m) => m.id === medicineId);
+    if (medicine) {
+      handleOpenDeleteModal(medicineId, medicine.name);
+    }
   };
 
   /** 약 추가 */
@@ -365,15 +386,10 @@ const MedicineDetailPage = () => {
   return (
     <div className="w-full h-full flex flex-col">
       <div className="flex-1">
-        <TableHeader
-          allChecked={selected.length === medicines.length}
-          onToggleAll={(checked) => toggleSelectAll(checked, medicines)}
-        />
+        <TableHeader editMode={editMode} />
 
         <TableList
           medicines={medicines}
-          selected={selected}
-          onToggleItem={toggleSelect}
           editMode={editMode}
           onChangeField={handleChangeField}
           onChangeAlarm={handleChangeAlarm}
@@ -385,10 +401,17 @@ const MedicineDetailPage = () => {
       </div>
 
       <FixandDeleteBtn
-        onDelete={handleDeleteSelected}
         editMode={editMode}
         onToggleEdit={handleToggleEdit}
         onSave={handleSaveEdit}
+      />
+
+      {/* 약 삭제 확인 모달 */}
+      <MedicineDeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        medicineName={deleteModal.medicineName}
+        onConfirm={handleDeleteMedicineConfirm}
+        onCancel={handleCloseDeleteModal}
       />
     </div>
   );
