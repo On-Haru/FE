@@ -6,12 +6,15 @@ import DetailCalendar from './components/DetailCalendar';
 import Checklist from './components/Checklist';
 import EmptyDateActions from './components/EmptyDateActions';
 import { getCalendar } from './services/takingLog';
+import { getCaregiverLinks } from '@/pages/Home/services/caregiverLink';
+import { getUser } from '@/pages/Home/services/user';
 import type { CalendarDay, CalendarSlot } from './types/takingLog';
 import type { DateChecklist, ChecklistItem } from '@/types/checklist';
 
 interface Elder {
   id: string;
   name: string;
+  linkId?: number; // CaregiverLink의 id (정렬 순서 유지용)
 }
 
 const DetailPage = () => {
@@ -19,6 +22,7 @@ const DetailPage = () => {
   const navigate = useNavigate();
   const [currentElder, setCurrentElder] = useState<Elder | null>(null);
   const [elders, setElders] = useState<Elder[]>([]);
+  const [isEldersLoading, setIsEldersLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isDateClicked, setIsDateClicked] = useState<boolean>(false);
   const [checklistData, setChecklistData] = useState<
@@ -107,30 +111,65 @@ const DetailPage = () => {
     [currentElder]
   );
 
-  // 어르신 목록 조회 (TODO: 실제 API로 교체)
+  // 어르신 목록 조회 (등록된 피보호자 목록)
   useEffect(() => {
-    const mockElders: Elder[] = [
-      { id: '1001', name: '김노인' },
-      { id: '2', name: '이노인' },
-      { id: '3', name: '박노인' },
-    ];
-    setElders(mockElders);
+    const fetchElders = async () => {
+      setIsEldersLoading(true);
+      try {
+        const links = await getCaregiverLinks();
 
-    if (!id || mockElders.length === 0) {
-      if (mockElders.length > 0) {
-        const firstElderId = mockElders[0].id;
-        navigate(`/detail/${firstElderId}`, { replace: true });
-        return;
+        // CaregiverLink의 id 기준으로 정렬 (가장 먼저 연결된 것이 첫 번째)
+        const sortedLinks = [...links].sort((a, b) => a.id - b.id);
+
+        // 각 피보호자의 사용자 정보를 병렬로 가져오기
+        const elderPromises = sortedLinks.map(async (link) => {
+          try {
+            const userInfo = await getUser(link.seniorId);
+            return {
+              id: link.seniorId.toString(),
+              name: userInfo.name,
+              linkId: link.id, // 정렬 순서 유지를 위해 linkId 저장
+            };
+          } catch (error) {
+            console.error(`피보호자 ${link.seniorId} 정보 조회 실패:`, error);
+            // 에러 발생 시 기본값 사용
+            return {
+              id: link.seniorId.toString(),
+              name: `피보호자 ${link.seniorId}`,
+              linkId: link.id,
+            };
+          }
+        });
+
+        const fetchedElders = await Promise.all(elderPromises);
+        setElders(fetchedElders);
+
+        if (fetchedElders.length === 0) {
+          // 피보호자가 없으면 currentElder를 null로 설정하여 에러 메시지 표시
+          setCurrentElder(null);
+          return;
+        }
+
+        // URL의 id와 일치하는 피보호자를 찾고, 없으면 첫 번째 피보호자를 기본값으로 사용
+        const targetElder =
+          fetchedElders.find((e) => e.id === id) || fetchedElders[0];
+
+        setCurrentElder(targetElder);
+        // URL이 현재 선택된 피보호자와 다른 경우에만 URL을 업데이트
+        if (id !== targetElder.id) {
+          navigate(`/detail/${targetElder.id}`, { replace: true });
+        }
+      } catch (error) {
+        console.error('피보호자 목록 조회 실패:', error);
+        // 에러 발생 시 빈 배열로 설정하고 currentElder도 null로 설정
+        setElders([]);
+        setCurrentElder(null);
+      } finally {
+        setIsEldersLoading(false);
       }
-    }
+    };
 
-    const elder = mockElders.find((e) => e.id === id);
-    if (elder) {
-      setCurrentElder(elder);
-    } else if (mockElders.length > 0) {
-      const firstElderId = mockElders[0].id;
-      navigate(`/detail/${firstElderId}`, { replace: true });
-    }
+    fetchElders();
   }, [id, navigate]);
 
   // 어르신이 변경되거나 월이 변경되면 캘린더 데이터 로드
@@ -167,7 +206,31 @@ const DetailPage = () => {
   };
 
   if (!currentElder) {
-    return <div>Loading...</div>;
+    if (isEldersLoading) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <p className="text-gray-500">로딩 중...</p>
+        </div>
+      );
+    }
+    if (elders.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <p className="text-gray-500 mb-2">등록된 피보호자가 없습니다.</p>
+            <p className="text-sm text-gray-400">
+              홈 화면에서 피보호자를 연결해주세요.
+            </p>
+          </div>
+        </div>
+      );
+    }
+    // Fallback: elders loaded but currentElder가 아직 선택되지 않은 경우
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-gray-500">로딩 중...</p>
+      </div>
+    );
   }
 
   return (
