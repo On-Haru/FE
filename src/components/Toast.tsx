@@ -98,28 +98,30 @@ const Toast = ({ message, type = 'success', duration = 3000, onClose, onRetry }:
   return (
     <div
       ref={toastRef}
-      className={`absolute top-20 left-1/2 -translate-x-1/2 z-50 bg-white rounded-xl shadow-lg border ${getBorderColor()} px-4 py-3 flex items-center gap-3 min-w-[200px] max-w-[90%]`}
+      className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-white rounded-xl shadow-lg border ${getBorderColor()} px-4 py-3 flex items-start gap-3 w-[calc(100%-2rem)] max-w-md mx-4`}
     >
       {getIcon()}
-      <span className="text-sm font-medium text-gray-900 flex-1">{message}</span>
-      {onRetry && (
+      <span className="text-sm font-medium text-gray-900 flex-1 break-words leading-relaxed">{message}</span>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {onRetry && (
+          <button
+            onClick={() => {
+              onRetry();
+              handleClose();
+            }}
+            className="px-3 py-1.5 text-xs font-medium text-primary border border-primary rounded-lg hover:bg-primary/10 active:bg-primary/20 transition-colors whitespace-nowrap"
+          >
+            다시 시도
+          </button>
+        )}
         <button
-          onClick={() => {
-            onRetry();
-            handleClose();
-          }}
-          className="px-3 py-1 text-xs font-medium text-primary border border-primary rounded-lg hover:bg-primary/10 transition-colors flex-shrink-0"
+          onClick={handleClose}
+          className="text-gray-400 hover:text-gray-600 active:text-gray-800 transition-colors p-1 -mr-1"
+          aria-label="닫기"
         >
-          다시 시도
+          <X className="w-4 h-4" />
         </button>
-      )}
-      <button
-        onClick={handleClose}
-        className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
-        aria-label="닫기"
-      >
-        <X className="w-4 h-4" />
-      </button>
+      </div>
     </div>
   );
 };
