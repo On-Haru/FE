@@ -64,11 +64,11 @@ const CalendarDateCell = memo(({
         }
 
         // status에 따른 텍스트 색상
-        let textColor = 'text-gray-900';
+        let textColor = 'text-gray-600';
         if (status === 'MISSED') {
             textColor = 'text-red-600';
         } else if (status === 'PLANNED') {
-            textColor = 'text-[#002E28]';
+            textColor = 'text-black';
         } else if (status === 'COMPLETE') {
             textColor = 'text-black';
         }
