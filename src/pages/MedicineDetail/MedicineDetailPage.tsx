@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import TableHeader from '@/pages/MedicineDetail/components/TableHeader';
 import TableList, { type MedicineItem } from '@/pages/MedicineDetail/components/TableList';
 import FixandDeleteBtn from '@/pages/MedicineDetail/components/FixandDeleteBtn';
@@ -17,7 +16,6 @@ import { getPreviousPrescriptions } from '@/pages/PreviousMedicine/services/prev
 import type { OCRResponse } from '@/pages/MedicineRegister/services/ocr';
 
 const MedicineDetailPage = () => {
-  const navigate = useNavigate();
   const [medicines, setMedicines] = useState<MedicineItem[]>([]);
   const [selected, setSelected] = useState<number[]>([]);
   const [editMode, setEditMode] = useState(false);
@@ -224,13 +222,7 @@ const MedicineDetailPage = () => {
       setPrescriptionInfo(updatedInfo);
       setMedicines(updatedMedicines);
 
-      // 저장 완료 후 달력 페이지로 이동하여 새로 등록된 처방전이 반영되도록 함
-      if (storedSeniorId) {
-        // 달력 페이지로 이동 (자동 새로고침됨)
-        navigate(`/detail/${storedSeniorId}`);
-      } else {
-        alert('저장 완료!');
-      }
+      // 저장 완료
       setEditMode(false);
     } catch (err: unknown) {
       const error = err as {

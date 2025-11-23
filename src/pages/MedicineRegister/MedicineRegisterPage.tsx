@@ -5,7 +5,8 @@ import CameraBox from '@/pages/MedicineRegister/components/CameraBox';
 import MedicineAddButton from '@/pages/MedicineRegister/components/MedicineAddButton';
 import ViewPrescriptionButton from '@/pages/MedicineRegister/components/ViewPrescriptionButton';
 import NameHeader from '@/pages/MedicineRegister/components/NameHeader';
-import { uploadPrescriptionOCR } from '@/pages/MedicineRegister/services/ocr';
+import PreviewModal from '@/pages/MedicineRegister/components/PreviewModal';
+import { uploadPrescriptionOCR, type OCRResponse } from '@/pages/MedicineRegister/services/ocr';
 import { getCaregiverLinks } from '@/pages/Home/services/caregiverLink';
 import { getUser } from '@/pages/Auth/services/user';
 
@@ -22,6 +23,8 @@ const MedicineRegisterPage = () => {
   const [currentElder, setCurrentElder] = useState<Elder | null>(null);
   const [elders, setElders] = useState<Elder[]>([]);
   const [isEldersLoading, setIsEldersLoading] = useState(true);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const [previewOCRResult, setPreviewOCRResult] = useState<OCRResponse | null>(null);
 
   // 어르신 목록 조회 (등록된 피보호자 목록)
   useEffect(() => {
@@ -97,17 +100,9 @@ const MedicineRegisterPage = () => {
       // OCR API 호출
       const ocrResult = await uploadPrescriptionOCR(file);
 
-      // 선택된 seniorId를 OCR 결과에 포함
-      const ocrResultWithSeniorId = {
-        ...ocrResult,
-        seniorId: selectedSeniorId || ocrResult.seniorId,
-      };
-
-      // OCR 결과를 localStorage에 저장 (MedicineDetailPage에서 사용)
-      localStorage.setItem('ocrPrescriptionData', JSON.stringify(ocrResultWithSeniorId));
-
-      // MedicineDetailPage로 이동
-      navigate(ROUTES.MEDICINE_DETAIL);
+      // 미리보기 모달 표시
+      setPreviewFile(file);
+      setPreviewOCRResult(ocrResult);
     } catch (error: unknown) {
       const err = error as {
         response?: {
@@ -139,6 +134,32 @@ const MedicineRegisterPage = () => {
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handlePreviewRetake = () => {
+    // 미리보기 모달 닫기
+    setPreviewFile(null);
+    setPreviewOCRResult(null);
+  };
+
+  const handlePreviewConfirm = () => {
+    if (!previewOCRResult) return;
+
+    // 선택된 seniorId를 OCR 결과에 포함
+    const ocrResultWithSeniorId = {
+      ...previewOCRResult,
+      seniorId: selectedSeniorId || previewOCRResult.seniorId,
+    };
+
+    // OCR 결과를 localStorage에 저장 (MedicineDetailPage에서 사용)
+    localStorage.setItem('ocrPrescriptionData', JSON.stringify(ocrResultWithSeniorId));
+
+    // 미리보기 모달 닫기
+    setPreviewFile(null);
+    setPreviewOCRResult(null);
+
+    // MedicineDetailPage로 이동
+    navigate(ROUTES.MEDICINE_DETAIL);
   };
 
   if (!currentElder) {
@@ -185,6 +206,14 @@ const MedicineRegisterPage = () => {
           onClick={() => navigate(ROUTES.MEDICINE_PREVIOUS)}
         />
       </div>
+
+      {/* 미리보기 모달 */}
+      <PreviewModal
+        file={previewFile}
+        ocrResult={previewOCRResult}
+        onRetake={handlePreviewRetake}
+        onConfirm={handlePreviewConfirm}
+      />
     </div>
   );
 };
