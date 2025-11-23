@@ -18,8 +18,6 @@ import {
 } from './components/TodayMedicationCard';
 
 const ElderHomePage = () => {
-  console.log('[ElderHomePage] 🏠 어르신 홈 페이지 렌더링 시작');
-  
   const { showError } = useToast();
   // 사용자 정보 조회
   const {
@@ -71,7 +69,7 @@ const ElderHomePage = () => {
     }
 
     try {
-      // API 호출: 복용 여부 업데이트
+      // updateTakenStatus가 내부에서 기록이 없으면 자동으로 생성함
       await updateTakenStatus({
         scheduleId: medication.scheduleId,
         scheduledDateTime: medication.scheduledDateTime,
@@ -107,74 +105,45 @@ const ElderHomePage = () => {
       return;
     }
 
+    // 이미 구독되어 있으면 다시 구독하지 않음
+    if (isSubscribed) {
+      return;
+    }
+
     // 브라우저가 Push를 지원하지 않으면 구독하지 않음
     if (!isSupported) {
       return;
     }
 
-    // 구독이 이미 되어 있어도 서버에 구독 정보를 전송하도록 subscribe 호출
-    // (브라우저에 구독이 있어도 서버에 없을 수 있으므로)
-    // 자동으로 Push 구독 시도 (에러는 조용히 처리)
-    subscribe().catch((error) => {
-      // 구독 실패는 조용히 처리하되, 디버깅을 위해 로그 출력
-      console.error('[ElderHomePage] 푸시 구독 실패:', error);
+    // 알림 권한이 차단된 경우 구독하지 않음
+    if ('Notification' in window && Notification.permission === 'denied') {
+      return;
+    }
 
+    // 자동으로 Push 구독 시도 (에러는 조용히 처리)
+    subscribe().catch(() => {
+      // 구독 실패는 조용히 처리 (사용자에게 강제로 권한을 요청하지 않음)
     });
   }, [isLoadingUser, hasGuardian, isSubscribed, isSupported, subscribe]);
 
   // Service Worker로부터 Push 알림 메시지 수신
   useEffect(() => {
-    console.log('[ElderHomePage] 메시지 리스너 useEffect 실행');
-
-    // Service Worker 지원 여부 확인
-    if (!('serviceWorker' in navigator)) {
-      console.warn('[ElderHomePage] ⚠️ Service Worker를 지원하지 않습니다.');
-      const userAgent = typeof window !== 'undefined' && window.navigator?.userAgent 
-        ? window.navigator.userAgent.substring(0, 50) + '...' 
-        : 'unknown';
-      console.warn('[ElderHomePage] 환경 정보:', {
-        protocol: window.location.protocol,
-        hostname: window.location.hostname,
-        userAgent,
-      });
+    if (!hasGuardian) {
       return;
     }
 
-    console.log('[ElderHomePage] ✅ Service Worker 지원됨');
-    console.log('[ElderHomePage] 메시지 리스너 설정 시작, hasGuardian:', hasGuardian);
-
-    // Service Worker 등록 상태 확인 (비동기)
-    navigator.serviceWorker.getRegistration()
-      .then((registration) => {
-        if (registration) {
-          console.log('[ElderHomePage] ✅ Service Worker 등록됨:', registration.scope);
-          console.log('[ElderHomePage] Service Worker 상태:', registration.active?.state || '없음');
-        } else {
-          console.warn('[ElderHomePage] ⚠️ Service Worker가 아직 등록되지 않았습니다. 등록 대기 중...');
-          // Service Worker 등록 대기
-          navigator.serviceWorker.ready.then((registration) => {
-            console.log('[ElderHomePage] ✅ Service Worker 등록 완료:', registration.scope);
-          });
-        }
-      })
-      .catch((error) => {
-        console.error('[ElderHomePage] Service Worker 등록 확인 실패:', error);
-      });
+    // Service Worker 지원 여부 확인
+    if (!('serviceWorker' in navigator)) {
+      return;
+    }
 
     const handleMessage = (event: MessageEvent) => {
-      console.log('[ElderHomePage] 📨 메시지 수신:', event);
-      console.log('[ElderHomePage] 메시지 데이터:', event.data);
-      console.log('[ElderHomePage] 메시지 소스:', event.source);
-      
       if (!event.data || typeof event.data !== 'object' || !event.data.type) {
-        console.log('[ElderHomePage] 메시지 형식이 올바르지 않습니다:', event.data);
         return;
       }
 
       // Push 알림 수신 처리
       if (event.data.type === 'PUSH_RECEIVED') {
-        console.log('[ElderHomePage] ✅ PUSH_RECEIVED 메시지 수신:', event.data.payload);
-        
         const payload = event.data.payload as {
           title?: string;
           body?: string;
@@ -183,57 +152,63 @@ const ElderHomePage = () => {
           receivedAt?: number;
         };
 
-        console.log('[ElderHomePage] Push 알림 수신:', payload);
-
         if (!payload?.title || !payload?.body) {
-          console.warn('[ElderHomePage] 푸시 알림에 title 또는 body가 없습니다.');
-
           return;
         }
 
-        console.log('[ElderHomePage] todayMedications:', todayMedications);
-        console.log('[ElderHomePage] todayMedications 길이:', todayMedications.length);
-        
         // scheduleId가 있으면 해당 약 정보 찾기
-        let medication = null;
         if (payload.scheduleId) {
-          medication = todayMedications.find(
+          const medication = todayMedications.find(
             (med) => med.scheduleId === payload.scheduleId
           );
 
-          console.log('[ElderHomePage] 약 정보 찾기:', {
-            scheduleId: payload.scheduleId,
-            found: !!medication,
-            isTaken: medication?.isTaken,
-            medicationName: medication?.medicationName,
-            allScheduleIds: todayMedications.map(m => m.scheduleId),
-          });
-        }
+          // 약 정보가 있고 아직 복용하지 않았으면 모달 표시
+          if (medication && !medication.isTaken) {
+            setReminderMedication({
+              id: medication.id,
+              time: medication.time,
+              medicationName: medication.medicationName,
+              dosage: medication.dosage,
+            });
+            setShowReminderModal(true);
+          } else if (medication && medication.isTaken) {
+            // 이미 복용한 약은 모달 표시하지 않음
+          } else {
+            // 약 정보를 찾지 못했어도 푸시 알림을 받았으면 모달 표시
+            // body에서 약 이름 추출 시도
+            const bodyText = payload.body || '';
+            const bodyMatch = bodyText.match(/(.+?)\s*(\d+정|\d+개|복용)/);
+            const medicationName = bodyMatch
+              ? bodyMatch[1].trim()
+              : bodyText.split(' ')[0] || bodyText || '약';
+            const dosage = bodyMatch ? bodyMatch[2] : '1정';
 
-        // 약 정보가 있고 아직 복용하지 않았으면 모달 표시
-        if (medication && !medication.isTaken) {
-          setReminderMedication({
-            id: medication.id,
-            time: medication.time,
-            medicationName: medication.medicationName,
-            dosage: medication.dosage,
-          });
-          setShowReminderModal(true);
-          console.log('[ElderHomePage] ✅ 모달 표시 (약 정보 찾음):', {
-            id: medication.id,
-            medicationName: medication.medicationName,
-          });
-        } else if (medication && medication.isTaken) {
-          // 이미 복용한 약은 모달 표시하지 않음
-          console.log('[ElderHomePage] 이미 복용한 약이므로 모달을 표시하지 않습니다.');
+            // scheduledDateTime에서 시간 추출하여 time 결정
+            let time: MedicationTime = 'morning';
+            if (payload.scheduledDateTime) {
+              const hour = new Date(payload.scheduledDateTime).getHours();
+              if (hour >= 5 && hour < 12) time = 'morning';
+              else if (hour >= 12 && hour < 17) time = 'lunch';
+              else time = 'evening';
+            }
+
+            setReminderMedication({
+              id: -1,
+              time,
+              medicationName,
+              dosage,
+            });
+            setShowReminderModal(true);
+          }
         } else {
-          // 약 정보를 찾지 못했어도 푸시 알림을 받았으면 모달 표시
-          // body에서 약 이름 추출 시도
+          // scheduleId가 없어도 알람 내용을 표시
           const bodyText = payload.body || '';
           const bodyMatch = bodyText.match(/(.+?)\s*(\d+정|\d+개|복용)/);
-          const medicationName = bodyMatch ? bodyMatch[1].trim() : bodyText.split(' ')[0] || bodyText || '약';
+          const medicationName = bodyMatch
+            ? bodyMatch[1].trim()
+            : bodyText.split(' ')[0] || bodyText || '약';
           const dosage = bodyMatch ? bodyMatch[2] : '1정';
-          
+
           // scheduledDateTime에서 시간 추출하여 time 결정
           let time: MedicationTime = 'morning';
           if (payload.scheduledDateTime) {
@@ -242,23 +217,14 @@ const ElderHomePage = () => {
             else if (hour >= 12 && hour < 17) time = 'lunch';
             else time = 'evening';
           }
-          
-          console.log('[ElderHomePage] 약 정보를 찾지 못했지만 모달 표시:', {
-            medicationName,
-            dosage,
-            time,
-            body: payload.body,
-          });
-          
+
           setReminderMedication({
-            id: Date.now(), // 임시 ID
+            id: -1,
             time,
             medicationName,
             dosage,
           });
           setShowReminderModal(true);
-          console.log('[ElderHomePage] ✅ 모달 표시 (약 정보 없음, body에서 추출)');
-
         }
       }
 
@@ -270,8 +236,6 @@ const ElderHomePage = () => {
           title?: string;
           body?: string;
         };
-
-        console.log('[ElderHomePage] 알림 클릭:', payload);
 
         if (payload?.scheduleId) {
           const medication = todayMedications.find(
@@ -286,13 +250,7 @@ const ElderHomePage = () => {
               dosage: medication.dosage,
             });
             setShowReminderModal(true);
-          } else if (medication && medication.isTaken) {
-            console.log('[ElderHomePage] 약을 이미 복용했습니다:', medication);
-          } else {
-            console.warn(
-              '[ElderHomePage] scheduleId로 약을 찾을 수 없습니다:',
-              payload.scheduleId
-            );
+          } else if (!medication) {
             // 약을 찾지 못해도 알람 내용을 표시
             const medicineName =
               payload.body?.replace(' 복용 시간입니다.', '').trim() || '약';
@@ -319,61 +277,15 @@ const ElderHomePage = () => {
       }
     };
 
-    // BroadcastChannel 리스너 등록 (가장 확실한 방법)
-    let channel: BroadcastChannel | null = null;
-    try {
-      channel = new BroadcastChannel('push-notification');
-      channel.addEventListener('message', (event) => {
-        console.log('[ElderHomePage] 📢 BroadcastChannel 메시지 수신:', event.data);
-        // BroadcastChannel 이벤트를 MessageEvent처럼 변환
-        const messageEvent = {
-          ...event,
-          data: event.data,
-        } as MessageEvent;
-        handleMessage(messageEvent);
-      });
-      console.log('[ElderHomePage] ✅ BroadcastChannel 리스너 등록 완료');
-    } catch (error) {
-      console.error('[ElderHomePage] BroadcastChannel 생성 실패:', error);
-    }
-
     // Service Worker 메시지 리스너 등록
-    const setupServiceWorkerListener = async () => {
-      try {
-        await navigator.serviceWorker.ready;
-        console.log('[ElderHomePage] Service Worker ready, 메시지 리스너 등록');
-        
-        // Service Worker 메시지 리스너 등록
-        navigator.serviceWorker.addEventListener('message', handleMessage as EventListener);
-        console.log('[ElderHomePage] navigator.serviceWorker 리스너 등록 완료');
-        
-        // controller가 있으면 controller에도 리스너 등록
-        if (navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.addEventListener('message', handleMessage as EventListener);
-          console.log('[ElderHomePage] controller 리스너 등록 완료');
-        } else {
-          console.warn('[ElderHomePage] Service Worker controller가 없습니다.');
-        }
-        
-        console.log('[ElderHomePage] ✅ 모든 메시지 리스너 등록 완료');
-      } catch (error) {
-        console.error('[ElderHomePage] Service Worker 메시지 리스너 등록 실패:', error);
-      }
-    };
+    const serviceWorker = navigator.serviceWorker;
+    if (serviceWorker) {
+      serviceWorker.addEventListener('message', handleMessage);
 
-    setupServiceWorkerListener();
-    
-    return () => {
-      if (channel) {
-        channel.close();
-      }
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.removeEventListener('message', handleMessage as EventListener);
-        if (navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.removeEventListener('message', handleMessage as EventListener);
-        }
-      }
-    };
+      return () => {
+        serviceWorker.removeEventListener('message', handleMessage);
+      };
+    }
   }, [hasGuardian, todayMedications]);
 
   // 복용 예정 약을 먼저, 복용된 약을 나중에 정렬
@@ -456,7 +368,11 @@ const ElderHomePage = () => {
       evening: '저녁약',
     };
 
-    const missedTimes = pendingMedications.map((med) => timeLabels[med.time]);
+    // 중복 제거: 각 시간대를 한 번만 표시
+    const uniqueTimes = Array.from(
+      new Set(pendingMedications.map((med) => med.time))
+    );
+    const missedTimes = uniqueTimes.map((time) => timeLabels[time]);
     return `${missedTimes.join(', ')} 미복용`;
   };
 
