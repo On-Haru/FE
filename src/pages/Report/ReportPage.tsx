@@ -13,6 +13,7 @@ import ReportLoading from './components/ReportLoading';
 import ReportErrorScreen from './components/ReportErrorScreen';
 import { getReport } from './services/report';
 import { generateReportPDF } from '@/utils/pdfGenerator';
+import { useToast } from '@/contexts/ToastContext';
 import type { ReportData } from '@/types/report';
 
 // 토글 가능한 섹션 컴포넌트
@@ -138,6 +139,7 @@ const CollapsibleSection = ({
 
 const ReportPage = () => {
   const [searchParams] = useSearchParams();
+  const { showError } = useToast();
 
   // 각 섹션의 열림/닫힘 상태 관리 (기본값: 모두 열림)
   const [isOverallStatsOpen, setIsOverallStatsOpen] = useState(true);
@@ -257,9 +259,11 @@ const ReportPage = () => {
       await generateReportPDF(reportData);
     } catch (error) {
       console.error('PDF 생성 실패:', error);
-      alert('PDF 생성 중 오류가 발생했습니다.');
+      showError('PDF 생성 중 오류가 발생했습니다.', () => {
+        handleShareReport();
+      });
     }
-  }, [reportData]);
+  }, [reportData, showError]);
 
   // Header의 공유 버튼 클릭 이벤트 리스너
   useEffect(() => {

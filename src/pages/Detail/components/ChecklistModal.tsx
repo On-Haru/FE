@@ -6,6 +6,8 @@ import { format, parse } from 'date-fns';
 import type { ChecklistItem } from '@/types/checklist';
 import TimeTag, { type TimeLabel } from '@/components/TimeTag';
 import { sendNotification } from '../services/push';
+import { useToast } from '@/contexts/ToastContext';
+import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 
 interface ChecklistModalProps {
     isOpen: boolean;
@@ -22,6 +24,7 @@ interface ChecklistModalProps {
 }
 
 const ChecklistModal = ({ isOpen, onClose, date, item, elderName, userId }: ChecklistModalProps) => {
+    const { showSuccess, showError } = useToast();
     const [isSending, setIsSending] = useState(false);
     const overlayRef = useRef<HTMLDivElement>(null);
     const modalRef = useRef<HTMLDivElement>(null);
@@ -115,11 +118,20 @@ const ChecklistModal = ({ isOpen, onClose, date, item, elderName, userId }: Chec
         : null;
 
     const handleSendNotification = async () => {
+        // scheduleId가 없으면 에러 표시
+        if (!item.scheduleId) {
+            console.error('알림 전송 실패: scheduleId가 없습니다.', { item, userId });
+            showError('알림을 보낼 수 없습니다. 약 정보가 올바르지 않습니다.');
+            return;
+        }
+
         setIsSending(true);
         try {
             // 알림 제목과 본문 생성
             const title = `${mealTime} 복약 알림`;
             const body = `${medicineName} 복용 시간입니다.`;
+
+            console.log('알림 전송 시도:', { userId, scheduleId: item.scheduleId, title, body });
 
             await sendNotification(userId, {
                 scheduleId: item.scheduleId,
@@ -127,10 +139,17 @@ const ChecklistModal = ({ isOpen, onClose, date, item, elderName, userId }: Chec
                 body,
             });
 
-            alert('알림이 전송되었습니다.');
+            console.log('알림 전송 성공');
+            showSuccess('알림이 전송되었습니다.');
             onClose();
         } catch (error) {
-            alert('알림 전송에 실패했습니다. 잠시 후 다시 시도해주세요.');
+            console.error('알림 전송 실패:', error);
+            // 에러 메시지 추출
+            const errorMessage = getApiErrorMessage(error);
+            
+            showError(`알림 전송에 실패했습니다: ${errorMessage}`, () => {
+                handleSendNotification();
+            });
         } finally {
             setIsSending(false);
         }

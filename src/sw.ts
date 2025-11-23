@@ -1,6 +1,8 @@
 /// <reference lib="webworker" />
 
 import { precacheAndRoute } from 'workbox-precaching';
+import { registerRoute } from 'workbox-routing';
+import { NetworkOnly } from 'workbox-strategies';
 
 type WBManifestEntry = {
   url: string;
@@ -14,7 +16,15 @@ declare const self: ServiceWorkerGlobalScope & {
 // Injected by VitePWA's injectManifest strategy so Workbox knows what to precache
 precacheAndRoute(self.__WB_MANIFEST);
 
+// API 요청은 네트워크로만 전송 (캐시하지 않음)
+registerRoute(
+  ({ url }) => url.pathname.startsWith('/api/'),
+  new NetworkOnly()
+);
+
 self.addEventListener('push', (event: PushEvent) => {
+  console.log('[Service Worker] Push 이벤트 수신!', event);
+  
   let data: {
     title: string;
     body: string;
@@ -27,7 +37,12 @@ self.addEventListener('push', (event: PushEvent) => {
 
   try {
     if (event.data) {
+      const rawData = event.data.text();
+      console.log('[Service Worker] Push 원본 데이터:', rawData);
       data = event.data.json();
+      console.log('[Service Worker] Push 파싱된 데이터:', data);
+    } else {
+      console.log('[Service Worker] Push 이벤트에 데이터가 없습니다.');
     }
   } catch (error) {
     console.error('[Service Worker] Push 데이터 파싱 실패:', error);
@@ -35,6 +50,7 @@ self.addEventListener('push', (event: PushEvent) => {
   }
 
   const { title, body, scheduleId, scheduledDateTime } = data;
+  console.log('[Service Worker] 알림 표시 예정:', { title, body, scheduleId, scheduledDateTime });
 
   event.waitUntil(
     (async () => {
@@ -51,6 +67,7 @@ self.addEventListener('push', (event: PushEvent) => {
             body,
           },
         });
+        console.log('[Service Worker] 알림 표시 성공!');
       } catch (error) {
         console.error('[Service Worker] 알림 표시 실패:', error);
       }

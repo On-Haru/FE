@@ -5,6 +5,7 @@ import { registerSW } from 'virtual:pwa-register';
 import './index.css';
 import App from './App.tsx';
 import { InstallPromptProvider } from './contexts/InstallPromptContext';
+import { ToastProvider } from './contexts/ToastContext';
 
 try {
   registerSW({ immediate: true });
@@ -15,9 +16,11 @@ try {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
+      <ToastProvider>
       <InstallPromptProvider>
         <App />
       </InstallPromptProvider>
+      </ToastProvider>
     </BrowserRouter>
   </StrictMode>
 );

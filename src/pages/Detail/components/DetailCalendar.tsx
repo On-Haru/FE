@@ -135,7 +135,8 @@ const DetailCalendar = ({
                 {daysInMonth.map((date) => {
                     const dateKey = format(date, 'yyyy-MM-dd');
                     const isSelected = selectedDate ? isSameDay(date, selectedDate) : false;
-                    const hasChecklist = !!checklistData[dateKey];
+                    const dayData = checklistData[dateKey];
+                    const status = dayData?.status;
 
                     return (
                         <CalendarDateCell
@@ -143,7 +144,7 @@ const DetailCalendar = ({
                             date={date}
                             checklistData={checklistData}
                             isSelected={isSelected}
-                            hasChecklist={hasChecklist}
+                            status={status}
                             onClick={() => handleDateClick(date)}
                         />
                     );
