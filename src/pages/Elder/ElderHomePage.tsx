@@ -25,7 +25,7 @@ const ElderHomePage = () => {
   } = useUser();
 
   // 보호자 연결 여부 확인
-  const { hasGuardian, setHasGuardian } = useGuardianConnection(isLoadingUser);
+  const { hasGuardian } = useGuardianConnection(isLoadingUser);
 
   // 오늘의 약 데이터 조회
   const {
