@@ -1,5 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
-import { updateTakenStatus } from '@/pages/Detail/services/takingLog';
+import {
+  updateTakenStatus,
+  createTakingLog,
+  getTakingLogsBySchedule,
+} from '@/pages/Detail/services/takingLog';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import { useToast } from '@/contexts/ToastContext';
 import { useUser } from './hooks/useUser';
@@ -69,12 +73,30 @@ const ElderHomePage = () => {
     }
 
     try {
-      // API 호출: 복용 여부 업데이트
-      await updateTakenStatus({
-        scheduleId: medication.scheduleId,
-        scheduledDateTime: medication.scheduledDateTime,
-        taken: true,
-      });
+      // 먼저 해당 스케줄의 복약 기록이 있는지 확인
+      const existingLogs = await getTakingLogsBySchedule(medication.scheduleId);
+
+      // scheduledDateTime과 일치하는 기록 찾기
+      const existingLog = existingLogs.find(
+        (log) => log.scheduledDateTime === medication.scheduledDateTime
+      );
+
+      if (existingLog) {
+        // 기록이 있으면 업데이트
+        await updateTakenStatus({
+          scheduleId: medication.scheduleId,
+          scheduledDateTime: medication.scheduledDateTime,
+          taken: true,
+        });
+      } else {
+        // 기록이 없으면 생성
+        await createTakingLog({
+          scheduleId: medication.scheduleId,
+          scheduledDateTime: medication.scheduledDateTime,
+          taken: true,
+          takenDateTime: new Date().toISOString(),
+        });
+      }
 
       // 성공 시 로컬 상태 업데이트
       setTodayMedications((prev) =>
@@ -117,16 +139,12 @@ const ElderHomePage = () => {
 
     // 알림 권한이 차단된 경우 구독하지 않음
     if ('Notification' in window && Notification.permission === 'denied') {
-      console.warn(
-        '[ElderHomePage] 알림 권한이 차단되어 Push 구독을 시도하지 않습니다.'
-      );
       return;
     }
 
     // 자동으로 Push 구독 시도 (에러는 조용히 처리)
-    subscribe().catch((error) => {
+    subscribe().catch(() => {
       // 구독 실패는 조용히 처리 (사용자에게 강제로 권한을 요청하지 않음)
-      console.warn('[ElderHomePage] Push 구독 실패:', error);
     });
   }, [isLoadingUser, hasGuardian, isSubscribed, isSupported, subscribe]);
 
@@ -156,13 +174,7 @@ const ElderHomePage = () => {
           receivedAt?: number;
         };
 
-        console.log('[ElderHomePage] Push 알림 수신:', payload);
-
         if (!payload?.title || !payload?.body) {
-          console.warn(
-            '[ElderHomePage] Push 알림에 title 또는 body가 없습니다:',
-            payload
-          );
           return;
         }
 
@@ -174,7 +186,6 @@ const ElderHomePage = () => {
 
           if (medication && !medication.isTaken) {
             // 약 정보가 있고 아직 복용하지 않았으면 모달 표시
-            console.log('[ElderHomePage] 약 정보 찾음, 모달 표시:', medication);
             setReminderMedication({
               id: medication.id,
               time: medication.time,
@@ -182,13 +193,7 @@ const ElderHomePage = () => {
               dosage: medication.dosage,
             });
             setShowReminderModal(true);
-          } else if (medication && medication.isTaken) {
-            console.log('[ElderHomePage] 약을 이미 복용했습니다:', medication);
-          } else {
-            console.warn(
-              '[ElderHomePage] scheduleId로 약을 찾을 수 없습니다:',
-              payload.scheduleId
-            );
+          } else if (!medication) {
             // 약을 찾지 못해도 알람 내용을 표시하기 위해 기본값으로 모달 표시
             const medicineName =
               payload.body.replace(' 복용 시간입니다.', '').trim() || '약';
@@ -202,10 +207,6 @@ const ElderHomePage = () => {
           }
         } else {
           // scheduleId가 없어도 알람 내용을 표시
-          console.log(
-            '[ElderHomePage] scheduleId가 없지만 알람 표시:',
-            payload
-          );
           const medicineName =
             payload.body.replace(' 복용 시간입니다.', '').trim() || '약';
           setReminderMedication({
@@ -227,8 +228,6 @@ const ElderHomePage = () => {
           body?: string;
         };
 
-        console.log('[ElderHomePage] 알림 클릭:', payload);
-
         if (payload?.scheduleId) {
           const medication = todayMedications.find(
             (med) => med.scheduleId === payload.scheduleId
@@ -242,13 +241,7 @@ const ElderHomePage = () => {
               dosage: medication.dosage,
             });
             setShowReminderModal(true);
-          } else if (medication && medication.isTaken) {
-            console.log('[ElderHomePage] 약을 이미 복용했습니다:', medication);
-          } else {
-            console.warn(
-              '[ElderHomePage] scheduleId로 약을 찾을 수 없습니다:',
-              payload.scheduleId
-            );
+          } else if (!medication) {
             // 약을 찾지 못해도 알람 내용을 표시
             const medicineName =
               payload.body?.replace(' 복용 시간입니다.', '').trim() || '약';

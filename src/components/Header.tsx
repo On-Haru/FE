@@ -66,7 +66,19 @@ const Header = () => {
         // 홈화면: 로고 왼쪽, Elder 홈화면이고 보호자 연결 시 오른쪽에 연결 코드
         // 보호자 홈화면(/home)일 때 오른쪽에 "피보호자 연결 추가하기" 버튼
         <div className="w-full flex items-center">
-          <div>
+          <div
+            onClick={() => {
+              // 피보호자 홈화면에서 로고 클릭 시 페이지 새로고침
+              if (isElderHome) {
+                window.location.reload();
+              }
+            }}
+            className={
+              isElderHome
+                ? 'cursor-pointer hover:opacity-80 transition-opacity'
+                : ''
+            }
+          >
             <img src="/logo.svg" alt="하루온" className="h-8" />
           </div>
           {isElderHome && hasGuardian ? (
