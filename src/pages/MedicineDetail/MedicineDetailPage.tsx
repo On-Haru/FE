@@ -15,7 +15,6 @@ import type {
 } from '@/pages/MedicineDetail/types/prescription';
 import { getPreviousPrescriptions } from '@/pages/PreviousMedicine/services/previous';
 import type { OCRResponse } from '@/pages/MedicineRegister/services/ocr';
-import { ROUTES } from '@/constants/routes';
 
 const MedicineDetailPage = () => {
   const navigate = useNavigate();
@@ -162,6 +161,12 @@ const MedicineDetailPage = () => {
         return;
       }
 
+      // medicines 배열 검증
+      if (medicines.length === 0) {
+        alert('저장할 약물 정보가 없습니다. 약물을 추가해주세요.');
+        return;
+      }
+
       // 필수 필드 검증 및 기본값 설정 
       const hospitalName = prescriptionInfo.hospitalName?.trim() || '병원명 미입력';
       const doctorName = prescriptionInfo.doctorName?.trim() || '의사명 미입력';
@@ -181,21 +186,29 @@ const MedicineDetailPage = () => {
         doctorName,
         issuedDate,
         note: null,
-        medicines: medicines.map((m) => ({
-          name: m.name,
-          dosage: m.dosage,
-          totalCount: m.totalCount,
-          durationDays: m.durationDays,
-          memo: m.memo,
-          aiDescription: m.aiDescription,
-          schedules: m.schedules.map((s) => ({
-            notifyTime: s.notifyTime,
-            timeTag: s.timeTag,
+        medicines: medicines
+          .filter((m) => m.name.trim() !== '') // 빈 약물명 제외
+          .map((m) => ({
+            name: m.name.trim() || '약품명 미입력',
+            dosage: m.dosage ?? 0,
+            totalCount: m.totalCount ?? 0,
+            durationDays: m.durationDays ?? 0,
+            memo: m.memo || null,
+            aiDescription: m.aiDescription || null,
+            schedules: (m.schedules || []).map((s) => ({
+              notifyTime: s.notifyTime,
+              timeTag: s.timeTag,
+            })),
           })),
-        })),
       };
 
-      // 원래 처방전 ID가 있으면 해당 ID로 저장 시도, 없으면 새로 생성
+      // medicines 배열이 비어있으면 에러
+      if (payload.medicines.length === 0) {
+        alert('저장할 약물 정보가 없습니다. 약물명을 입력해주세요.');
+        return;
+      }
+
+      // 기존 처방전 ID가 있으면 업데이트 시도, 없으면 새로 생성
       const currentPrescriptionId = localStorage.getItem('currentPrescriptionId');
       const prescriptionId = currentPrescriptionId ? Number(currentPrescriptionId) : 0;
       
