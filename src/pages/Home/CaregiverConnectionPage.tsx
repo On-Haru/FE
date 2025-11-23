@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { createCaregiverLink } from './services/caregiverLink';
 import { formatPhoneNumber, extractPhoneNumber } from '@/utils/phoneFormatter';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { useToast } from '@/contexts/ToastContext';
 
 const CaregiverConnectionPage = () => {
   const navigate = useNavigate();
+  const { showError } = useToast();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [connectionCode, setConnectionCode] = useState('');
 
@@ -29,12 +31,12 @@ const CaregiverConnectionPage = () => {
 
     const phoneWithoutHyphen = extractPhoneNumber(phoneNumber);
     if (phoneWithoutHyphen.length < 10 || phoneWithoutHyphen.length > 11) {
-      alert('올바른 전화번호를 입력해주세요.');
+      showError('올바른 전화번호를 입력해주세요.');
       return;
     }
 
     if (connectionCode.length !== 4) {
-      alert('연결 코드를 입력해주세요.');
+      showError('연결 코드를 입력해주세요.');
       return;
     }
 
@@ -47,7 +49,13 @@ const CaregiverConnectionPage = () => {
       // 성공 시 홈으로 이동
       navigate('/home');
     } catch (error) {
-      alert(getApiErrorMessage(error));
+      showError(getApiErrorMessage(error), () => {
+        // 다시 시도는 폼 제출을 다시 시도
+        const form = document.querySelector('form');
+        if (form) {
+          form.requestSubmit();
+        }
+      });
     }
   };
 

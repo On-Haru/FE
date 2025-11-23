@@ -27,9 +27,14 @@ const mapScheduleTypeToMedicationTime = (
  * CalendarSlot을 Medication 타입으로 변환
  * dosage는 API에 없으므로 기본값 "1정" 사용
  */
-export const convertSlotToMedication = (slot: CalendarSlot): Medication => {
+export const convertSlotToMedication = (slot: CalendarSlot, index?: number): Medication => {
+  // slotId가 null인 경우 scheduleId와 scheduledDateTime을 조합하여 고유 ID 생성
+  const id = slot.slotId !== null 
+    ? slot.slotId 
+    : parseInt(`${slot.scheduleId}${new Date(slot.scheduledDateTime).getTime()}${index || 0}`, 10) % Number.MAX_SAFE_INTEGER;
+  
   return {
-    id: slot.slotId,
+    id,
     time: mapScheduleTypeToMedicationTime(slot.scheduleType),
     medicationName: slot.medicineName,
     dosage: '1정', // API에 dosage 정보가 없으므로 기본값 사용
@@ -55,5 +60,5 @@ export const convertTodaySlotsToMedications = (
       const scheduledDateString = scheduledDate.toISOString().split('T')[0];
       return scheduledDateString === todayString;
     })
-    .map(convertSlotToMedication);
+    .map((slot, index) => convertSlotToMedication(slot, index));
 };
