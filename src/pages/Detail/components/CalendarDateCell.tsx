@@ -58,13 +58,13 @@ const CalendarDateCell = memo(({
     const className = useMemo(() => {
         const baseClasses = 'relative w-8 h-8 flex items-center justify-center text-sm rounded';
         if (isDisabled) {
-            return `${baseClasses} text-gray-400 cursor-default`;
+            return `${baseClasses} text-gray-300 cursor-default`;
         }
 
         // status에 따른 텍스트 색상
         let textColor = 'text-gray-600';
         if (status === 'MISSED') {
-            textColor = 'text-red-600';
+            textColor = 'text-black';
         } else if (status === 'PLANNED') {
             textColor = 'text-black';
         } else if (status === 'COMPLETE') {
