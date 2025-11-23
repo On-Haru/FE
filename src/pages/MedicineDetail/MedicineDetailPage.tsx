@@ -116,18 +116,6 @@ const MedicineDetailPage = () => {
     fetchData();
   }, []);
 
-  /** 선택 토글 */
-  const toggleSelect = (id: number) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
-    );
-  };
-
-  /** 전체 선택 */
-  const toggleSelectAll = (isChecked: boolean, medicines: MedicineItem[]) => {
-    setSelected(isChecked ? medicines.map((m) => m.id) : []);
-  };
-
   /** 체크된 약 삭제 */
   const handleDeleteSelected = () => {
     setMedicines((prev) => prev.filter((m) => !selected.includes(m.id)));
@@ -374,15 +362,10 @@ const MedicineDetailPage = () => {
   return (
     <div className="w-full h-full flex flex-col">
       <div className="flex-1">
-        <TableHeader
-          allChecked={selected.length === medicines.length}
-          onToggleAll={(checked) => toggleSelectAll(checked, medicines)}
-        />
+        <TableHeader editMode={editMode} />
 
         <TableList
           medicines={medicines}
-          selected={selected}
-          onToggleItem={toggleSelect}
           editMode={editMode}
           onChangeField={handleChangeField}
           onChangeAlarm={handleChangeAlarm}

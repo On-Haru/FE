@@ -7,8 +7,8 @@ export type { MedicineItem };
 
 interface TableListProps {
   medicines: MedicineItem[];
-  selected: number[];
-  onToggleItem: (id: number) => void;
+  selected?: number[];
+  onToggleItem?: (id: number) => void;
   editMode: boolean;
   onChangeField?: (id: number, field: string, value: string | number) => void;
   onChangeAlarm?: (
@@ -25,8 +25,6 @@ interface TableListProps {
 
 const TableList = ({
   medicines,
-  selected,
-  onToggleItem,
   editMode,
   onChangeField,
   onChangeAlarm,
@@ -56,8 +54,6 @@ const TableList = ({
       )}
 
       {medicines.map((item) => {
-        const isChecked = selected.includes(item.id);
-
         return (
           <div 
             key={item.id} 
@@ -73,19 +69,6 @@ const TableList = ({
                 }
               }}
             >
-              {/* 체크박스 */}
-              <input
-                type="checkbox"
-                className="accent-primary"
-                checked={isChecked}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  onToggleItem(item.id);
-                }}
-                onClick={(e) => e.stopPropagation()}
-                disabled={editMode}
-              />
-
               {/* 약품명 */}
               {editMode ? (
                 <input
@@ -160,8 +143,11 @@ const TableList = ({
               {editMode && onDeleteMedicine && (
                 <button
                   type="button"
-                  onClick={() => onDeleteMedicine(item.id)}
-                  className="ml-2 px-2 py-1 text-sm text-red-500 border border-red-300 rounded"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteMedicine(item.id);
+                  }}
+                  className="w-8 px-2 py-1 text-sm text-red-500 border border-red-300 rounded-lg"
                 >
                   삭제
                 </button>
@@ -169,7 +155,7 @@ const TableList = ({
             </div>
 
             {/* ---- 스케줄 영역 ---- */}
-            <div className="px-2 pl-9">
+            <div className="px-2">
               <div onClick={(e) => {
                 if (editMode) {
                   e.stopPropagation();

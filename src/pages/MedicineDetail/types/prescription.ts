@@ -79,3 +79,39 @@ export interface PrescriptionCreateResponse {
   note: string;
 }
 
+export interface PrescriptionUpdateResponse {
+  success: boolean;
+  data: {
+    id: number;
+    seniorId: number;
+    hospitalName: string;
+    doctorName: string;
+    issuedDate: string;
+    note: string;
+    medicines: Array<{
+      id: number;
+      prescriptionId: number;
+      name: string;
+      dosage: number;
+      totalCount: number;
+      durationDays: number;
+      memo: string | null;
+      aiDescription: string | null;
+      schedules: Array<{
+        id: number;
+        notifyTime: string;
+        timeTag: 'MORNING' | 'LUNCH' | 'EVENING';
+      }>;
+    }>;
+  };
+  errorCode: string | null;
+  message: string | null;
+}
+
+export interface PrescriptionDeleteResponse {
+  success: boolean;
+  data: {};
+  errorCode: string | null;
+  message: string | null;
+}
+
