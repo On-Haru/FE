@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import AlarmList from '@/pages/MedicineDetail/components/AlarmList';
+import MedicineDetailModal from '@/pages/MedicineDetail/components/MedicineDetailModal';
 import type { MedicineItem } from '@/pages/MedicineDetail/types/prescription';
 
 export type { MedicineItem };
@@ -33,6 +35,18 @@ const TableList = ({
   onDeleteMedicine,
   onAddMedicine,
 }: TableListProps) => {
+  const [selectedMedicine, setSelectedMedicine] = useState<MedicineItem | null>(null);
+
+  const handleMedicineClick = (item: MedicineItem) => {
+    if (!editMode) {
+      setSelectedMedicine(item);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setSelectedMedicine(null);
+  };
+
   return (
     <div className="w-full">
       {medicines.length === 0 && (
@@ -45,15 +59,30 @@ const TableList = ({
         const isChecked = selected.includes(item.id);
 
         return (
-          <div key={item.id} className="border-b border-gray-200 pb-2">
+          <div 
+            key={item.id} 
+            className={`border-b border-gray-200 pb-2 ${!editMode ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+            onClick={() => handleMedicineClick(item)}
+          >
             {/* ---- 약 정보 Row ---- */}
-            <div className="flex items-center px-2 py-2 text-base gap-3">
+            <div 
+              className="flex items-center px-2 py-2 text-base gap-3"
+              onClick={(e) => {
+                if (editMode) {
+                  e.stopPropagation();
+                }
+              }}
+            >
               {/* 체크박스 */}
               <input
                 type="checkbox"
                 className="accent-primary"
                 checked={isChecked}
-                onChange={() => onToggleItem(item.id)}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  onToggleItem(item.id);
+                }}
+                onClick={(e) => e.stopPropagation()}
                 disabled={editMode}
               />
 
@@ -141,14 +170,20 @@ const TableList = ({
 
             {/* ---- 스케줄 영역 ---- */}
             <div className="px-2 pl-9">
-              <AlarmList
-                medicineId={item.id}
-                alarms={item.schedules}
-                editMode={editMode}
-                onChangeAlarm={onChangeAlarm}
-                onDeleteAlarm={onDeleteAlarm}
-                onAddAlarm={onAddAlarm}
-              />
+              <div onClick={(e) => {
+                if (editMode) {
+                  e.stopPropagation();
+                }
+              }}>
+                <AlarmList
+                  medicineId={item.id}
+                  alarms={item.schedules}
+                  editMode={editMode}
+                  onChangeAlarm={onChangeAlarm}
+                  onDeleteAlarm={onDeleteAlarm}
+                  onAddAlarm={onAddAlarm}
+                />
+              </div>
             </div>
           </div>
         );
@@ -167,6 +202,12 @@ const TableList = ({
           </button>
         </div>
       )}
+
+      {/* 약 상세 정보 모달 */}
+      <MedicineDetailModal
+        medicine={selectedMedicine}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 };
