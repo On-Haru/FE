@@ -23,7 +23,14 @@ const DisconnectConfirmModal = ({
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      // 모달이 닫힐 때 body 스크롤 복원
+      document.body.style.overflow = '';
+      return;
+    }
+
+    // 모달이 열릴 때 body 스크롤 막기
+    document.body.style.overflow = 'hidden';
 
     const overlay = overlayRef.current;
     const modal = modalRef.current;
@@ -51,6 +58,8 @@ const DisconnectConfirmModal = ({
 
     return () => {
       gsap.killTweensOf([overlay, modal]);
+      // cleanup 시 body 스크롤 복원
+      document.body.style.overflow = '';
     };
   }, [isOpen]);
 
@@ -127,13 +136,14 @@ const DisconnectConfirmModal = ({
     </div>
   );
 
-  // mobile-content 요소 찾기
-  const mobileContent = document.querySelector('.mobile-content');
-  if (mobileContent) {
-    return createPortal(modalContent, mobileContent);
+  // mobile-container에 포털하여 Layout 전체를 덮도록 함
+  const mobileContainer = document.querySelector('.mobile-container');
+  if (mobileContainer) {
+    return createPortal(modalContent, mobileContainer);
   }
-
-  return modalContent;
+  
+  // fallback: body에 포털
+  return createPortal(modalContent, document.body);
 };
 
 export default DisconnectConfirmModal;

@@ -31,9 +31,16 @@ const ChecklistModal = ({ isOpen, onClose, date, item, elderName, userId }: Chec
     const parsedDate = parse(date, 'yyyy-MM-dd', new Date());
     const dateLabel = format(parsedDate, 'M월 d일');
 
-    // 모달 등장/퇴장 애니메이션
+    // 모달 등장/퇴장 애니메이션 및 body 스크롤 제어
     useEffect(() => {
-        if (!isOpen) return;
+        if (!isOpen) {
+            // 모달이 닫힐 때 body 스크롤 복원
+            document.body.style.overflow = '';
+            return;
+        }
+
+        // 모달이 열릴 때 body 스크롤 막기
+        document.body.style.overflow = 'hidden';
 
         const overlay = overlayRef.current;
         const modal = modalRef.current;
@@ -61,6 +68,8 @@ const ChecklistModal = ({ isOpen, onClose, date, item, elderName, userId }: Chec
 
         return () => {
             gsap.killTweensOf([overlay, modal]);
+            // cleanup 시 body 스크롤 복원
+            document.body.style.overflow = '';
         };
     }, [isOpen]);
 
@@ -250,13 +259,14 @@ const ChecklistModal = ({ isOpen, onClose, date, item, elderName, userId }: Chec
         </div>
     );
 
-    // mobile-content 요소 찾기
-    const mobileContent = document.querySelector('.mobile-content');
-    if (mobileContent) {
-        return createPortal(modalContent, mobileContent);
+    // mobile-container에 포털하여 Layout 전체를 덮도록 함
+    const mobileContainer = document.querySelector('.mobile-container');
+    if (mobileContainer) {
+        return createPortal(modalContent, mobileContainer);
     }
-
-    return modalContent;
+    
+    // fallback: body에 포털
+    return createPortal(modalContent, document.body);
 };
 
 export default ChecklistModal;

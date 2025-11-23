@@ -48,50 +48,101 @@ export const createTakingLog = async (
 export const updateTakenStatus = async (
     request: UpdateTakenRequest
 ): Promise<void> => {
-    console.log('[updateTakenStatus] 요청 시작:', request);
-    
+    const endpoint = '/api/taking-logs/has-taken';
+
+    console.log('[updateTakenStatus] 요청 시작:', {
+        scheduleId: request.scheduleId,
+        scheduledDateTime: request.scheduledDateTime,
+        taken: request.taken,
+    });
+
     try {
-        // null 응답을 허용하기 위해 직접 axios 호출
-        const response = await axiosInstance.post(
-            '/api/taking-logs/has-taken', 
-            request
-        );
-        
-        console.log('[updateTakenStatus] 전체 응답:', response);
-        console.log('[updateTakenStatus] response.data:', response.data);
-        
-        // 응답 구조 확인
+        // 먼저 기존 기록 업데이트 시도
+        const response = await axiosInstance.post(endpoint, request);
+
+        // 성공 응답 처리
         const responseData = response.data;
-        
-        // responseData가 객체인지 확인
         if (responseData && typeof responseData === 'object') {
-            // ApiResponse 구조인지 확인
-            if ('success' in responseData) {
-                // ApiResponse 구조
-                if (!responseData.success) {
-                    const errorMessage = responseData.message || '복용 여부 업데이트에 실패했습니다.';
-                    console.error('[updateTakenStatus] API 실패:', {
-                        errorCode: responseData.errorCode,
-                        message: errorMessage,
-                    });
-                    throw new Error(errorMessage);
-                }
-                // success가 true면 성공
-                console.log('[updateTakenStatus] 성공 (ApiResponse 구조)');
-            } else {
-                // 다른 응답 구조일 수 있음
-                console.log('[updateTakenStatus] 성공 (다른 응답 구조)');
+            if ('success' in responseData && !responseData.success) {
+                const errorMessage = responseData.message || '복용 여부 업데이트에 실패했습니다.';
+                throw new Error(errorMessage);
             }
-        } else {
-            // responseData가 없거나 다른 형식이어도 성공으로 간주 (void 반환)
-            console.log('[updateTakenStatus] 성공 (응답 없음)');
         }
-    } catch (error) {
-        console.error('[updateTakenStatus] 에러 발생:', error);
-        // axios 에러인 경우 response 확인
-        if ((error as any).response) {
-            console.error('[updateTakenStatus] 에러 응답:', (error as any).response.data);
+
+        console.log('[updateTakenStatus] ✅ 성공 (기존 기록 업데이트)');
+    } catch (error: any) {
+        console.log('[updateTakenStatus] 에러 발생:', {
+            status: error.response?.status,
+            errorCode: error.response?.data?.errorCode,
+            message: error.response?.data?.message || error.message,
+            data: error.response?.data,
+        });
+
+        // 404 에러인 경우: 복약 기록이 없으므로 새로 생성
+        if (error.response?.status === 404) {
+            const errorData = error.response.data;
+            const errorCode = errorData?.errorCode;
+            const errorMessage = errorData?.message || '';
+
+            // "복약 기록을 찾을 수 없습니다" 에러인 경우 새로 생성
+            const isRecordNotFound =
+                errorCode === 'TL001' ||
+                errorMessage.includes('복약 기록을 찾을 수 없습니다') ||
+                errorMessage.includes('복약 기록이 없습니다') ||
+                errorMessage.includes('기록을 찾을 수 없습니다');
+
+            if (isRecordNotFound) {
+                console.log('[updateTakenStatus] 복약 기록이 없어 새로 생성합니다:', request);
+
+                try {
+                    // 복약 기록 생성
+                    const newRecord = await createTakingLog({
+                        scheduleId: request.scheduleId,
+                        scheduledDateTime: request.scheduledDateTime,
+                        taken: request.taken,
+                        takenDateTime: request.taken ? new Date().toISOString() : null,
+                        delayMinutes: null,
+                    });
+                    console.log('[updateTakenStatus] ✅ 성공 (새 기록 생성):', newRecord);
+                    return;
+                } catch (createError: any) {
+                    console.error('[updateTakenStatus] ❌ 복약 기록 생성 실패:', {
+                        status: createError.response?.status,
+                        errorCode: createError.response?.data?.errorCode,
+                        message: createError.response?.data?.message || createError.message,
+                        data: createError.response?.data,
+                    });
+                    throw createError;
+                }
+            } else {
+                // 404이지만 다른 이유인 경우
+                console.warn('[updateTakenStatus] 404 에러이지만 기록 없음 에러가 아닙니다:', {
+                    errorCode,
+                    message: errorMessage,
+                });
+            }
         }
+
+        // 다른 에러인 경우 백엔드 에러 메시지 추출
+        if (error.response?.data) {
+            const errorData = error.response.data;
+            if (errorData && typeof errorData === 'object' && 'message' in errorData) {
+                const backendMessage = errorData.message || '복용 여부 업데이트에 실패했습니다.';
+                console.error('[updateTakenStatus] 백엔드 에러:', {
+                    errorCode: errorData.errorCode,
+                    message: backendMessage,
+                    status: error.response.status,
+                });
+                throw new Error(backendMessage);
+            }
+        }
+
+        // 백엔드 에러 메시지가 없으면 기본 에러 메시지
+        console.error('[updateTakenStatus] 알 수 없는 에러:', {
+            message: error.message,
+            status: error.response?.status,
+            data: error.response?.data,
+        });
         throw error;
     }
 };
