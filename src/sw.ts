@@ -29,7 +29,7 @@ self.addEventListener('push', (event: PushEvent) => {
     timeStamp: event.timeStamp,
     hasData: !!event.data,
   });
-  
+
 
   let data: {
     title: string;
@@ -45,7 +45,7 @@ self.addEventListener('push', (event: PushEvent) => {
     if (event.data) {
       const rawData = event.data.text();
       console.log('[Service Worker] Push 원본 데이터 (text):', rawData);
-      
+
       try {
         data = event.data.json();
         console.log('[Service Worker] Push 파싱된 데이터 (JSON):', data);
@@ -78,10 +78,10 @@ self.addEventListener('push', (event: PushEvent) => {
             body,
           },
         };
-        
+
         console.log('[Service Worker] 알림 옵션:', notificationOptions);
         console.log('[Service Worker] 알림 표시 시도 중...');
-        
+
         await self.registration.showNotification(title, notificationOptions);
         console.log('[Service Worker] ✅ 알림 표시 성공!');
       } catch (error) {
@@ -96,7 +96,7 @@ self.addEventListener('push', (event: PushEvent) => {
       // BroadcastChannel을 사용하여 메시지 전송 (더 확실함)
       try {
         const channel = new BroadcastChannel('push-notification');
-n
+
         const message = {
           type: 'PUSH_RECEIVED',
           payload: {
@@ -127,7 +127,7 @@ n
         const elderClients = windowClients.filter((client) =>
           client.url.includes('/elder')
         );
-        
+
         console.log('[Service Worker] 전체 클라이언트 수:', windowClients.length);
         console.log('[Service Worker] 어르신 페이지 클라이언트 수:', elderClients.length);
         windowClients.forEach((client) => {
@@ -136,7 +136,7 @@ n
 
         // 어르신 페이지 클라이언트에만 메시지 전송
         const targetClients = elderClients.length > 0 ? elderClients : windowClients;
-        
+
         for (const client of targetClients) {
           console.log('[Service Worker] 클라이언트에 메시지 전송:', client.url);
           try {

@@ -129,10 +129,13 @@ const ElderHomePage = () => {
     // Service Worker 지원 여부 확인
     if (!('serviceWorker' in navigator)) {
       console.warn('[ElderHomePage] ⚠️ Service Worker를 지원하지 않습니다.');
+      const userAgent = typeof window !== 'undefined' && window.navigator?.userAgent 
+        ? window.navigator.userAgent.substring(0, 50) + '...' 
+        : 'unknown';
       console.warn('[ElderHomePage] 환경 정보:', {
         protocol: window.location.protocol,
         hostname: window.location.hostname,
-        userAgent: navigator.userAgent.substring(0, 50) + '...',
+        userAgent,
       });
       return;
     }
@@ -337,16 +340,16 @@ const ElderHomePage = () => {
     // Service Worker 메시지 리스너 등록
     const setupServiceWorkerListener = async () => {
       try {
-        const registration = await navigator.serviceWorker.ready;
+        await navigator.serviceWorker.ready;
         console.log('[ElderHomePage] Service Worker ready, 메시지 리스너 등록');
         
         // Service Worker 메시지 리스너 등록
-        navigator.serviceWorker.addEventListener('message', handleMessage);
+        navigator.serviceWorker.addEventListener('message', handleMessage as EventListener);
         console.log('[ElderHomePage] navigator.serviceWorker 리스너 등록 완료');
         
         // controller가 있으면 controller에도 리스너 등록
         if (navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.addEventListener('message', handleMessage);
+          navigator.serviceWorker.controller.addEventListener('message', handleMessage as EventListener);
           console.log('[ElderHomePage] controller 리스너 등록 완료');
         } else {
           console.warn('[ElderHomePage] Service Worker controller가 없습니다.');
@@ -365,9 +368,9 @@ const ElderHomePage = () => {
         channel.close();
       }
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.removeEventListener('message', handleMessage);
+        navigator.serviceWorker.removeEventListener('message', handleMessage as EventListener);
         if (navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.removeEventListener('message', handleMessage);
+          navigator.serviceWorker.controller.removeEventListener('message', handleMessage as EventListener);
         }
       }
     };
