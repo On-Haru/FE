@@ -48,7 +48,6 @@ const MedicineDetailPage = () => {
           
           // OCR 결과가 비어있는 경우 사용자에게 알림
           if (medicines.length === 0) {
-            console.warn('⚠️ OCR 결과가 비어있습니다. 처방전을 인식하지 못했을 수 있습니다.');
             return;
           }
           
@@ -68,7 +67,6 @@ const MedicineDetailPage = () => {
         // 선택된 seniorId 확인
         const storedSeniorId = localStorage.getItem('selectedSeniorId');
         if (!storedSeniorId) {
-          console.warn('선택된 피보호자가 없습니다.');
           setMedicines([]);
           return;
         }
@@ -90,7 +88,6 @@ const MedicineDetailPage = () => {
             }
           } catch (error) {
             // 저장된 ID로 조회 실패 시 최신 처방전 조회로 fallback
-            console.warn('저장된 처방전 ID로 조회 실패, 최신 처방전 조회:', error);
           }
         }
         
@@ -114,11 +111,6 @@ const MedicineDetailPage = () => {
         // 조회한 처방전 ID를 localStorage에 저장 (다음 로드 시 사용)
         localStorage.setItem('currentPrescriptionId', String(latestPrescription.id));
       } catch (error: unknown) {
-        const err = error as { response?: { status?: number; data?: unknown } };
-        console.error('처방전 조회 실패', {
-          status: err.response?.status,
-          data: err.response?.data,
-        });
         setMedicines([]);
       }
     };
@@ -249,13 +241,6 @@ const MedicineDetailPage = () => {
         };
         message?: string;
       };
-      
-      console.error('저장 실패', {
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        response: error.response?.data,
-      });
       
       // 에러 메시지 추출
       const errorData = error.response?.data as { message?: string; errorCode?: string } | undefined;

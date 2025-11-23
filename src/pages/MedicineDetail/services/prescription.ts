@@ -147,7 +147,6 @@ export async function updatePrescription(
   data: PrescriptionCreateRequest
 ): Promise<PrescriptionCreateResponse> {
   // 항상 POST로 새로 생성
-  console.log('POST body:', JSON.stringify(data, null, 2));
   const res = await axiosInstance.post<{ data: PrescriptionCreateResponse }>(
     `/api/prescriptions`,
     data

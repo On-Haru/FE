@@ -43,7 +43,6 @@ const MedicineRegisterPage = () => {
               linkId: link.id,
             };
           } catch (error) {
-            console.error(`피보호자 ${link.seniorId} 정보 조회 실패:`, error);
             // 에러 발생 시 기본값 사용
             return {
               id: link.seniorId.toString(),
@@ -71,7 +70,6 @@ const MedicineRegisterPage = () => {
         setSelectedSeniorId(Number(targetElder.id));
         localStorage.setItem('selectedSeniorId', targetElder.id);
       } catch (error) {
-        console.error('피보호자 목록 조회 실패:', error);
         // 에러 발생 시 빈 배열로 설정하고 currentElder도 null로 설정
         setElders([]);
         setCurrentElder(null);
