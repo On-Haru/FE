@@ -111,9 +111,18 @@ const ElderHomePage = () => {
       return;
     }
 
+    // 알림 권한이 차단된 경우 구독하지 않음
+    if ('Notification' in window && Notification.permission === 'denied') {
+      console.warn(
+        '[ElderHomePage] 알림 권한이 차단되어 Push 구독을 시도하지 않습니다.'
+      );
+      return;
+    }
+
     // 자동으로 Push 구독 시도 (에러는 조용히 처리)
-    subscribe().catch(() => {
+    subscribe().catch((error) => {
       // 구독 실패는 조용히 처리 (사용자에게 강제로 권한을 요청하지 않음)
+      console.warn('[ElderHomePage] Push 구독 실패:', error);
     });
   }, [isLoadingUser, hasGuardian, isSubscribed, isSupported, subscribe]);
 
@@ -138,7 +147,13 @@ const ElderHomePage = () => {
           receivedAt?: number;
         };
 
+        console.log('[ElderHomePage] Push 알림 수신:', payload);
+
         if (!payload?.title || !payload?.body) {
+          console.warn(
+            '[ElderHomePage] Push 알림에 title 또는 body가 없습니다:',
+            payload
+          );
           return;
         }
 
@@ -150,6 +165,7 @@ const ElderHomePage = () => {
 
           if (medication && !medication.isTaken) {
             // 약 정보가 있고 아직 복용하지 않았으면 모달 표시
+            console.log('[ElderHomePage] 약 정보 찾음, 모달 표시:', medication);
             setReminderMedication({
               id: medication.id,
               time: medication.time,
@@ -157,7 +173,39 @@ const ElderHomePage = () => {
               dosage: medication.dosage,
             });
             setShowReminderModal(true);
+          } else if (medication && medication.isTaken) {
+            console.log('[ElderHomePage] 약을 이미 복용했습니다:', medication);
+          } else {
+            console.warn(
+              '[ElderHomePage] scheduleId로 약을 찾을 수 없습니다:',
+              payload.scheduleId
+            );
+            // 약을 찾지 못해도 알람 내용을 표시하기 위해 기본값으로 모달 표시
+            const medicineName =
+              payload.body.replace(' 복용 시간입니다.', '').trim() || '약';
+            setReminderMedication({
+              id: -1, // 임시 ID
+              time: 'morning', // 기본값
+              medicationName: medicineName,
+              dosage: '1정',
+            });
+            setShowReminderModal(true);
           }
+        } else {
+          // scheduleId가 없어도 알람 내용을 표시
+          console.log(
+            '[ElderHomePage] scheduleId가 없지만 알람 표시:',
+            payload
+          );
+          const medicineName =
+            payload.body.replace(' 복용 시간입니다.', '').trim() || '약';
+          setReminderMedication({
+            id: -1, // 임시 ID
+            time: 'morning', // 기본값
+            medicationName: medicineName,
+            dosage: '1정',
+          });
+          setShowReminderModal(true);
         }
       }
 
@@ -169,6 +217,8 @@ const ElderHomePage = () => {
           title?: string;
           body?: string;
         };
+
+        console.log('[ElderHomePage] 알림 클릭:', payload);
 
         if (payload?.scheduleId) {
           const medication = todayMedications.find(
@@ -183,7 +233,35 @@ const ElderHomePage = () => {
               dosage: medication.dosage,
             });
             setShowReminderModal(true);
+          } else if (medication && medication.isTaken) {
+            console.log('[ElderHomePage] 약을 이미 복용했습니다:', medication);
+          } else {
+            console.warn(
+              '[ElderHomePage] scheduleId로 약을 찾을 수 없습니다:',
+              payload.scheduleId
+            );
+            // 약을 찾지 못해도 알람 내용을 표시
+            const medicineName =
+              payload.body?.replace(' 복용 시간입니다.', '').trim() || '약';
+            setReminderMedication({
+              id: -1,
+              time: 'morning',
+              medicationName: medicineName,
+              dosage: '1정',
+            });
+            setShowReminderModal(true);
           }
+        } else {
+          // scheduleId가 없어도 알람 내용을 표시
+          const medicineName =
+            payload.body?.replace(' 복용 시간입니다.', '').trim() || '약';
+          setReminderMedication({
+            id: -1,
+            time: 'morning',
+            medicationName: medicineName,
+            dosage: '1정',
+          });
+          setShowReminderModal(true);
         }
       }
     };

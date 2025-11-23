@@ -36,6 +36,30 @@ export const usePushSubscription = () => {
     checkSupport();
   }, []);
 
+  // 알림 권한 상태 확인
+  useEffect(() => {
+    if (!state.isSupported) {
+      return;
+    }
+
+    const checkPermission = () => {
+      if ('Notification' in window) {
+        const permission = Notification.permission;
+        console.log('[usePushSubscription] 알림 권한 상태:', permission);
+
+        if (permission === 'denied') {
+          setState((prev) => ({
+            ...prev,
+            error:
+              '알림 권한이 차단되었습니다. 브라우저 설정에서 알림 권한을 허용해주세요.',
+          }));
+        }
+      }
+    };
+
+    checkPermission();
+  }, [state.isSupported]);
+
   // 현재 구독 상태 확인
   useEffect(() => {
     const checkSubscription = async () => {
@@ -75,8 +99,25 @@ export const usePushSubscription = () => {
     setState((prev) => ({ ...prev, isSubscribing: true, error: null }));
 
     try {
-      // 1. 알림 권한 요청
-      const permission = await Notification.requestPermission();
+      // 1. 알림 권한 확인 및 요청
+      let permission = Notification.permission;
+
+      // 권한이 차단된 경우
+      if (permission === 'denied') {
+        setState((prev) => ({
+          ...prev,
+          isSubscribing: false,
+          error:
+            '알림 권한이 차단되었습니다. 브라우저 주소창 옆의 자물쇠 아이콘을 클릭하여 알림 권한을 허용해주세요.',
+        }));
+        return false;
+      }
+
+      // 권한이 없으면 요청
+      if (permission === 'default') {
+        permission = await Notification.requestPermission();
+      }
+
       if (permission !== 'granted') {
         setState((prev) => ({
           ...prev,
@@ -105,9 +146,10 @@ export const usePushSubscription = () => {
 
       // 5. 구독이 없으면 새로 생성
       if (!subscription) {
+        const keyArray = urlBase64ToUint8Array(vapidPublicKey);
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+          applicationServerKey: keyArray as BufferSource,
         });
       }
 
