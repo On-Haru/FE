@@ -359,7 +359,11 @@ const ElderHomePage = () => {
       evening: '저녁약',
     };
 
-    const missedTimes = pendingMedications.map((med) => timeLabels[med.time]);
+    // 중복 제거: 각 시간대를 한 번만 표시
+    const uniqueTimes = Array.from(
+      new Set(pendingMedications.map((med) => med.time))
+    );
+    const missedTimes = uniqueTimes.map((time) => timeLabels[time]);
     return `${missedTimes.join(', ')} 미복용`;
   };
 
