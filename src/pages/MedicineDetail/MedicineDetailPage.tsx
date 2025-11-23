@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import TableHeader from '@/pages/MedicineDetail/components/TableHeader';
 import TableList, { type MedicineItem } from '@/pages/MedicineDetail/components/TableList';
 import FixandDeleteBtn from '@/pages/MedicineDetail/components/FixandDeleteBtn';
@@ -19,8 +18,7 @@ import { getPreviousPrescriptions } from '@/pages/PreviousMedicine/services/prev
 import type { OCRResponse } from '@/pages/MedicineRegister/services/ocr';
 
 const MedicineDetailPage = () => {
-  const navigate = useNavigate();
-  const { showSuccess, showError, showInfo } = useToast();
+  const { showSuccess, showError } = useToast();
   const [medicines, setMedicines] = useState<MedicineItem[]>([]);
   const [selected, setSelected] = useState<number[]>([]);
   const [editMode, setEditMode] = useState(false);

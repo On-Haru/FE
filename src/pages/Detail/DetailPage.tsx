@@ -8,7 +8,6 @@ import EmptyDateActions from './components/EmptyDateActions';
 import { getCalendar } from './services/takingLog';
 import { getCaregiverLinks } from '@/pages/Home/services/caregiverLink';
 import { getUser } from '@/pages/Auth/services/user';
-import { getPreviousPrescriptions } from '@/pages/PreviousMedicine/services/previous';
 import type { CalendarDay, CalendarSlot } from './types/takingLog';
 import type { DateChecklist, ChecklistItem } from '@/types/checklist';
 
@@ -29,7 +28,6 @@ const DetailPage = () => {
     const [checklistData, setChecklistData] = useState<Record<string, DateChecklist>>({});
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [isLoading, setIsLoading] = useState(false);
-    const [hasPrescription, setHasPrescription] = useState(false);
 
     // API에서 캘린더 데이터 가져오기
     const fetchCalendarData = useCallback(async (year: number, month: number) => {
@@ -187,24 +185,6 @@ const DetailPage = () => {
         fetchElders();
     }, [id, navigate]);
 
-    // 어르신이 변경되면 처방전 존재 여부 확인
-    useEffect(() => {
-        const checkPrescription = async () => {
-            if (!currentElder) {
-                setHasPrescription(false);
-                return;
-            }
-
-            try {
-                const prescriptions = await getPreviousPrescriptions(Number(currentElder.id));
-                setHasPrescription(prescriptions.length > 0);
-            } catch (error) {
-                setHasPrescription(false);
-            }
-        };
-
-        checkPrescription();
-    }, [currentElder]);
 
     // 어르신이 변경되거나 월이 변경되면 캘린더 데이터 로드
     useEffect(() => {
@@ -339,10 +319,8 @@ const DetailPage = () => {
                             return (
                                 <EmptyDateActions
                                     date={selectedDate}
-                                    elderName={currentElder.name}
                                     isDateClicked={isDateClicked}
                                     userId={Number(currentElder.id)}
-                                    hasPrescription={hasPrescription}
                                 />
                             );
                         }
@@ -350,10 +328,8 @@ const DetailPage = () => {
                         return (
                             <EmptyDateActions
                                 date={selectedDate}
-                                elderName={currentElder.name}
                                 isDateClicked={isDateClicked}
                                 userId={Number(currentElder.id)}
-                                hasPrescription={hasPrescription}
                             />
                         );
                     }

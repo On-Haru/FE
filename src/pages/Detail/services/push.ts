@@ -1,7 +1,6 @@
 import { apiClient } from '@/lib/api/apiClient';
 import axiosInstance from '@/lib/axios';
 import type { NotifyRequest, SubscribeRequest } from '../types/push';
-import type { ApiResponse } from '@/lib/api/apiClient';
 
 /**
  * 즉시 알림 발송 (테스트/수동)

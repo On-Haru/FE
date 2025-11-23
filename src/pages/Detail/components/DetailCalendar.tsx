@@ -136,7 +136,6 @@ const DetailCalendar = ({
                     const dateKey = format(date, 'yyyy-MM-dd');
                     const isSelected = selectedDate ? isSameDay(date, selectedDate) : false;
                     const dayData = checklistData[dateKey];
-                    const hasChecklist = !!dayData && dayData.items.length > 0;
                     const status = dayData?.status;
 
                     return (
@@ -145,7 +144,6 @@ const DetailCalendar = ({
                             date={date}
                             checklistData={checklistData}
                             isSelected={isSelected}
-                            hasChecklist={hasChecklist}
                             status={status}
                             onClick={() => handleDateClick(date)}
                         />

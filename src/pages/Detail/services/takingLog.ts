@@ -6,7 +6,6 @@ import type {
     CreateTakingLogRequest,
     UpdateTakenRequest,
 } from '../types/takingLog';
-import type { ApiResponse } from '@/lib/api/apiClient';
 
 // 월간 복약 현황 캘린더 조회
 export const getCalendar = async (

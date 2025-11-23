@@ -9,7 +9,6 @@ interface CalendarDateCellProps {
     checklistData: Record<string, DateChecklist>;
     isSelected?: boolean;
     isDisabled?: boolean;
-    hasChecklist?: boolean;
     status?: 'NONE' | 'PLANNED' | 'PARTIAL' | 'COMPLETE' | 'MISSED';
     onClick?: () => void;
 }
@@ -19,7 +18,6 @@ const CalendarDateCell = memo(({
     checklistData,
     isSelected = false,
     isDisabled = false,
-    hasChecklist = false,
     status,
     onClick,
 }: CalendarDateCellProps) => {

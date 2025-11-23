@@ -40,7 +40,7 @@ const Checklist = ({ date, items, elderName, userId }: ChecklistProps) => {
         });
     }, [items]);
 
-    const handleItemClick = (item: ChecklistItem, index: number) => {
+    const handleItemClick = (item: ChecklistItem) => {
         // 보호자 페이지에서는 체크 불가, 모달만 열기
         // 체크는 어르신만 할 수 있음
         setSelectedItem(item);
@@ -64,7 +64,7 @@ const Checklist = ({ date, items, elderName, userId }: ChecklistProps) => {
                             ref={(el) => {
                                 itemsRef.current[index] = el;
                             }}
-                            onClick={() => handleItemClick(item, index)}
+                            onClick={() => handleItemClick(item)}
                             className="flex items-center gap-3 cursor-pointer"
                         >
                             <div

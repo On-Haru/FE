@@ -5,18 +5,14 @@ import { ROUTES } from '@/constants/routes';
 
 interface EmptyDateActionsProps {
     date: Date;
-    elderName: string;
     isDateClicked: boolean;
     userId: number;
-    hasPrescription?: boolean;
 }
 
 const EmptyDateActions = ({ 
     date, 
-    elderName, 
     isDateClicked, 
     userId,
-    hasPrescription = false 
 }: EmptyDateActionsProps) => {
     const navigate = useNavigate();
     const dayLabel = `${format(date, 'd')}일`;

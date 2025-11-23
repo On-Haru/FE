@@ -105,9 +105,10 @@ export const usePushSubscription = () => {
 
       // 5. 구독이 없으면 새로 생성
       if (!subscription) {
+        const keyArray = urlBase64ToUint8Array(vapidPublicKey);
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+          applicationServerKey: keyArray as BufferSource,
         });
       }
 
