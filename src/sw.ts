@@ -24,7 +24,7 @@ registerRoute(
 
 self.addEventListener('push', (event: PushEvent) => {
   console.log('[Service Worker] Push 이벤트 수신!', event);
-  
+
   let data: {
     title: string;
     body: string;
@@ -50,7 +50,6 @@ self.addEventListener('push', (event: PushEvent) => {
   }
 
   const { title, body, scheduleId, scheduledDateTime } = data;
-  console.log('[Service Worker] 알림 표시 예정:', { title, body, scheduleId, scheduledDateTime });
 
   event.waitUntil(
     (async () => {
@@ -77,8 +76,10 @@ self.addEventListener('push', (event: PushEvent) => {
         includeUncontrolled: true,
       });
 
+      console.log('[Service Worker] 클라이언트 수:', windowClients.length);
+
       for (const client of windowClients) {
-        client.postMessage({
+        const message = {
           type: 'PUSH_RECEIVED',
           payload: {
             title,
@@ -87,7 +88,16 @@ self.addEventListener('push', (event: PushEvent) => {
             scheduledDateTime,
             receivedAt: Date.now(),
           },
-        });
+        };
+        console.log('[Service Worker] 클라이언트에 메시지 전송:', message);
+        client.postMessage(message);
+      }
+
+      // 클라이언트가 없어도 알림은 표시됨 (이미 위에서 표시함)
+      if (windowClients.length === 0) {
+        console.log(
+          '[Service Worker] 열려있는 클라이언트가 없습니다. 알림만 표시됨.'
+        );
       }
     })()
   );
