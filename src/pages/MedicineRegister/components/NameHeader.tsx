@@ -1,4 +1,5 @@
 import Dropdown, { type DropdownOption } from '@/components/Dropdown';
+import { useToast } from '@/contexts/ToastContext';
 
 interface Elder {
   id: string;
@@ -16,6 +17,8 @@ const NameHeader = ({
   elders,
   onElderChange,
 }: NameHeaderProps) => {
+  const { showToast } = useToast();
+
   // Elder 데이터를 DropdownOption 형식으로 변환
   const dropdownOptions: DropdownOption[] = elders.map((elder) => ({
     label: `${elder.name}님`,
@@ -27,6 +30,14 @@ const NameHeader = ({
     value: currentElder.id,
   };
 
+  const handleElderChange = (elderId: string) => {
+    const selectedElder = elders.find((elder) => elder.id === elderId);
+    if (selectedElder && selectedElder.id !== currentElder.id) {
+      onElderChange(elderId);
+      showToast(`${selectedElder.name}님으로 변경되었습니다`);
+    }
+  };
+
   return (
     <div className="flex items-center justify-between w-full gap-3 ">
       {/* 왼쪽: 어르신 이름 + 드롭다운 */}
@@ -34,7 +45,7 @@ const NameHeader = ({
         <Dropdown
           selected={selectedOption}
           options={dropdownOptions}
-          onSelect={onElderChange}
+          onSelect={handleElderChange}
           width={120}
           fontSize="clamp(16px, 5vw, 20px)"
         />

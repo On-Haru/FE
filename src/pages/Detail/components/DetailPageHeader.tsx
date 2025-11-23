@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useRef } from 'react';
 import { gsap } from 'gsap';
 import Dropdown, { type DropdownOption } from '@/components/Dropdown';
+import { useToast } from '@/contexts/ToastContext';
 
 interface Elder {
   id: string;
@@ -23,6 +24,7 @@ const DetailPageHeader = ({
 }: DetailPageHeaderProps) => {
   const navigate = useNavigate();
   const reportButtonRef = useRef<HTMLButtonElement>(null);
+  const { showToast } = useToast();
 
   // Elder 데이터를 DropdownOption 형식으로 변환
   const dropdownOptions: DropdownOption[] = elders.map((elder) => ({
@@ -36,8 +38,12 @@ const DetailPageHeader = ({
   };
 
   const handleElderSelect = (elderId: string) => {
-    onElderChange(elderId);
-    navigate(`/detail/${elderId}`);
+    const selectedElder = elders.find((elder) => elder.id === elderId);
+    if (selectedElder && selectedElder.id !== currentElder.id) {
+      onElderChange(elderId);
+      navigate(`/detail/${elderId}`);
+      showToast(`${selectedElder.name}님으로 변경되었습니다`);
+    }
   };
 
   const handleAiReportClick = () => {
