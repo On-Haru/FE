@@ -105,11 +105,10 @@ const Dropdown = ({
             <button
               key={opt.value}
               onClick={() => handleSelect(opt)}
-              className={`w-full text-center px-4 py-2 text-base transition-colors ${
-                opt.value === selected.value
+              className={`w-full text-center px-4 py-2 text-base transition-colors ${opt.value === selected.value
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'text-gray-900 hover:bg-gray-50 active:bg-gray-100'
-              }`}
+                }`}
             >
               {opt.label}
             </button>

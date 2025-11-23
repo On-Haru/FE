@@ -49,7 +49,7 @@ const NameHeader = ({ onSeniorIdChange }: NameHeaderProps) => {
 
         // Dropdown 옵션 생성 (seniorId를 value로 사용)
         const options: DropdownOption[] = eldersWithNames.map((elder) => ({
-          label: `${elder.name} 님`,
+          label: `${elder.name}님`,
           value: String(elder.seniorId),
         }));
 
@@ -97,6 +97,7 @@ const NameHeader = ({ onSeniorIdChange }: NameHeaderProps) => {
 
   return (
     <div className="flex items-center justify-between w-full gap-3">
+      {/* 왼쪽: 어르신 이름 + 드롭다운 */}
       {selectedOption && (
         <div className="flex-shrink-0">
           <Dropdown
@@ -113,10 +114,12 @@ const NameHeader = ({ onSeniorIdChange }: NameHeaderProps) => {
               }
             }}
             fontSize="clamp(16px, 5vw, 20px)"
-            width={140}
+            width={120}
           />
         </div>
       )}
+      {/* 오른쪽: 빈 공간 (DetailPageHeader의 AI 리포트 버튼과 동일한 높이 유지) */}
+      <div className="flex-shrink-0" style={{ width: '100px', height: '35px' }} />
     </div>
   );
 };

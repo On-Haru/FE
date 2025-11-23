@@ -26,7 +26,7 @@ const ElderHomePage = () => {
   } = useUser();
 
   // 보호자 연결 여부 확인
-  const { hasGuardian, setHasGuardian } = useGuardianConnection(isLoadingUser);
+  const { hasGuardian } = useGuardianConnection(isLoadingUser);
 
   // Push 구독
   const { isSupported, isSubscribed, subscribe } = usePushSubscription();
