@@ -98,7 +98,7 @@ const Toast = ({ message, type = 'success', duration = 3000, onClose, onRetry }:
   return (
     <div
       ref={toastRef}
-      className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-white rounded-xl shadow-lg border ${getBorderColor()} px-4 py-3 flex items-center gap-3 min-w-[200px] max-w-[90%]`}
+      className={`absolute top-20 left-1/2 -translate-x-1/2 z-50 bg-white rounded-xl shadow-lg border ${getBorderColor()} px-4 py-3 flex items-center gap-3 min-w-[200px] max-w-[90%]`}
     >
       {getIcon()}
       <span className="text-sm font-medium text-gray-900 flex-1">{message}</span>

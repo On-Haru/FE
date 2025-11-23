@@ -13,6 +13,8 @@ interface ToastContextType {
   showSuccess: (message: string, duration?: number) => void;
   showError: (message: string, onRetry?: () => void) => void;
   showInfo: (message: string, duration?: number) => void;
+  toast: ToastConfig | null;
+  closeToast: () => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -53,18 +55,33 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
   }, []);
 
   return (
-    <ToastContext.Provider value={{ showToast, showSuccess, showError, showInfo }}>
+    <ToastContext.Provider value={{ showToast, showSuccess, showError, showInfo, toast, closeToast: handleClose }}>
       {children}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          duration={toast.duration}
-          onRetry={toast.onRetry}
-          onClose={handleClose}
-        />
-      )}
     </ToastContext.Provider>
+  );
+};
+
+// Toast 렌더링을 위한 컴포넌트 (Layout에서 사용)
+export const ToastRenderer = () => {
+  const context = useContext(ToastContext);
+  if (!context) {
+    return null;
+  }
+
+  const { toast, closeToast } = context;
+
+  if (!toast) {
+    return null;
+  }
+
+  return (
+    <Toast
+      message={toast.message}
+      type={toast.type}
+      duration={toast.duration}
+      onRetry={toast.onRetry}
+      onClose={closeToast}
+    />
   );
 };
 
