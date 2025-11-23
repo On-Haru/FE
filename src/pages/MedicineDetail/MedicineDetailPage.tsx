@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import TableHeader from '@/pages/MedicineDetail/components/TableHeader';
 import TableList, { type MedicineItem } from '@/pages/MedicineDetail/components/TableList';
 import FixandDeleteBtn from '@/pages/MedicineDetail/components/FixandDeleteBtn';
+import MedicineDeleteConfirmModal from '@/pages/MedicineDetail/components/MedicineDeleteConfirmModal';
 
 import {
   getPrescriptionDetail,
@@ -17,9 +18,17 @@ import type { OCRResponse } from '@/pages/MedicineRegister/services/ocr';
 
 const MedicineDetailPage = () => {
   const [medicines, setMedicines] = useState<MedicineItem[]>([]);
-  const [selected, setSelected] = useState<number[]>([]);
   const [editMode, setEditMode] = useState(false);
   const [prescriptionInfo, setPrescriptionInfo] = useState<PrescriptionInfo | null>(null);
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    medicineId: number | null;
+    medicineName: string;
+  }>({
+    isOpen: false,
+    medicineId: null,
+    medicineName: '',
+  });
   
   // OCR 데이터 처리 여부 추적 (중복 실행 방지)
   const hasProcessedOCR = useRef(false);
@@ -116,10 +125,30 @@ const MedicineDetailPage = () => {
     fetchData();
   }, []);
 
-  /** 체크된 약 삭제 */
-  const handleDeleteSelected = () => {
-    setMedicines((prev) => prev.filter((m) => !selected.includes(m.id)));
-    setSelected([]);
+  /** 약 삭제 모달 열기 */
+  const handleOpenDeleteModal = (medicineId: number, medicineName: string) => {
+    setDeleteModal({
+      isOpen: true,
+      medicineId,
+      medicineName,
+    });
+  };
+
+  /** 약 삭제 모달 닫기 */
+  const handleCloseDeleteModal = () => {
+    setDeleteModal({
+      isOpen: false,
+      medicineId: null,
+      medicineName: '',
+    });
+  };
+
+  /** 약 삭제 확인 */
+  const handleDeleteMedicineConfirm = () => {
+    if (!deleteModal.medicineId) return;
+    
+    setMedicines((prev) => prev.filter((m) => m.id !== deleteModal.medicineId));
+    handleCloseDeleteModal();
   };
 
   /** 수정 모드 toggle */
@@ -336,10 +365,12 @@ const MedicineDetailPage = () => {
     });
   };
 
-  /** 약 삭제 */
+  /** 약 삭제 버튼 클릭 (모달 열기) */
   const handleDeleteMedicine = (medicineId: number) => {
-    setMedicines((prev) => prev.filter((m) => m.id !== medicineId));
-    setSelected((prev) => prev.filter((id) => id !== medicineId));
+    const medicine = medicines.find((m) => m.id === medicineId);
+    if (medicine) {
+      handleOpenDeleteModal(medicineId, medicine.name);
+    }
   };
 
   /** 약 추가 */
@@ -377,10 +408,17 @@ const MedicineDetailPage = () => {
       </div>
 
       <FixandDeleteBtn
-        onDelete={handleDeleteSelected}
         editMode={editMode}
         onToggleEdit={handleToggleEdit}
         onSave={handleSaveEdit}
+      />
+
+      {/* 약 삭제 확인 모달 */}
+      <MedicineDeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        medicineName={deleteModal.medicineName}
+        onConfirm={handleDeleteMedicineConfirm}
+        onCancel={handleCloseDeleteModal}
       />
     </div>
   );
