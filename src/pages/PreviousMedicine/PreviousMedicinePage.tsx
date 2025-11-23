@@ -35,11 +35,6 @@ const PreviousMedicinePage = () => {
         
         setPrescriptions(sortedData);
       } catch (error: unknown) {
-        const err = error as { response?: { status?: number; data?: unknown } };
-        console.error('이전 처방전 조회 실패', {
-          status: err.response?.status,
-          data: err.response?.data,
-        });
         setPrescriptions([]);
       } finally {
         setLoading(false);
