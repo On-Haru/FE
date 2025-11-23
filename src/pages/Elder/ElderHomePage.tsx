@@ -124,14 +124,28 @@ const ElderHomePage = () => {
     }
 
     const handleMessage = (event: MessageEvent) => {
-      // Service Worker로부터 메시지 수신
-      if (event.data && event.data.type === 'PUSH_NOTIFICATION') {
-        const notificationData = event.data.data;
+      if (!event.data || typeof event.data !== 'object' || !event.data.type) {
+        return;
+      }
+
+      // Push 알림 수신 처리
+      if (event.data.type === 'PUSH_RECEIVED') {
+        const payload = event.data.payload as {
+          title?: string;
+          body?: string;
+          scheduleId?: number;
+          scheduledDateTime?: string;
+          receivedAt?: number;
+        };
+
+        if (!payload?.title || !payload?.body) {
+          return;
+        }
 
         // scheduleId가 있으면 해당 약 정보 찾기
-        if (notificationData.scheduleId) {
+        if (payload.scheduleId) {
           const medication = todayMedications.find(
-            (med) => med.scheduleId === notificationData.scheduleId
+            (med) => med.scheduleId === payload.scheduleId
           );
 
           if (medication && !medication.isTaken) {
@@ -144,19 +158,21 @@ const ElderHomePage = () => {
             });
             setShowReminderModal(true);
           }
-        } else {
-          // scheduleId가 없으면 title과 body로 약 정보 찾기 시도
-          // 또는 기본 모달 표시 (나중에 개선 가능)
         }
       }
 
       // 알림 클릭 이벤트 처리
-      if (event.data && event.data.type === 'NOTIFICATION_CLICK') {
-        const notificationData = event.data.data;
+      if (event.data.type === 'NOTIFICATION_CLICK') {
+        const payload = event.data.payload as {
+          scheduleId?: number;
+          scheduledDateTime?: string;
+          title?: string;
+          body?: string;
+        };
 
-        if (notificationData.scheduleId) {
+        if (payload?.scheduleId) {
           const medication = todayMedications.find(
-            (med) => med.scheduleId === notificationData.scheduleId
+            (med) => med.scheduleId === payload.scheduleId
           );
 
           if (medication && !medication.isTaken) {
