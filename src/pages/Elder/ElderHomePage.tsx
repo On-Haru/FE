@@ -162,8 +162,8 @@ const ElderHomePage = () => {
             (med) => med.scheduleId === payload.scheduleId
           );
 
+          // 약 정보가 있고 아직 복용하지 않았으면 모달 표시
           if (medication && !medication.isTaken) {
-            // 약 정보가 있고 아직 복용하지 않았으면 모달 표시
             setReminderMedication({
               id: medication.id,
               time: medication.time,
@@ -171,27 +171,58 @@ const ElderHomePage = () => {
               dosage: medication.dosage,
             });
             setShowReminderModal(true);
-          } else if (!medication) {
-            // 약을 찾지 못해도 알람 내용을 표시하기 위해 기본값으로 모달 표시
-            const medicineName =
-              payload.body.replace(' 복용 시간입니다.', '').trim() || '약';
+          } else if (medication && medication.isTaken) {
+            // 이미 복용한 약은 모달 표시하지 않음
+          } else {
+            // 약 정보를 찾지 못했어도 푸시 알림을 받았으면 모달 표시
+            // body에서 약 이름 추출 시도
+            const bodyText = payload.body || '';
+            const bodyMatch = bodyText.match(/(.+?)\s*(\d+정|\d+개|복용)/);
+            const medicationName = bodyMatch
+              ? bodyMatch[1].trim()
+              : bodyText.split(' ')[0] || bodyText || '약';
+            const dosage = bodyMatch ? bodyMatch[2] : '1정';
+
+            // scheduledDateTime에서 시간 추출하여 time 결정
+            let time: MedicationTime = 'morning';
+            if (payload.scheduledDateTime) {
+              const hour = new Date(payload.scheduledDateTime).getHours();
+              if (hour >= 5 && hour < 12) time = 'morning';
+              else if (hour >= 12 && hour < 17) time = 'lunch';
+              else time = 'evening';
+            }
+
             setReminderMedication({
-              id: -1, // 임시 ID
-              time: 'morning', // 기본값
-              medicationName: medicineName,
-              dosage: '1정',
+              id: -1,
+              time,
+              medicationName,
+              dosage,
             });
             setShowReminderModal(true);
           }
         } else {
           // scheduleId가 없어도 알람 내용을 표시
-          const medicineName =
-            payload.body.replace(' 복용 시간입니다.', '').trim() || '약';
+          const bodyText = payload.body || '';
+          const bodyMatch = bodyText.match(/(.+?)\s*(\d+정|\d+개|복용)/);
+          const medicationName = bodyMatch
+            ? bodyMatch[1].trim()
+            : bodyText.split(' ')[0] || bodyText || '약';
+          const dosage = bodyMatch ? bodyMatch[2] : '1정';
+
+          // scheduledDateTime에서 시간 추출하여 time 결정
+          let time: MedicationTime = 'morning';
+          if (payload.scheduledDateTime) {
+            const hour = new Date(payload.scheduledDateTime).getHours();
+            if (hour >= 5 && hour < 12) time = 'morning';
+            else if (hour >= 12 && hour < 17) time = 'lunch';
+            else time = 'evening';
+          }
+
           setReminderMedication({
-            id: -1, // 임시 ID
-            time: 'morning', // 기본값
-            medicationName: medicineName,
-            dosage: '1정',
+            id: -1,
+            time,
+            medicationName,
+            dosage,
           });
           setShowReminderModal(true);
         }

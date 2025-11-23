@@ -23,7 +23,13 @@ registerRoute(
 );
 
 self.addEventListener('push', (event: PushEvent) => {
-  console.log('[Service Worker] Push 이벤트 수신!', event);
+  console.log('[Service Worker] ========== Push 이벤트 수신! ==========');
+  console.log('[Service Worker] Push 이벤트 객체:', {
+    type: event.type,
+    timeStamp: event.timeStamp,
+    hasData: !!event.data,
+  });
+
 
   let data: {
     title: string;
@@ -38,14 +44,20 @@ self.addEventListener('push', (event: PushEvent) => {
   try {
     if (event.data) {
       const rawData = event.data.text();
-      console.log('[Service Worker] Push 원본 데이터:', rawData);
-      data = event.data.json();
-      console.log('[Service Worker] Push 파싱된 데이터:', data);
+      console.log('[Service Worker] Push 원본 데이터 (text):', rawData);
+
+      try {
+        data = event.data.json();
+        console.log('[Service Worker] Push 파싱된 데이터 (JSON):', data);
+      } catch (jsonError) {
+        console.error('[Service Worker] JSON 파싱 실패, 텍스트로 처리:', jsonError);
+        // 텍스트가 JSON이 아닐 수도 있으므로 기본값 사용
+      }
     } else {
-      console.log('[Service Worker] Push 이벤트에 데이터가 없습니다.');
+      console.warn('[Service Worker] ⚠️ Push 이벤트에 데이터가 없습니다!');
     }
   } catch (error) {
-    console.error('[Service Worker] Push 데이터 파싱 실패:', error);
+    console.error('[Service Worker] ❌ Push 데이터 파싱 실패:', error);
     // fallback keeps default data
   }
 
@@ -54,7 +66,7 @@ self.addEventListener('push', (event: PushEvent) => {
   event.waitUntil(
     (async () => {
       try {
-        await self.registration.showNotification(title, {
+        const notificationOptions = {
           body,
           icon: '/pwa-192x192.png',
           badge: '/pwa-192x192.png',
@@ -65,20 +77,26 @@ self.addEventListener('push', (event: PushEvent) => {
             title,
             body,
           },
-        });
-        console.log('[Service Worker] 알림 표시 성공!');
+        };
+
+        console.log('[Service Worker] 알림 옵션:', notificationOptions);
+        console.log('[Service Worker] 알림 표시 시도 중...');
+
+        await self.registration.showNotification(title, notificationOptions);
+        console.log('[Service Worker] ✅ 알림 표시 성공!');
       } catch (error) {
-        console.error('[Service Worker] 알림 표시 실패:', error);
+        console.error('[Service Worker] ❌ 알림 표시 실패:', error);
+        console.error('[Service Worker] 에러 상세:', {
+          name: (error as Error).name,
+          message: (error as Error).message,
+          stack: (error as Error).stack,
+        });
       }
 
-      const windowClients = await self.clients.matchAll({
-        type: 'window',
-        includeUncontrolled: true,
-      });
+      // BroadcastChannel을 사용하여 메시지 전송 (더 확실함)
+      try {
+        const channel = new BroadcastChannel('push-notification');
 
-      console.log('[Service Worker] 클라이언트 수:', windowClients.length);
-
-      for (const client of windowClients) {
         const message = {
           type: 'PUSH_RECEIVED',
           payload: {
@@ -89,15 +107,57 @@ self.addEventListener('push', (event: PushEvent) => {
             receivedAt: Date.now(),
           },
         };
-        console.log('[Service Worker] 클라이언트에 메시지 전송:', message);
-        client.postMessage(message);
+        channel.postMessage(message);
+        console.log('[Service Worker] BroadcastChannel로 메시지 전송:', message);
+        channel.close();
+      } catch (error) {
+        console.error('[Service Worker] BroadcastChannel 전송 실패:', error);
       }
 
-      // 클라이언트가 없어도 알림은 표시됨 (이미 위에서 표시함)
-      if (windowClients.length === 0) {
-        console.log(
-          '[Service Worker] 열려있는 클라이언트가 없습니다. 알림만 표시됨.'
+      // 기존 방식도 유지 (클라이언트에 직접 전송)
+      const windowClients = await self.clients.matchAll({
+        type: 'window',
+        includeUncontrolled: true,
+      });
+
+      console.log('[Service Worker] 클라이언트 수:', windowClients.length);
+
+      if (windowClients.length > 0) {
+        // 어르신 페이지(/elder) 클라이언트 찾기
+        const elderClients = windowClients.filter((client) =>
+          client.url.includes('/elder')
         );
+
+        console.log('[Service Worker] 전체 클라이언트 수:', windowClients.length);
+        console.log('[Service Worker] 어르신 페이지 클라이언트 수:', elderClients.length);
+        windowClients.forEach((client) => {
+          console.log('[Service Worker] 클라이언트 URL:', client.url);
+        });
+
+        // 어르신 페이지 클라이언트에만 메시지 전송
+        const targetClients = elderClients.length > 0 ? elderClients : windowClients;
+
+        for (const client of targetClients) {
+          console.log('[Service Worker] 클라이언트에 메시지 전송:', client.url);
+          try {
+            client.postMessage({
+              type: 'PUSH_RECEIVED',
+              payload: {
+                title,
+                body,
+                scheduleId,
+                scheduledDateTime,
+                receivedAt: Date.now(),
+              },
+            });
+            console.log('[Service Worker] ✅ 클라이언트 메시지 전송 성공:', client.url);
+          } catch (error) {
+            console.error('[Service Worker] ❌ 클라이언트 메시지 전송 실패:', client.url, error);
+          }
+        }
+      } else {
+        console.warn('[Service Worker] ⚠️ 열려있는 클라이언트가 없습니다.');
+
       }
     })()
   );

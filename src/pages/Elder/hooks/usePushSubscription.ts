@@ -70,12 +70,26 @@ export const usePushSubscription = () => {
       try {
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
+        
+        if (subscription) {
+          console.log('[usePushSubscription] 기존 구독 발견:', {
+            endpoint: subscription.endpoint,
+            expirationTime: subscription.expirationTime,
+            keys: {
+              hasP256dh: !!subscription.getKey('p256dh'),
+              hasAuth: !!subscription.getKey('auth'),
+            },
+          });
+        } else {
+          console.log('[usePushSubscription] 구독이 없습니다.');
+        }
+        
         setState((prev) => ({
           ...prev,
           isSubscribed: subscription !== null,
         }));
       } catch (error) {
-        // 구독 상태 확인 실패는 조용히 처리
+        console.error('[usePushSubscription] 구독 상태 확인 실패:', error);
       }
     };
 
@@ -146,11 +160,15 @@ export const usePushSubscription = () => {
 
       // 5. 구독이 없으면 새로 생성
       if (!subscription) {
+        console.log('[usePushSubscription] 기존 구독이 없어 새로 생성합니다.');
         const keyArray = urlBase64ToUint8Array(vapidPublicKey);
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: keyArray as BufferSource,
         });
+        console.log('[usePushSubscription] 새 구독 생성 완료:', subscription.endpoint);
+      } else {
+        console.log('[usePushSubscription] 기존 구독 발견:', subscription.endpoint);
       }
 
       // 6. 구독 정보를 서버에 전송
