@@ -118,6 +118,7 @@ const ElderHomePage = () => {
     subscribe().catch((error) => {
       // 구독 실패는 조용히 처리하되, 디버깅을 위해 로그 출력
       console.error('[ElderHomePage] 푸시 구독 실패:', error);
+
     });
   }, [isLoadingUser, hasGuardian, isSubscribed, isSupported, subscribe]);
 
@@ -179,8 +180,11 @@ const ElderHomePage = () => {
           receivedAt?: number;
         };
 
+        console.log('[ElderHomePage] Push 알림 수신:', payload);
+
         if (!payload?.title || !payload?.body) {
           console.warn('[ElderHomePage] 푸시 알림에 title 또는 body가 없습니다.');
+
           return;
         }
 
@@ -251,6 +255,7 @@ const ElderHomePage = () => {
           });
           setShowReminderModal(true);
           console.log('[ElderHomePage] ✅ 모달 표시 (약 정보 없음, body에서 추출)');
+
         }
       }
 
@@ -262,6 +267,8 @@ const ElderHomePage = () => {
           title?: string;
           body?: string;
         };
+
+        console.log('[ElderHomePage] 알림 클릭:', payload);
 
         if (payload?.scheduleId) {
           const medication = todayMedications.find(
@@ -276,7 +283,35 @@ const ElderHomePage = () => {
               dosage: medication.dosage,
             });
             setShowReminderModal(true);
+          } else if (medication && medication.isTaken) {
+            console.log('[ElderHomePage] 약을 이미 복용했습니다:', medication);
+          } else {
+            console.warn(
+              '[ElderHomePage] scheduleId로 약을 찾을 수 없습니다:',
+              payload.scheduleId
+            );
+            // 약을 찾지 못해도 알람 내용을 표시
+            const medicineName =
+              payload.body?.replace(' 복용 시간입니다.', '').trim() || '약';
+            setReminderMedication({
+              id: -1,
+              time: 'morning',
+              medicationName: medicineName,
+              dosage: '1정',
+            });
+            setShowReminderModal(true);
           }
+        } else {
+          // scheduleId가 없어도 알람 내용을 표시
+          const medicineName =
+            payload.body?.replace(' 복용 시간입니다.', '').trim() || '약';
+          setReminderMedication({
+            id: -1,
+            time: 'morning',
+            medicationName: medicineName,
+            dosage: '1정',
+          });
+          setShowReminderModal(true);
         }
       }
     };

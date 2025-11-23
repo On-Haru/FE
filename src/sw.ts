@@ -30,6 +30,7 @@ self.addEventListener('push', (event: PushEvent) => {
     hasData: !!event.data,
   });
   
+
   let data: {
     title: string;
     body: string;
@@ -61,7 +62,6 @@ self.addEventListener('push', (event: PushEvent) => {
   }
 
   const { title, body, scheduleId, scheduledDateTime } = data;
-  console.log('[Service Worker] 알림 표시 예정:', { title, body, scheduleId, scheduledDateTime });
 
   event.waitUntil(
     (async () => {
@@ -96,6 +96,7 @@ self.addEventListener('push', (event: PushEvent) => {
       // BroadcastChannel을 사용하여 메시지 전송 (더 확실함)
       try {
         const channel = new BroadcastChannel('push-notification');
+n
         const message = {
           type: 'PUSH_RECEIVED',
           payload: {
@@ -156,6 +157,7 @@ self.addEventListener('push', (event: PushEvent) => {
         }
       } else {
         console.warn('[Service Worker] ⚠️ 열려있는 클라이언트가 없습니다.');
+
       }
     })()
   );
