@@ -12,12 +12,14 @@ interface DetailPageHeaderProps {
   currentElder: Elder;
   elders: Elder[];
   onElderChange: (elderId: string) => void;
+  currentMonth: Date;
 }
 
 const DetailPageHeader = ({
   currentElder,
   elders,
   onElderChange,
+  currentMonth,
 }: DetailPageHeaderProps) => {
   const navigate = useNavigate();
   const reportButtonRef = useRef<HTMLButtonElement>(null);
@@ -39,8 +41,10 @@ const DetailPageHeader = ({
   };
 
   const handleAiReportClick = () => {
-    // AI 리포트 페이지로 이동 (나중에 구현)
-    navigate(`/report?elderId=${currentElder.id}`);
+    // 달력에 표시된 년도와 월을 파라미터로 전달
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth() + 1; // getMonth()는 0부터 시작하므로 +1
+    navigate(`/report?elderId=${currentElder.id}&year=${year}&month=${month}`);
   };
 
   return (

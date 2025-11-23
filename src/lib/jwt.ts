@@ -59,3 +59,17 @@ export const getUserIdFromToken = (token: string): number | null => {
   const userId = decoded.userId || decoded.user_id || decoded.sub || decoded.id;
   return userId ? Number(userId) : null;
 };
+
+/**
+ * JWT 토큰에서 사용자 이름 추출
+ */
+export const getUserNameFromToken = (token: string): string | null => {
+  const decoded = decodeJWT(token);
+  if (!decoded) {
+    return null;
+  }
+
+  // name, userName, username 등 다양한 필드명 확인
+  const userName = decoded.name || decoded.userName || decoded.username || decoded.user_name;
+  return userName ? String(userName) : null;
+};
