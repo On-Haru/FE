@@ -5,6 +5,8 @@ import type {
   PrescriptionDetailResponse,
   PrescriptionCreateRequest,
   PrescriptionCreateResponse,
+  PrescriptionUpdateResponse,
+  PrescriptionDeleteResponse,
 } from '@/pages/MedicineDetail/types/prescription';
 import type { OCRResponse } from '@/pages/MedicineRegister/services/ocr';
 
@@ -15,6 +17,8 @@ export type {
   PrescriptionDetailResponse,
   PrescriptionCreateRequest,
   PrescriptionCreateResponse,
+  PrescriptionUpdateResponse,
+  PrescriptionDeleteResponse,
 };
 
 
@@ -139,17 +143,48 @@ export async function getPrescriptionDetail(
 
 /**
  * 처방전 등록/수정
- * @param _id 처방전 ID (사용하지 않음, 항상 새로 생성)
+ * @param prescriptionId 처방전 ID (0이면 새로 생성, 있으면 업데이트)
  * @param data 처방전 데이터
  */
 export async function updatePrescription(
-  _id: number,
+  prescriptionId: number,
   data: PrescriptionCreateRequest
-): Promise<PrescriptionCreateResponse> {
-  // 항상 POST로 새로 생성
-  const res = await axiosInstance.post<{ data: PrescriptionCreateResponse }>(
-    `/api/prescriptions`,
-    data
+): Promise<PrescriptionUpdateResponse['data']> {
+  if (prescriptionId > 0) {
+    // 기존 처방전 업데이트 (PUT)
+    const res = await axiosInstance.put<PrescriptionUpdateResponse>(
+      `/api/prescriptions/${prescriptionId}`,
+      data
+    );
+    return res.data.data;
+  } else {
+    // 새 처방전 생성 (POST)
+    const res = await axiosInstance.post<{ data: PrescriptionCreateResponse }>(
+      `/api/prescriptions`,
+      data
+    );
+    // POST 응답을 PUT 응답 형식으로 변환
+    return {
+      id: res.data.data.id,
+      seniorId: res.data.data.seniorId,
+      hospitalName: res.data.data.hospitalName,
+      doctorName: res.data.data.doctorName,
+      issuedDate: res.data.data.issuedDate,
+      note: res.data.data.note,
+      medicines: [], // POST 응답에는 medicines가 없으므로 빈 배열
+    };
+  }
+}
+
+/**
+ * 처방전 삭제
+ * @param prescriptionId 처방전 ID
+ */
+export async function deletePrescription(
+  prescriptionId: number
+): Promise<PrescriptionDeleteResponse> {
+  const res = await axiosInstance.delete<PrescriptionDeleteResponse>(
+    `/api/prescriptions/${prescriptionId}`
   );
-  return res.data.data;
+  return res.data;
 }

@@ -4,7 +4,6 @@ import type { ChecklistItem } from '@/types/checklist';
 import { format, parse } from 'date-fns';
 import { Check } from 'lucide-react';
 import ChecklistModal from './ChecklistModal';
-import { updateTakenStatus } from '../services/takingLog';
 
 
 interface ChecklistProps {
@@ -18,10 +17,12 @@ const Checklist = ({ date, items, elderName, userId }: ChecklistProps) => {
     const [selectedItem, setSelectedItem] = useState<ChecklistItem | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
-    const checkboxesRef = useRef<(HTMLDivElement | null)[]>([]);
 
     const parsedDate = parse(date, 'yyyy-MM-dd', new Date());
     const dayLabel = `${format(parsedDate, 'd')}일`;
+
+    // items가 배열인지 확인하고 안전하게 처리
+    const safeItems = Array.isArray(items) ? items : [];
 
     // 아이템 등장 애니메이션
     useEffect(() => {
@@ -40,40 +41,11 @@ const Checklist = ({ date, items, elderName, userId }: ChecklistProps) => {
                 ease: 'power2.out',
             });
         });
-    }, [items]);
+    }, [safeItems]);
 
-    const handleItemClick = async (item: ChecklistItem, index: number) => {
-        // 체크박스 클릭 애니메이션
-        const checkbox = checkboxesRef.current[index];
-        if (checkbox) {
-            gsap.to(checkbox, {
-                scale: 1.2,
-                duration: 0.15,
-                ease: 'power2.out',
-                yoyo: true,
-                repeat: 1,
-            });
-        }
-
-        // API 호출하여 복용 여부 업데이트
-        const extendedItem = item as ChecklistItem & {
-            scheduleId?: number;
-            scheduledDateTime?: string;
-        };
-
-        if (extendedItem.scheduleId && extendedItem.scheduledDateTime) {
-            try {
-                await updateTakenStatus({
-                    scheduleId: extendedItem.scheduleId,
-                    scheduledDateTime: extendedItem.scheduledDateTime,
-                    taken: !item.checked, // 토글
-                });
-                // 성공 시 UI 업데이트는 부모 컴포넌트에서 처리
-            } catch (error) {
-                alert('복용 여부 업데이트에 실패했습니다.');
-            }
-        }
-
+    const handleItemClick = (item: ChecklistItem) => {
+        // 보호자 페이지에서는 체크 불가, 모달만 열기
+        // 체크는 어르신만 할 수 있음
         setSelectedItem(item);
         setIsModalOpen(true);
     };
@@ -89,33 +61,34 @@ const Checklist = ({ date, items, elderName, userId }: ChecklistProps) => {
             <div className="mt-4">
                 <h3 className="text-base font-semibold mb-3 text-primary">{dayLabel}</h3>
                 <div className="space-y-3">
-                    {items.map((item, index) => (
-                        <div
-                            key={item.id}
-                            ref={(el) => {
-                                itemsRef.current[index] = el;
-                            }}
-                            onClick={() => handleItemClick(item, index)}
-                            className="flex items-center gap-3 cursor-pointer"
-                        >
+                    {safeItems.length > 0 ? (
+                        safeItems.map((item, index) => (
                             <div
+                                key={item.id}
                                 ref={(el) => {
-                                    checkboxesRef.current[index] = el;
+                                    itemsRef.current[index] = el;
                                 }}
-                                className={`relative flex items-center justify-center w-5 h-5 rounded border-1 transition-colors ${item.checked
-                                    ? 'bg-primary border-primary'
-                                    : 'bg-transparent border-gray-300'
-                                    }`}
+                                onClick={() => handleItemClick(item)}
+                                className="flex items-center gap-3 cursor-pointer"
                             >
-                                {item.checked && (
-                                    <Check className="w-4 h-4 text-white" />
-                                )}
+                                <div
+                                    className={`relative flex items-center justify-center w-5 h-5 rounded border-1 transition-colors ${item.checked
+                                        ? 'bg-primary border-primary'
+                                        : 'bg-transparent border-gray-300'
+                                        }`}
+                                >
+                                    {item.checked && (
+                                        <Check className="w-4 h-4 text-white" />
+                                    )}
+                                </div>
+                                <span className={`text-base ${item.checked ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+                                    {item.label}
+                                </span>
                             </div>
-                            <span className={`text-base ${item.checked ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                                {item.label}
-                            </span>
-                        </div>
-                    ))}
+                        ))
+                    ) : (
+                        <p className="text-gray-500 text-center text-sm">체크리스트 항목이 없습니다.</p>
+                    )}
                 </div>
             </div>
             {selectedItem && (

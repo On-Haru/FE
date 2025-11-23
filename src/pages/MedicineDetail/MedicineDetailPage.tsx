@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import TableHeader from '@/pages/MedicineDetail/components/TableHeader';
 import TableList, { type MedicineItem } from '@/pages/MedicineDetail/components/TableList';
 import FixandDeleteBtn from '@/pages/MedicineDetail/components/FixandDeleteBtn';
+import MedicineDeleteConfirmModal from '@/pages/MedicineDetail/components/MedicineDeleteConfirmModal';
+import { useToast } from '@/contexts/ToastContext';
+import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+
 
 import {
   getPrescriptionDetail,
@@ -17,11 +20,20 @@ import { getPreviousPrescriptions } from '@/pages/PreviousMedicine/services/prev
 import type { OCRResponse } from '@/pages/MedicineRegister/services/ocr';
 
 const MedicineDetailPage = () => {
-  const navigate = useNavigate();
+
+  const { showSuccess, showError } = useToast();
   const [medicines, setMedicines] = useState<MedicineItem[]>([]);
-  const [selected, setSelected] = useState<number[]>([]);
   const [editMode, setEditMode] = useState(false);
   const [prescriptionInfo, setPrescriptionInfo] = useState<PrescriptionInfo | null>(null);
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    medicineId: number | null;
+    medicineName: string;
+  }>({
+    isOpen: false,
+    medicineId: null,
+    medicineName: '',
+  });
   
   // OCR 데이터 처리 여부 추적 (중복 실행 방지)
   const hasProcessedOCR = useRef(false);
@@ -118,22 +130,29 @@ const MedicineDetailPage = () => {
     fetchData();
   }, []);
 
-  /** 선택 토글 */
-  const toggleSelect = (id: number) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
-    );
+  /** 약 삭제 모달 열기 */
+  const handleOpenDeleteModal = (medicineId: number, medicineName: string) => {
+    setDeleteModal({
+      isOpen: true,
+      medicineId,
+      medicineName,
+    });
   };
 
-  /** 전체 선택 */
-  const toggleSelectAll = (isChecked: boolean, medicines: MedicineItem[]) => {
-    setSelected(isChecked ? medicines.map((m) => m.id) : []);
+  /** 약 삭제 모달 닫기 */
+  const handleCloseDeleteModal = () => {
+    setDeleteModal({
+      isOpen: false,
+      medicineId: null,
+      medicineName: '',
+    });
   };
 
-  /** 체크된 약 삭제 */
-  const handleDeleteSelected = () => {
-    setMedicines((prev) => prev.filter((m) => !selected.includes(m.id)));
-    setSelected([]);
+  /** 약 삭제 확인 */
+  const handleDeleteMedicineConfirm = () => {
+    if (!deleteModal.medicineId) return;
+    
+    setMedicines((prev) => prev.filter((m) => m.id !== deleteModal.medicineId));
   };
 
   /** 수정 모드 toggle */
@@ -143,19 +162,19 @@ const MedicineDetailPage = () => {
   const handleSaveEdit = useCallback(async () => {
     try {
       if (!prescriptionInfo) {
-        alert('처방전 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+        showError('처방전 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
         return;
       }
 
       // seniorId 검증
       if (!prescriptionInfo.seniorId) {
-        alert('시니어 ID가 없습니다. 처방전 정보를 확인해주세요.');
+        showError('시니어 ID가 없습니다. 처방전 정보를 확인해주세요.');
         return;
       }
 
       // medicines 배열 검증
       if (medicines.length === 0) {
-        alert('저장할 약물 정보가 없습니다. 약물을 추가해주세요.');
+        showError('저장할 약물 정보가 없습니다. 약물을 추가해주세요.');
         return;
       }
 
@@ -196,7 +215,7 @@ const MedicineDetailPage = () => {
 
       // medicines 배열이 비어있으면 에러
       if (payload.medicines.length === 0) {
-        alert('저장할 약물 정보가 없습니다. 약물명을 입력해주세요.');
+        showError('저장할 약물 정보가 없습니다. 약물명을 입력해주세요.');
         return;
       }
 
@@ -208,7 +227,9 @@ const MedicineDetailPage = () => {
 
       // 저장 후 새로 생성된 처방전 ID로 데이터 다시 불러오기
       if (!result || !result.id) {
-        alert('저장은 완료되었지만 데이터를 불러오지 못했습니다. 페이지를 새로고침해주세요.');
+        showError('저장은 완료되었지만 데이터를 불러오지 못했습니다. 페이지를 새로고침해주세요.', () => {
+          window.location.reload();
+        });
         setEditMode(false);
         return;
       }
@@ -224,48 +245,29 @@ const MedicineDetailPage = () => {
       setPrescriptionInfo(updatedInfo);
       setMedicines(updatedMedicines);
 
-      // 저장 완료 후 달력 페이지로 이동하여 새로 등록된 처방전이 반영되도록 함
-      if (storedSeniorId) {
-        // 달력 페이지로 이동 (자동 새로고침됨)
-        navigate(`/detail/${storedSeniorId}`);
-      } else {
-        alert('저장 완료!');
-      }
+      // 저장 완료
+      // 저장 완료 알림
+      showSuccess('저장 완료!');
       setEditMode(false);
     } catch (err: unknown) {
-      const error = err as {
-        response?: {
-          status?: number;
-          statusText?: string;
-          data?: { message?: string };
-        };
-        message?: string;
-      };
-      
-      // 에러 메시지 추출
-      const errorData = error.response?.data as { message?: string; errorCode?: string } | undefined;
-      const errorMessage = errorData?.message || error.message || '알 수 없는 오류';
+      const errorMessage = getApiErrorMessage(err);
       
       // note 필드 길이 초과 에러 처리
       if (errorMessage.includes('Data too long for column') && errorMessage.includes('note')) {
-        alert(
-          '저장 실패: 비고(note) 필드가 너무 깁니다.\n\n' +
-          '비고 내용이 500자를 초과하여 저장할 수 없습니다.\n' +
-          '비고 내용을 줄여주세요.'
-        );
+        showError('저장 실패: 비고(note) 필드가 너무 깁니다. 비고 내용이 500자를 초과하여 저장할 수 없습니다.');
       }
       // 404 에러인 경우 더 명확한 메시지 제공
-      else if (error.response?.status === 404) {
-        alert(
-          '저장 실패: API 엔드포인트를 찾을 수 없습니다.\n\n백엔드 서버가 실행 중인지 확인하거나, API 경로가 올바른지 확인해주세요.'
-        );
+      else if ((err as { response?: { status?: number } }).response?.status === 404) {
+        showError('저장 실패: API 엔드포인트를 찾을 수 없습니다. 백엔드 서버가 실행 중인지 확인해주세요.', () => {
+          handleSaveEdit();
+        });
       } else {
-        alert(
-          `저장 실패: ${errorMessage}`
-        );
+        showError(`저장 실패: ${errorMessage}`, () => {
+          handleSaveEdit();
+        });
       }
     }
-  }, [prescriptionInfo, medicines]);
+  }, [prescriptionInfo, medicines, showSuccess, showError]);
 
   // OCR 처리 후 자동 저장 (한 번만 실행되도록 보장)
   useEffect(() => {
@@ -356,10 +358,12 @@ const MedicineDetailPage = () => {
     });
   };
 
-  /** 약 삭제 */
+  /** 약 삭제 버튼 클릭 (모달 열기) */
   const handleDeleteMedicine = (medicineId: number) => {
-    setMedicines((prev) => prev.filter((m) => m.id !== medicineId));
-    setSelected((prev) => prev.filter((id) => id !== medicineId));
+    const medicine = medicines.find((m) => m.id === medicineId);
+    if (medicine) {
+      handleOpenDeleteModal(medicineId, medicine.name);
+    }
   };
 
   /** 약 추가 */
@@ -382,15 +386,10 @@ const MedicineDetailPage = () => {
   return (
     <div className="w-full h-full flex flex-col">
       <div className="flex-1">
-        <TableHeader
-          allChecked={selected.length === medicines.length}
-          onToggleAll={(checked) => toggleSelectAll(checked, medicines)}
-        />
+        <TableHeader editMode={editMode} />
 
         <TableList
           medicines={medicines}
-          selected={selected}
-          onToggleItem={toggleSelect}
           editMode={editMode}
           onChangeField={handleChangeField}
           onChangeAlarm={handleChangeAlarm}
@@ -402,10 +401,17 @@ const MedicineDetailPage = () => {
       </div>
 
       <FixandDeleteBtn
-        onDelete={handleDeleteSelected}
         editMode={editMode}
         onToggleEdit={handleToggleEdit}
         onSave={handleSaveEdit}
+      />
+
+      {/* 약 삭제 확인 모달 */}
+      <MedicineDeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        medicineName={deleteModal.medicineName}
+        onConfirm={handleDeleteMedicineConfirm}
+        onCancel={handleCloseDeleteModal}
       />
     </div>
   );

@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { updateTakenStatus } from '@/pages/Detail/services/takingLog';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { useToast } from '@/contexts/ToastContext';
 import { useUser } from './hooks/useUser';
 import { useTodayMedications } from './hooks/useTodayMedications';
 import { useGuardianConnection } from './hooks/useGuardianConnection';
@@ -17,6 +18,7 @@ import {
 } from './components/TodayMedicationCard';
 
 const ElderHomePage = () => {
+  const { showError } = useToast();
   // 사용자 정보 조회
   const {
     userName,
@@ -51,7 +53,7 @@ const ElderHomePage = () => {
     // 해당 약 찾기
     const medication = todayMedications.find((med) => med.id === id);
     if (!medication) {
-      alert('약 정보를 찾을 수 없습니다.');
+      showError('약 정보를 찾을 수 없습니다.');
       return;
     }
 
@@ -62,7 +64,7 @@ const ElderHomePage = () => {
 
     // scheduleId와 scheduledDateTime이 없는 경우 (이론적으로는 발생하지 않아야 함)
     if (!medication.scheduleId || !medication.scheduledDateTime) {
-      alert('약 정보가 올바르지 않습니다.');
+      showError('약 정보가 올바르지 않습니다.');
       return;
     }
 
@@ -80,7 +82,9 @@ const ElderHomePage = () => {
       );
     } catch (error) {
       // 에러 발생 시 사용자에게 알림
-      alert(getApiErrorMessage(error));
+      showError(getApiErrorMessage(error), () => {
+        handleMedicationTaken(id);
+      });
     }
   };
 
@@ -129,6 +133,11 @@ const ElderHomePage = () => {
   // Service Worker로부터 Push 알림 메시지 수신
   useEffect(() => {
     if (!hasGuardian) {
+      return;
+    }
+
+    // Service Worker 지원 여부 확인
+    if (!('serviceWorker' in navigator)) {
       return;
     }
 
@@ -267,11 +276,14 @@ const ElderHomePage = () => {
     };
 
     // Service Worker 메시지 리스너 등록
-    navigator.serviceWorker.addEventListener('message', handleMessage);
+    const serviceWorker = navigator.serviceWorker;
+    if (serviceWorker) {
+      serviceWorker.addEventListener('message', handleMessage);
 
-    return () => {
-      navigator.serviceWorker.removeEventListener('message', handleMessage);
-    };
+      return () => {
+        serviceWorker.removeEventListener('message', handleMessage);
+      };
+    }
   }, [hasGuardian, todayMedications]);
 
   // 복용 예정 약을 먼저, 복용된 약을 나중에 정렬

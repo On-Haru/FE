@@ -20,7 +20,7 @@ export interface TakingLog {
 
 // 캘린더 슬롯 타입
 export interface CalendarSlot {
-    slotId: number;
+    slotId: number | null;
     scheduleId: number;
     medicineName: string;
     scheduleType: 'MORNING' | 'LUNCH' | 'EVENING' | 'BEDTIME';

@@ -3,6 +3,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { getUserTypeFromPath, USER_TYPE } from '@/types/user';
 import { isAuthPage } from '@/constants/routes';
+import { ToastRenderer } from '@/contexts/ToastContext';
 
 const Layout = () => {
   const location = useLocation();
@@ -11,7 +12,7 @@ const Layout = () => {
   const authPage = isAuthPage(location.pathname);
 
   return (
-    <div className="mobile-container flex flex-col">
+    <div className="mobile-container flex flex-col relative">
       {!authPage && <Header />}
       
       <main className="mobile-content flex-1 min-h-0 overflow-y-auto p-4">
@@ -19,6 +20,8 @@ const Layout = () => {
       </main>
 
       {!isElder && !authPage && <Footer />}
+      
+      <ToastRenderer />
     </div>
   );
 };

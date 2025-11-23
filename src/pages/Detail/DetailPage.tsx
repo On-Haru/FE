@@ -57,10 +57,16 @@ const DetailPage = () => {
             // API 응답을 checklist 형식으로 변환
             const convertedData: Record<string, DateChecklist> = {};
 
+            console.log('[DetailPage] API 응답 데이터:', calendarData);
+            console.log('[DetailPage] days 배열:', calendarData.days);
+
             calendarData.days.forEach((day: CalendarDay) => {
+                // slots가 배열인지 확인하고, 배열이 아니면 빈 배열로 처리
+                const slots = Array.isArray(day.slots) ? day.slots : [];
+
                 // slots가 있고 길이가 0보다 큰 경우에만 체크리스트 생성
-                if (day.slots && day.slots.length > 0) {
-                    const items: ChecklistItem[] = day.slots.map((slot: CalendarSlot) => {
+                if (slots.length > 0) {
+                    const items: ChecklistItem[] = slots.map((slot: CalendarSlot, index: number) => {
                         // scheduleType을 한글로 변환
                         const typeMap: Record<string, string> = {
                             'MORNING': '아침약',
@@ -69,8 +75,13 @@ const DetailPage = () => {
                             'BEDTIME': '취침전약',
                         };
 
+                        // slotId가 null인 경우 scheduleId와 scheduledDateTime을 조합하여 고유 ID 생성
+                        const itemId = slot.slotId !== null
+                            ? slot.slotId.toString()
+                            : `${slot.scheduleId}-${slot.scheduledDateTime}-${index}`;
+
                         return {
-                            id: slot.slotId.toString(),
+                            id: itemId,
                             label: `${typeMap[slot.scheduleType] || slot.scheduleType} : ${slot.medicineName}`,
                             checked: slot.taken,
                             // API 데이터를 저장하기 위한 추가 필드
@@ -89,10 +100,23 @@ const DetailPage = () => {
                     convertedData[day.date] = {
                         date: day.date,
                         items,
+                        status: day.status,
+                        takenRatio: day.takenRatio,
+                        requiredCount: day.requiredCount,
+                        takenCount: day.takenCount,
+                    };
+                } else {
+                    // slots가 없거나 빈 배열인 경우에도 status 정보는 저장
+                    // NONE 상태인 경우를 위해
+                    convertedData[day.date] = {
+                        date: day.date,
+                        items: [],
+                        status: day.status,
+                        takenRatio: day.takenRatio,
+                        requiredCount: day.requiredCount,
+                        takenCount: day.takenCount,
                     };
                 }
-                // slots가 없거나 빈 배열인 경우는 convertedData에 추가하지 않음
-                // 이렇게 하면 getSelectedDateChecklist()가 null을 반환하여 EmptyDateActions가 표시됨
             });
 
             setChecklistData(convertedData);
@@ -110,10 +134,10 @@ const DetailPage = () => {
             setIsEldersLoading(true);
             try {
                 const links = await getCaregiverLinks();
-                
+
                 // CaregiverLink의 id 기준으로 정렬 (가장 먼저 연결된 것이 첫 번째)
                 const sortedLinks = [...links].sort((a, b) => a.id - b.id);
-                
+
                 // 각 피보호자의 사용자 정보를 병렬로 가져오기
                 const elderPromises = sortedLinks.map(async (link) => {
                     try {
@@ -145,7 +169,7 @@ const DetailPage = () => {
 
                 // URL의 id와 일치하는 피보호자를 찾고, 없으면 첫 번째 피보호자를 기본값으로 사용
                 const targetElder = fetchedElders.find((e) => e.id === id) || fetchedElders[0];
-                
+
                 setCurrentElder(targetElder);
                 // URL이 현재 선택된 피보호자와 다른 경우에만 URL을 업데이트
                 if (id !== targetElder.id) {
@@ -163,6 +187,7 @@ const DetailPage = () => {
 
         fetchElders();
     }, [id, navigate]);
+
 
     // 어르신이 변경되거나 월이 변경되면 캘린더 데이터 로드
     useEffect(() => {
@@ -223,7 +248,23 @@ const DetailPage = () => {
     const getSelectedDateChecklist = (): DateChecklist | null => {
         if (!selectedDate) return null;
         const dateKey = format(selectedDate, 'yyyy-MM-dd');
-        return checklistData[dateKey] || null;
+        const result = checklistData[dateKey];
+        if (!result) return null;
+
+        // items가 배열인지 확인하고 기본값 제공
+        const safeResult = {
+            ...result,
+            items: Array.isArray(result.items) ? result.items : []
+        };
+
+        console.log('[DetailPage] getSelectedDateChecklist:', {
+            dateKey,
+            hasData: !!result,
+            itemsCount: safeResult.items.length,
+            status: safeResult.status,
+            checklistDataKeys: Object.keys(checklistData),
+        });
+        return safeResult;
     };
 
     if (!currentElder) {
@@ -269,32 +310,41 @@ const DetailPage = () => {
                     onMonthChange={handleMonthChange}
                     isLoading={isLoading}
                 />
-                {isDateClicked ? (
-                    <>
-                        {getSelectedDateChecklist() && getSelectedDateChecklist()!.items.length > 0 ? (
-                            <div className="mt-4 px-4">
-                                <Checklist
-                                    date={getSelectedDateChecklist()!.date}
-                                    items={getSelectedDateChecklist()!.items}
-                                    elderName={currentElder.name}
+                {(() => {
+                    const selectedChecklist = getSelectedDateChecklist();
+                    const hasItems = selectedChecklist && selectedChecklist.items.length > 0;
+
+                    if (isDateClicked) {
+                        if (hasItems) {
+                            return (
+                                <div className="mt-4 px-4">
+                                    <Checklist
+                                        date={selectedChecklist!.date}
+                                        items={selectedChecklist!.items}
+                                        elderName={currentElder.name}
+                                        userId={Number(currentElder.id)}
+                                    />
+                                </div>
+                            );
+                        } else {
+                            return (
+                                <EmptyDateActions
+                                    date={selectedDate}
+                                    isDateClicked={isDateClicked}
                                     userId={Number(currentElder.id)}
                                 />
-                            </div>
-                        ) : (
+                            );
+                        }
+                    } else {
+                        return (
                             <EmptyDateActions
                                 date={selectedDate}
-                                elderName={currentElder.name}
                                 isDateClicked={isDateClicked}
+                                userId={Number(currentElder.id)}
                             />
-                        )}
-                    </>
-                ) : (
-                    <EmptyDateActions
-                        date={selectedDate}
-                        elderName={currentElder.name}
-                        isDateClicked={isDateClicked}
-                    />
-                )}
+                        );
+                    }
+                })()}
             </div>
         </div>
     );

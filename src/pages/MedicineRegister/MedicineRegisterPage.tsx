@@ -5,9 +5,11 @@ import CameraBox from '@/pages/MedicineRegister/components/CameraBox';
 import MedicineAddButton from '@/pages/MedicineRegister/components/MedicineAddButton';
 import ViewPrescriptionButton from '@/pages/MedicineRegister/components/ViewPrescriptionButton';
 import NameHeader from '@/pages/MedicineRegister/components/NameHeader';
-import { uploadPrescriptionOCR } from '@/pages/MedicineRegister/services/ocr';
+import PreviewModal from '@/pages/MedicineRegister/components/PreviewModal';
+import { uploadPrescriptionOCR, type OCRResponse } from '@/pages/MedicineRegister/services/ocr';
 import { getCaregiverLinks } from '@/pages/Home/services/caregiverLink';
 import { getUser } from '@/pages/Auth/services/user';
+import { useToast } from '@/contexts/ToastContext';
 
 interface Elder {
   id: string;
@@ -17,11 +19,14 @@ interface Elder {
 
 const MedicineRegisterPage = () => {
   const navigate = useNavigate();
+  const { showError } = useToast();
   const [isUploading, setIsUploading] = useState(false);
   const [selectedSeniorId, setSelectedSeniorId] = useState<number | null>(null);
   const [currentElder, setCurrentElder] = useState<Elder | null>(null);
   const [elders, setElders] = useState<Elder[]>([]);
   const [isEldersLoading, setIsEldersLoading] = useState(true);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const [previewOCRResult, setPreviewOCRResult] = useState<OCRResponse | null>(null);
 
   // 어르신 목록 조회 (등록된 피보호자 목록)
   useEffect(() => {
@@ -97,17 +102,9 @@ const MedicineRegisterPage = () => {
       // OCR API 호출
       const ocrResult = await uploadPrescriptionOCR(file);
 
-      // 선택된 seniorId를 OCR 결과에 포함
-      const ocrResultWithSeniorId = {
-        ...ocrResult,
-        seniorId: selectedSeniorId || ocrResult.seniorId,
-      };
-
-      // OCR 결과를 localStorage에 저장 (MedicineDetailPage에서 사용)
-      localStorage.setItem('ocrPrescriptionData', JSON.stringify(ocrResultWithSeniorId));
-
-      // MedicineDetailPage로 이동
-      navigate(ROUTES.MEDICINE_DETAIL);
+      // 미리보기 모달 표시
+      setPreviewFile(file);
+      setPreviewOCRResult(ocrResult);
     } catch (error: unknown) {
       const err = error as {
         response?: {
@@ -132,13 +129,45 @@ const MedicineRegisterPage = () => {
         errorMessage.includes('404 Not Found')
       ) {
         errorMessage =
-          '백엔드 OCR 서비스 설정 문제입니다.\n\n백엔드 개발자에게 다음을 확인 요청하세요:\n- OCR API 엔드포인트 URL\n- OCR API 키 및 인증 정보\n- 환경 변수 설정';
+          '백엔드 OCR 서비스 설정 문제입니다. 백엔드 개발자에게 다음을 확인 요청하세요: OCR API 엔드포인트 URL, OCR API 키 및 인증 정보, 환경 변수 설정';
       }
 
-      alert(`처방전 인식에 실패했습니다\n\n${errorMessage}`);
+      showError(`처방전 인식에 실패했습니다: ${errorMessage}`, () => {
+        // 다시 시도는 파일 선택을 다시 할 수 있도록 input을 초기화
+        const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+        if (input) {
+          input.value = '';
+        }
+      });
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handlePreviewRetake = () => {
+    // 미리보기 모달 닫기
+    setPreviewFile(null);
+    setPreviewOCRResult(null);
+  };
+
+  const handlePreviewConfirm = () => {
+    if (!previewOCRResult) return;
+
+    // 선택된 seniorId를 OCR 결과에 포함
+    const ocrResultWithSeniorId = {
+      ...previewOCRResult,
+      seniorId: selectedSeniorId || previewOCRResult.seniorId,
+    };
+
+    // OCR 결과를 localStorage에 저장 (MedicineDetailPage에서 사용)
+    localStorage.setItem('ocrPrescriptionData', JSON.stringify(ocrResultWithSeniorId));
+
+    // 미리보기 모달 닫기
+    setPreviewFile(null);
+    setPreviewOCRResult(null);
+
+    // MedicineDetailPage로 이동
+    navigate(ROUTES.MEDICINE_DETAIL);
   };
 
   if (!currentElder) {
@@ -185,6 +214,14 @@ const MedicineRegisterPage = () => {
           onClick={() => navigate(ROUTES.MEDICINE_PREVIOUS)}
         />
       </div>
+
+      {/* 미리보기 모달 */}
+      <PreviewModal
+        file={previewFile}
+        ocrResult={previewOCRResult}
+        onRetake={handlePreviewRetake}
+        onConfirm={handlePreviewConfirm}
+      />
     </div>
   );
 };

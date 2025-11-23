@@ -9,7 +9,7 @@ interface CalendarDateCellProps {
     checklistData: Record<string, DateChecklist>;
     isSelected?: boolean;
     isDisabled?: boolean;
-    hasChecklist?: boolean;
+    status?: 'NONE' | 'PLANNED' | 'PARTIAL' | 'COMPLETE' | 'MISSED';
     onClick?: () => void;
 }
 
@@ -18,7 +18,7 @@ const CalendarDateCell = memo(({
     checklistData,
     isSelected = false,
     isDisabled = false,
-    hasChecklist = false,
+    status,
     onClick,
 }: CalendarDateCellProps) => {
     const cellRef = useRef<HTMLButtonElement>(null);
@@ -26,11 +26,24 @@ const CalendarDateCell = memo(({
     // 날짜 키를 메모이제이션
     const dateKey = useMemo(() => format(date, 'yyyy-MM-dd'), [date]);
 
-    // 완료율 계산을 메모이제이션
+    // 완료율 계산을 메모이제이션 (status와 takenRatio 우선 사용)
     const filledCount = useMemo(() => {
         const checklist = checklistData[dateKey];
-        if (!checklist || checklist.items.length === 0) return 0;
 
+        // status가 NONE이면 표시 없음
+        if (status === 'NONE' || !checklist) return 0;
+
+        // takenRatio가 있으면 우선 사용
+        if (checklist.takenRatio !== undefined) {
+            const ratio = checklist.takenRatio;
+            if (ratio === 0) return 0;
+            if (ratio <= 50) return 1;
+            if (ratio < 100) return 2;
+            return 3;
+        }
+
+        // takenRatio가 없으면 기존 로직 사용
+        if (checklist.items.length === 0) return 0;
         const checkedCount = checklist.items.filter(item => item.checked).length;
         const percentage = (checkedCount / checklist.items.length) * 100;
 
@@ -39,19 +52,30 @@ const CalendarDateCell = memo(({
         if (percentage <= 50) return 1;
         if (percentage < 100) return 2;
         return 3;
-    }, [checklistData, dateKey]);
+    }, [checklistData, dateKey, status]);
 
-    // 클래스명을 메모이제이션
+    // 클래스명을 메모이제이션 (status에 따른 색상 추가)
     const className = useMemo(() => {
         const baseClasses = 'relative w-8 h-8 flex items-center justify-center text-sm rounded';
         if (isDisabled) {
             return `${baseClasses} text-gray-400 cursor-default`;
         }
-        if (isSelected) {
-            return `${baseClasses} text-gray-900 font-semibold cursor-pointer`;
+
+        // status에 따른 텍스트 색상
+        let textColor = 'text-gray-600';
+        if (status === 'MISSED') {
+            textColor = 'text-red-600';
+        } else if (status === 'PLANNED') {
+            textColor = 'text-black';
+        } else if (status === 'COMPLETE') {
+            textColor = 'text-black';
         }
-        return `${baseClasses} text-gray-900 cursor-pointer`;
-    }, [isDisabled, isSelected, hasChecklist]);
+
+        if (isSelected) {
+            return `${baseClasses} ${textColor} font-semibold cursor-pointer`;
+        }
+        return `${baseClasses} ${textColor} cursor-pointer`;
+    }, [isDisabled, isSelected, status]);
 
     // GSAP 호버 애니메이션
     useEffect(() => {

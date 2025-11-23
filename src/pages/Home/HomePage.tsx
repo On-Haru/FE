@@ -14,6 +14,7 @@ import {
   generateStatusMessage,
 } from './utils/takingLogUtils';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { useToast } from '@/contexts/ToastContext';
 import EmptyStateScreen from './components/EmptyStateScreen';
 import CaregiverCard from './components/CaregiverCard';
 
@@ -24,6 +25,7 @@ interface RecipientWithLinkId extends CareRecipient {
 }
 
 const HomePage = () => {
+  const { showError } = useToast();
   const [recipients, setRecipients] = useState<RecipientWithLinkId[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -122,7 +124,7 @@ const HomePage = () => {
     // 해당 피보호자의 linkId 찾기
     const recipient = recipients.find((r) => r.id === id);
     if (!recipient) {
-      alert('피보호자를 찾을 수 없습니다.');
+      showError('피보호자를 찾을 수 없습니다.');
       return;
     }
 
@@ -134,7 +136,9 @@ const HomePage = () => {
       setRecipients((prev) => prev.filter((r) => r.id !== id));
     } catch (error) {
       // 에러 발생 시 사용자에게 알림
-      alert(getApiErrorMessage(error));
+      showError(getApiErrorMessage(error), () => {
+        handleDisconnect(id);
+      });
     }
   };
 
